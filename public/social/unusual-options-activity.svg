@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f5f6f1"/>
+  <path d="M64 140H1136M64 551H1136" stroke="#d9dfd4"/>
+  <rect x="64" y="60" width="38" height="38" rx="7" fill="#4056d9"/>
+  <path d="M73 86L81 77 87 81 96 68" fill="none" stroke="#fff" stroke-width="3"/>
+  <text x="117" y="89" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#24372e">PredixLab.</text>
+  <text x="1136" y="84" text-anchor="end" font-family="monospace" font-size="13" letter-spacing="2" fill="#59665e">03 / OPTIONS ACTIVITY</text>
+  <text x="64" y="243" font-family="Arial,sans-serif" font-size="59" letter-spacing="-2" fill="#24372e">Unusual options activity.</text>
+  <text x="64" y="319" font-family="Arial,sans-serif" font-size="59" letter-spacing="-2" fill="#4056d9">See the contract details.</text>
+  <text x="64" y="389" font-family="Arial,sans-serif" font-size="21" fill="#59665e">Expirations, strikes, and changes in open interest.</text>
+  <text x="64" y="465" font-family="monospace" font-size="14" fill="#59665e">OBSERVED ACTIVITY. NOT ASSUMED INTENT.</text>
+  <g transform="translate(814 212)" font-family="Arial,sans-serif">
+    <rect width="322" height="60" rx="6" fill="#e1ebcc" stroke="#c0cbbb"/>
+    <text x="161" y="36" text-anchor="middle" font-size="18" fill="#24372e">Underlying stock</text>
+    <path d="M161 60V91M80 117V91H244V117" fill="none" stroke="#9aaa91" stroke-width="2"/>
+    <rect y="117" width="150" height="114" rx="6" fill="#fff" stroke="#c0cbbb"/>
+    <text x="75" y="153" text-anchor="middle" font-family="monospace" font-size="17" fill="#4056d9">CALL</text>
+    <text x="75" y="182" text-anchor="middle" font-size="12" fill="#59665e">Expiration / Strike</text>
+    <text x="75" y="208" text-anchor="middle" font-size="12" fill="#59665e">Change in open interest</text>
+    <rect x="172" y="117" width="150" height="114" rx="6" fill="#fff" stroke="#c0cbbb"/>
+    <text x="247" y="153" text-anchor="middle" font-family="monospace" font-size="17" fill="#58765c">PUT</text>
+    <text x="247" y="182" text-anchor="middle" font-size="12" fill="#59665e">Expiration / Strike</text>
+    <text x="247" y="208" text-anchor="middle" font-size="12" fill="#59665e">Change in open interest</text>
+    <text x="161" y="261" text-anchor="middle" font-family="monospace" font-size="9" fill="#677268">CONTRACT STRUCTURE / ILLUSTRATION</text>
+  </g>
+  <text x="64" y="590" font-family="Arial,sans-serif" font-size="15" fill="#59665e">Daily snapshots, not a live trade feed. Not investment advice.</text>
+  <text x="1136" y="590" text-anchor="end" font-family="monospace" font-size="15" fill="#24372e">predixlab.com</text>
+</svg>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://predixlab.com/sitemap.xml

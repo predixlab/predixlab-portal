@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "home": {
+      "title": "US Stock Signals, Screening & Options Analysis | PredixLab",
+      "description": "Analyze US stocks with daily signals, stock screening, and options activity. Compare charts and past performance. Free signals have a 10-day delay."
+    },
+    "pricing": {
+      "title": "PredixLab Pricing | Compare Free and Premium Plans",
+      "description": "Compare free analysis tools and delayed signals with Premium's latest daily data. Premium costs $20/month or $192/year. See features and subscription terms."
+    },
+    "about": {
+      "title": "About PredixLab | US Stock Analysis for Individual Investors",
+      "description": "Learn why PredixLab brings daily market data, stock signals, and historical performance together to help individual investors make their own informed decisions."
+    },
+    "stockSignals": {
+      "title": "Daily US Stock Signals & Historical Performance | PredixLab",
+      "description": "Review AlphaRank rankings and Pivot turning-point signals alongside charts and historical performance. Free signal data has a 10-day delay."
+    },
+    "stockScreener": {
+      "title": "Quantitative Stock Screener for US Stocks | PredixLab",
+      "description": "Filter tracked S&P 500 and NASDAQ-100 stocks by volume, momentum, RSI, trend, volatility, and drawdown. Save custom screens without coding."
+    },
+    "unusualOptions": {
+      "title": "Unusual Options Activity & Open Interest | PredixLab",
+      "description": "Browse unusual options activity by stock. Compare calls, puts, expirations, strikes, and changes in open interest, with clear data dates."
+    },
+    "terms": {
+      "title": "Terms of Service | PredixLab",
+      "description": "Read the terms that apply to the PredixLab website, dashboard, market data, quantitative signals, and subscriptions, including responsibilities and risk disclosures."
+    },
+    "privacy": {
+      "title": "Privacy Policy | PredixLab",
+      "description": "Learn what account, subscription, and device information PredixLab collects, how it is used and shared, and how to manage optional analytics or contact us."
+    },
+    "notFound": {
+      "title": "Page Not Found | PredixLab",
+      "description": "This page doesn't exist or its address has changed. Return to PredixLab for daily US stock signals, stock screening, and options analysis."
+    }
+  },
+  "nav": {
+    "home": "Home",
+    "tools": "Tools",
+    "pricing": "Pricing",
+    "about": "About",
+    "login": "Open dashboard",
+    "primaryLabel": "Primary navigation",
+    "mobileLabel": "Mobile navigation",
+    "homeLabel": "PredixLab home",
+    "openMenu": "Open navigation menu",
+    "closeMenu": "Close navigation menu",
+    "skipToContent": "Skip to main content",
+    "switchLanguage": "Switch to {{language}}",
+    "switchToLight": "Switch to light theme",
+    "switchToDark": "Switch to dark theme"
+  },
+  "notFound": {
+    "title": "We couldn't find that page.",
+    "description": "The link may be out of date or the address may be incorrect. Head back to the homepage or open the dashboard.",
+    "backHome": "Back to homepage",
+    "openDashboard": "Open dashboard"
+  },
+  "footer": {
+    "manifesto": "See the bigger picture. Make your own call.",
+    "description": "Daily signals, stock screening, and options activity for individual investors following US markets.",
+    "tools": "Tools",
+    "explore": "Explore",
+    "stockSignals": "Daily stock signals",
+    "stockScreener": "Stock screener",
+    "unusualOptions": "Options activity",
+    "legal": "Terms & privacy",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "analyticsPreferences": "Analytics preferences",
+    "disclaimer": "For informational purposes only. Not investment advice.",
+    "tagline": "Perspective matters.",
+    "caption": "DATA. CONTEXT. YOUR DECISION."
+  },
+  "analytics": {
+    "title": "Analytics cookies",
+    "description": "Google Analytics sends basic page and device measurements without analytics cookies. Allow analytics cookies to measure repeat visits. You can change your choice in the footer; basic measurement continues without cookies.",
+    "decline": "No analytics cookies",
+    "accept": "Allow analytics cookies"
+  }
+}

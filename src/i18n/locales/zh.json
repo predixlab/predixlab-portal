@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "home": {
+      "title": "PredixLab | 美股每日信号、量化选股与期权异动",
+      "description": "查看每日美股信号，按自己的条件筛选股票，跟踪期权异动。PredixLab 将图表、大盘表现和历史数据放在一起，帮助你独立判断。免费版信号延迟 10 天。"
+    },
+    "pricing": {
+      "title": "PredixLab 价格 | 免费版与 Premium 功能对比",
+      "description": "免费使用图表和选股器，查看延迟 10 天的信号与期权异动。Premium 每月 $20 或每年 $192，可查看最新已发布数据。了解功能区别与订阅规则。"
+    },
+    "about": {
+      "title": "关于 PredixLab | 面向个人投资者的美股分析工具",
+      "description": "了解 PredixLab 如何将每日行情、量化信号和历史表现集中展示，让看盘和选股更方便。数据提供参考，投资决定仍由你自己做出。"
+    },
+    "stockSignals": {
+      "title": "每日美股信号与历史表现 | PredixLab",
+      "description": "查看 AlphaRank 股票排名和 Pivot 转折信号，结合股价图表、大盘情况及历史表现判断。免费版信号和信号表现延迟 10 天。"
+    },
+    "stockScreener": {
+      "title": "美股量化选股器 | 按动量、趋势与风险筛选 - PredixLab",
+      "description": "不用写代码，按成交量、动量、RSI、均线、波动率和回撤筛选平台已收录的标普 500 与纳斯达克 100 股票。保存常用筛选条件，下次直接使用。"
+    },
+    "unusualOptions": {
+      "title": "美股期权异动 | 合约明细与持仓量变化 - PredixLab",
+      "description": "按股票和日期查看美股期权异动，比较 Call、Put、到期日、行权价和持仓量变化。先看合约明细，再结合股价走势判断。免费版数据延迟 10 天。"
+    },
+    "terms": {
+      "title": "服务条款 | PredixLab",
+      "description": "了解使用 PredixLab 网站、工作台、市场数据、量化信号和订阅服务时适用的规则、责任与风险说明。"
+    },
+    "privacy": {
+      "title": "隐私政策 | PredixLab",
+      "description": "了解 PredixLab 收集和使用哪些账户、订阅和设备信息，如何保存与共享数据，以及如何管理可选的网站统计功能和联系我们。"
+    },
+    "notFound": {
+      "title": "页面未找到 | PredixLab",
+      "description": "页面不存在或地址已变化。返回 PredixLab 首页，了解每日美股信号、量化选股与期权分析功能。"
+    }
+  },
+  "nav": {
+    "home": "首页",
+    "tools": "产品功能",
+    "pricing": "价格",
+    "about": "关于",
+    "login": "进入工作台",
+    "primaryLabel": "主导航",
+    "mobileLabel": "移动端导航",
+    "homeLabel": "PredixLab 首页",
+    "openMenu": "打开导航菜单",
+    "closeMenu": "关闭导航菜单",
+    "skipToContent": "跳到主要内容",
+    "switchLanguage": "切换为 {{language}}",
+    "switchToLight": "切换为浅色主题",
+    "switchToDark": "切换为深色主题"
+  },
+  "notFound": {
+    "title": "页面未找到",
+    "description": "这个地址可能已失效，或输入有误。你可以返回首页，或进入工作台继续使用。",
+    "backHome": "返回首页",
+    "openDashboard": "进入工作台"
+  },
+  "footer": {
+    "manifesto": "看懂行情，独立判断。",
+    "description": "面向个人投资者的美股分析工具，汇集每日信号、股票筛选和期权异动。",
+    "tools": "产品功能",
+    "explore": "了解更多",
+    "stockSignals": "每日美股信号",
+    "stockScreener": "量化选股器",
+    "unusualOptions": "期权异动",
+    "legal": "条款与隐私",
+    "terms": "服务条款",
+    "privacy": "隐私政策",
+    "analyticsPreferences": "网站统计设置",
+    "disclaimer": "本网站内容仅供参考，不构成投资建议。",
+    "tagline": "看清行情，独立判断。",
+    "caption": "数据供参考，决策由你做。"
+  },
+  "analytics": {
+    "title": "分析 Cookie 设置",
+    "description": "Google Analytics 默认在不使用分析 Cookie 的情况下发送基础页面和设备统计。允许分析 Cookie 后可衡量重复访问。你可以随时在页脚更改选择；不允许 Cookie 时仍会发送基础统计。",
+    "decline": "不使用分析 Cookie",
+    "accept": "允许分析 Cookie"
+  }
+}

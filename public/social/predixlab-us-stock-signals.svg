@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f5f6f1"/>
+  <path d="M64 140H1136M64 551H1136" stroke="#d9dfd4"/>
+  <rect x="64" y="60" width="38" height="38" rx="7" fill="#4056d9"/>
+  <path d="M73 86L81 77 87 81 96 68" fill="none" stroke="#fff" stroke-width="3"/>
+  <text x="117" y="89" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#24372e">PredixLab.</text>
+  <text x="1136" y="84" text-anchor="end" font-family="monospace" font-size="13" letter-spacing="2" fill="#59665e">01 / DAILY SIGNALS</text>
+  <text x="64" y="243" font-family="Arial,sans-serif" font-size="62" letter-spacing="-2" fill="#24372e">Daily US stock signals.</text>
+  <text x="64" y="319" font-family="Arial,sans-serif" font-size="62" letter-spacing="-2" fill="#4056d9">Put them in context.</text>
+  <text x="64" y="389" font-family="Arial,sans-serif" font-size="21" fill="#59665e">Price action. Market context. Past performance.</text>
+  <text x="64" y="465" font-family="monospace" font-size="14" fill="#59665e">A STARTING POINT. NOT A TRADE INSTRUCTION.</text>
+  <g transform="translate(820 212)">
+    <rect width="315" height="262" rx="10" fill="#fff" stroke="#c0cbbb"/>
+    <path d="M20 66H295M20 119H295M20 172H295M20 225H295" stroke="#d9dfd4" stroke-dasharray="3 4"/>
+    <text x="20" y="29" font-family="monospace" font-size="10" fill="#677268">PRICE + HISTORICAL MARKERS</text>
+    <path d="M24 149L42 135 67 151 88 125 107 138 128 174 148 165 170 188 191 159 209 132 231 144 253 103 279 114" fill="none" stroke="#4056d9" stroke-width="3"/>
+    <path d="M170 58V217" stroke="#4056d9" stroke-dasharray="3 4"/>
+    <circle cx="170" cy="188" r="17" fill="#ecedfb" stroke="#4056d9"/>
+    <circle cx="170" cy="188" r="5" fill="#4056d9"/>
+    <text x="20" y="246" font-family="monospace" font-size="9" fill="#677268">ILLUSTRATION / NOT A LIVE SIGNAL</text>
+  </g>
+  <text x="64" y="590" font-family="Arial,sans-serif" font-size="15" fill="#59665e">Free signals have a 10-day delay. Not investment advice.</text>
+  <text x="1136" y="590" text-anchor="end" font-family="monospace" font-size="15" fill="#24372e">predixlab.com</text>
+</svg>

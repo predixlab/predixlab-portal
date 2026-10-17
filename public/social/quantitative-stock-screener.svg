@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f5f6f1"/>
+  <path d="M64 140H1136M64 551H1136" stroke="#d9dfd4"/>
+  <rect x="64" y="60" width="38" height="38" rx="7" fill="#4056d9"/>
+  <path d="M73 86L81 77 87 81 96 68" fill="none" stroke="#fff" stroke-width="3"/>
+  <text x="117" y="89" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#24372e">PredixLab.</text>
+  <text x="1136" y="84" text-anchor="end" font-family="monospace" font-size="13" letter-spacing="2" fill="#59665e">02 / STOCK SCREENER</text>
+  <text x="64" y="243" font-family="Arial,sans-serif" font-size="62" letter-spacing="-2" fill="#24372e">Your criteria.</text>
+  <text x="64" y="319" font-family="Arial,sans-serif" font-size="62" letter-spacing="-2" fill="#4056d9">Stocks that match.</text>
+  <text x="64" y="389" font-family="Arial,sans-serif" font-size="21" fill="#59665e">Screen US stocks without writing code.</text>
+  <text x="64" y="465" font-family="monospace" font-size="14" fill="#59665e">MOMENTUM / TREND / LIQUIDITY / RISK</text>
+  <g transform="translate(823 209)" font-family="Arial,sans-serif">
+    <rect width="313" height="269" rx="10" fill="#fff" stroke="#c0cbbb"/>
+    <text x="20" y="30" font-family="monospace" font-size="11" fill="#59665e">SCREEN BUILDER</text>
+    <path d="M0 48H313" stroke="#d9dfd4"/>
+    <rect x="20" y="69" width="273" height="42" rx="4" fill="#edf0e8"/>
+    <text x="34" y="95" font-size="15" fill="#24372e">Momentum</text><text x="266" y="95" font-size="16" fill="#58765c">+</text>
+    <rect x="20" y="123" width="273" height="42" rx="4" fill="#edf0e8"/>
+    <text x="34" y="149" font-size="15" fill="#24372e">Trend structure</text><text x="266" y="149" font-size="16" fill="#58765c">+</text>
+    <rect x="20" y="177" width="273" height="42" rx="4" fill="#ecedfb"/>
+    <text x="34" y="203" font-size="15" fill="#4056d9">Your risk criteria</text><text x="266" y="203" font-size="16" fill="#4056d9">+</text>
+    <text x="20" y="248" font-family="monospace" font-size="9" fill="#677268">TOOL ILLUSTRATION / NOT QUERY RESULTS</text>
+  </g>
+  <text x="64" y="590" font-family="Arial,sans-serif" font-size="15" fill="#59665e">Tracked S&amp;P 500 and NASDAQ-100 stocks. No coding required.</text>
+  <text x="1136" y="590" text-anchor="end" font-family="monospace" font-size="15" fill="#24372e">predixlab.com</text>
+</svg>

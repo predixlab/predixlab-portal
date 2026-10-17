@@ -1,0 +1,216 @@
+export const planTerms = {
+  monthlyPrice: 20,
+  annualPrice: 192,
+  delayDays: 10,
+  trialDays: 30,
+};
+
+export const pricingContent = {
+  zh: {
+    eyebrow: "按需选择，价格透明。",
+    title: ["先免费使用，", "再按需要升级。"],
+    description:
+      "免费版可以看图表、用选股器、查看历史信号。需要最新每日数据时，再选择 Premium。月付和年付享有相同功能。",
+    billingLabel: "选择 Premium 的付费方式",
+    monthly: "月付",
+    annual: "年付",
+    saving: "省 20%",
+    free: "免费版",
+    freeDescription: "先熟悉图表、选股器和历史信号，不必急着订阅。",
+    freePeriod: "免费使用",
+    freeBilling: "无需信用卡",
+    freeAction: "免费开始使用",
+    freeNote: "注册后即可进入工作台。",
+    freeFeatures: [
+      "市场概览与股价图表",
+      "量化选股器与自定义筛选",
+      "延迟 10 天的每日信号",
+      "延迟 10 天的期权异动与信号表现",
+    ],
+    premium: "Premium",
+    premiumBadge: "查看最新数据",
+    premiumDescription: "解锁最新已发布的信号、期权异动和信号表现。",
+    monthUnit: "/ 月",
+    monthlyBilling: "每月支付 $20",
+    annualBilling: "每年支付 $192，折合每月 $16",
+    premiumAction: "选择 Premium",
+    premiumNote: "符合条件的新订阅可享 30 天试用，具体以结账页面为准。",
+    premiumFeatures: [
+      "包含免费版的全部分析工具",
+      "最新已发布的每日信号",
+      "最新已发布的期权异动",
+      "更新至最近可用交易日的信号表现",
+    ],
+    footnote: "价格以美元计。你可以在工作台中管理或取消订阅，具体条款以结账页面为准。",
+    compareEyebrow: "功能对比",
+    compareTitle: "升级 Premium，跟进最新信号。",
+    compareDescription: "免费版和 Premium 使用相同的模型。升级不会改变信号准确率，也不代表更低的投资风险。",
+    featureColumn: "功能",
+    included: "包含",
+    delayed: "延迟 10 天",
+    latest: "最新已发布数据",
+    rows: ["市场概览", "股价图表", "量化选股器", "每日信号", "期权异动", "信号表现"],
+    faqTitle: "订阅常见问题",
+    questions: [
+      {
+        question: "月付和年付的功能一样吗？",
+        answer: "一样。年付为每年 $192，比连续 12 个月按月支付 $20 节省 $48。年付是每年一次性扣款，并非每月扣款 $16。",
+      },
+      {
+        question: "Premium 提供实时数据吗？",
+        answer: "不提供。Premium 可查看免费版延迟开放的最新数据，但平台仍以日线行情和每日信号为主，不提供实时行情或盘中逐笔成交。",
+      },
+      {
+        question: "怎么管理或取消订阅？",
+        answer: "在工作台的账户设置中操作。取消通常在当前付费周期结束后生效；续费、试用和退款的具体规则，请查看结账页面和服务条款。",
+      },
+    ],
+  },
+  en: {
+    eyebrow: "STRAIGHTFORWARD PLANS. NO GUESSWORK.",
+    title: ["Start with Free.", "Stay current with Premium."],
+    description:
+      "Explore the charts, screener, and past signals at no cost. Choose Premium for the latest daily data. Monthly and annual plans include the same features.",
+    billingLabel: "Choose how to pay for Premium",
+    monthly: "Monthly",
+    annual: "Annual",
+    saving: "Save 20%",
+    free: "Free",
+    freeDescription: "Get to know the charts, screener, and historical signals before subscribing.",
+    freePeriod: "free access",
+    freeBilling: "No credit card required",
+    freeAction: "Get started free",
+    freeNote: "Create an account to access the dashboard.",
+    freeFeatures: [
+      "Market overview and price charts",
+      "Stock screener with custom filters",
+      "Daily signals with a 10-day delay",
+      "Options activity and signal performance with a 10-day delay",
+    ],
+    premium: "Premium",
+    premiumBadge: "Latest daily data",
+    premiumDescription: "Get the latest published signals, options activity, and signal performance.",
+    monthUnit: "/ month",
+    monthlyBilling: "$20 billed monthly",
+    annualBilling: "$192 billed annually, equivalent to $16/month",
+    premiumAction: "Choose Premium",
+    premiumNote: "Eligible new subscriptions may include a 30-day trial. See checkout for details.",
+    premiumFeatures: [
+      "Every analysis tool in the Free plan",
+      "The latest published daily signals",
+      "The latest published options activity",
+      "Signal performance through the latest available trading day",
+    ],
+    footnote: "Prices are in USD. Manage or cancel your subscription in the dashboard. The terms shown at checkout apply.",
+    compareEyebrow: "COMPARE FEATURES",
+    compareTitle: "Same tools. More recent signal data.",
+    compareDescription: "Both plans use the same models. Upgrading doesn't change signal accuracy or reduce investment risk.",
+    featureColumn: "Feature",
+    included: "Included",
+    delayed: "10-day delay",
+    latest: "Latest published data",
+    rows: ["Market overview", "Price charts", "Stock screener", "Daily signals", "Options activity", "Signal performance"],
+    faqTitle: "Subscription questions.",
+    questions: [
+      {
+        question: "Do monthly and annual plans have the same features?",
+        answer: "Yes. Annual billing costs $192 per year, saving $48 compared with twelve monthly payments of $20. You're charged once a year, not in monthly installments of $16.",
+      },
+      {
+        question: "Does Premium include real-time data?",
+        answer: "No. Premium gives you access to the latest data that is delayed on the Free plan. PredixLab still uses daily price data and daily signals, not live quotes or intraday transaction feeds.",
+      },
+      {
+        question: "How do I manage or cancel my subscription?",
+        answer: "Go to your account settings in the dashboard. Cancellation generally takes effect at the end of your current paid period. See checkout and the Terms of Service for renewal, trial, and refund details.",
+      },
+    ],
+  },
+};
+
+export const aboutContent = {
+  zh: {
+    eyebrow: "关于 PREDIXLAB",
+    title: "更清楚地看行情，更有依据地做判断。",
+    description:
+      "一条信号能提醒你关注一只股票，但怎么判断，还要看走势、市场环境和历史表现。PredixLab 把这些信息放在一起，让日常看盘和选股更方便。",
+    descriptor: "面向个人投资者的美股分析工具",
+    motto: "数据提供参考，决定由你做出。",
+    purposeEyebrow: "为什么做 PredixLab",
+    purposeLead:
+      "看一只股票，不该只看一个分数。近期怎么走、大盘强不强、过去的信号表现如何，都值得放在一起考虑。",
+    purposeDescription:
+      "PredixLab 将日线行情、量化信号和历史表现集中展示，减少查找和整理信息的重复工作，让你有更多时间比较股票、做出判断。",
+    principlesEyebrow: "我们在意什么",
+    principlesTitle: "信息说清楚，局限不回避。",
+    principles: [
+      {
+        title: "信号和行情一起看",
+        description: "把信号与股价图表、大盘表现和历史数据放在一起，帮助你理解当前情况，而不只是给出一个标签。",
+      },
+      {
+        title: "说明数据和指标的含义",
+        description: "讲清楚数据更新到哪天、覆盖哪些股票，以及指标代表什么。不把模型评分当作成功概率，也不把回测当作收益承诺。",
+      },
+      {
+        title: "方便回看和比较",
+        description: "保留信号日期和历史表现，让你能回看当时的走势，而不是只看到最新一次的结果。",
+      },
+    ],
+    pipelineEyebrow: "信号从哪里来",
+    pipelineTitle: "从行情数据，到每日更新。",
+    pipelineDescription: "以下是整体处理流程。不同功能使用的模型、数据范围和评估方法可能不同。",
+    pipeline: [
+      { title: "整理行情", description: "收集和处理价格、成交量等市场数据，记录数据日期和覆盖范围。" },
+      { title: "计算指标", description: "从走势、市场状态和风险等角度，提取供模型使用的指标。" },
+      { title: "评估表现", description: "在明确的时间范围和假设下检查历史表现，同时关注失效情况。" },
+      { title: "更新信号", description: "将已发布的结果展示在工作台中，方便查看和比较。" },
+    ],
+    boundaryTitle: "提供分析工具，不代替投资决策。",
+    boundaryDescription: "PredixLab 不是券商或投资顾问，也不替你执行交易。数据可能延迟或出错，模型也可能失效。所有内容仅供参考，不承诺收益。",
+    contactTitle: "有问题或建议，欢迎联系我们。",
+    contactDescription: "无论是数据问题、功能建议，还是想了解股票覆盖范围，都可以给我们发邮件。",
+  },
+  en: {
+    eyebrow: "ABOUT PREDIXLAB",
+    title: "Built for investors who want more than a signal.",
+    description:
+      "A signal can draw your attention to a stock. The chart, the market, and the history help you decide what to make of it. PredixLab brings them together.",
+    descriptor: "US stock analysis tools for individual investors",
+    motto: "THE DATA INFORMS. YOU DECIDE.",
+    purposeEyebrow: "WHY WE BUILT PREDIXLAB",
+    purposeLead:
+      "There's more to a stock than a score. Recent price action, the broader market, and the record of past signals all deserve a place in your analysis.",
+    purposeDescription:
+      "PredixLab puts daily market data, quantitative signals, and historical performance in one place. Less time gathering information means more time comparing stocks and forming your own view.",
+    principlesEyebrow: "WHAT MATTERS TO US",
+    principlesTitle: "Clear information. Honest about the limits.",
+    principles: [
+      {
+        title: "Show the signal in context",
+        description: "Keep signals alongside price charts, market conditions, and historical data so you can assess the setup, not just read a label.",
+      },
+      {
+        title: "Explain what the numbers mean",
+        description: "Make data dates, stock coverage, and metric definitions clear. A model score is not a probability of success, and a backtest is not a promise of returns.",
+      },
+      {
+        title: "Make past signals easy to revisit",
+        description: "Keep signal dates and historical performance accessible so you can look back at earlier price moves, not just the latest result.",
+      },
+    ],
+    pipelineEyebrow: "WHERE THE SIGNALS COME FROM",
+    pipelineTitle: "From market data to daily updates.",
+    pipelineDescription: "This is an overview of the process. Models, data coverage, and evaluation methods can differ between features.",
+    pipeline: [
+      { title: "Prepare market data", description: "Collect and process prices, volume, and other market data, keeping track of dates and coverage." },
+      { title: "Calculate indicators", description: "Build model inputs that describe price action, market conditions, and risk." },
+      { title: "Evaluate past performance", description: "Assess historical results under defined time periods and assumptions, including where models fall short." },
+      { title: "Publish daily updates", description: "Make published results available in the dashboard for you to review and compare." },
+    ],
+    boundaryTitle: "Analysis tools, not investment advice.",
+    boundaryDescription: "PredixLab is not a broker or investment adviser, and it doesn't execute trades. Data can be delayed or incorrect, and models can fail. Nothing on the platform guarantees returns.",
+    contactTitle: "Questions or feedback? Get in touch.",
+    contactDescription: "Email us to report a data issue, suggest a feature, or ask about stock coverage.",
+  },
+};

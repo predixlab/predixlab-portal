@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f5f6f1"/>
+  <path d="M64 140H1136M64 551H1136" stroke="#d9dfd4"/>
+  <rect x="64" y="60" width="38" height="38" rx="7" fill="#4056d9"/>
+  <path d="M73 86L81 77 87 81 96 68" fill="none" stroke="#fff" stroke-width="3"/>
+  <text x="117" y="89" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#24372e">PredixLab.</text>
+  <text x="1136" y="84" text-anchor="end" font-family="monospace" font-size="13" letter-spacing="2" fill="#59665e">US STOCK ANALYSIS</text>
+  <text x="64" y="240" font-family="Arial,sans-serif" font-size="60" letter-spacing="-2" fill="#24372e">Spot the signals.</text>
+  <text x="64" y="314" font-family="Arial,sans-serif" font-size="60" letter-spacing="-2" fill="#4056d9">See the bigger picture.</text>
+  <text x="64" y="384" font-family="Arial,sans-serif" font-size="21" fill="#59665e">Daily signals. Screening. Options activity.</text>
+  <rect x="64" y="432" width="216" height="47" rx="6" fill="#4056d9"/>
+  <text x="87" y="462" font-family="Arial,sans-serif" font-size="17" fill="#fff">Get started free</text>
+  <g transform="translate(781 199)">
+    <rect width="355" height="280" rx="10" fill="#fff" stroke="#c0cbbb"/>
+    <path d="M20 64H335M20 118H335M20 172H335M20 226H335" stroke="#d9dfd4" stroke-dasharray="3 4"/>
+    <text x="20" y="30" font-family="monospace" font-size="10" fill="#677268">SIGNAL OVERVIEW / D1</text>
+    <path d="M28 168L51 154 74 171 98 134 122 148 148 183 170 167 193 121 217 138 239 91 265 108 288 72 324 83" fill="none" stroke="#587c67" stroke-width="3"/>
+    <path d="M193 67V226" stroke="#4056d9" stroke-dasharray="3 4"/>
+    <circle cx="193" cy="121" r="19" fill="#ecedfb" stroke="#4056d9"/>
+    <circle cx="193" cy="121" r="5" fill="#4056d9"/>
+    <text x="20" y="259" font-family="monospace" font-size="9" fill="#677268">WORKFLOW ILLUSTRATION / NOT MARKET DATA</text>
+  </g>
+  <text x="64" y="590" font-family="Arial,sans-serif" font-size="15" fill="#59665e">See the bigger picture. Make your own call.</text>
+  <text x="1136" y="590" text-anchor="end" font-family="monospace" font-size="15" fill="#24372e">predixlab.com</text>
+</svg>
