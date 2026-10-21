@@ -8,6 +8,18 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { azureRouteKey, retiredRedirects, validateAzureRouteKeys, validateRetiredRedirects } from "./azure-routes.mjs";
 
 const origin = "https://predixlab.com";
+const productLinks = [
+  { path: "/us-stock-signals/", label: "Daily signals", card: "Explore daily stock signals" },
+  { path: "/quantitative-stock-screener/", label: "Stock screener", card: "Explore the stock screener" },
+  { path: "/unusual-options-activity/", label: "Options activity", card: "Explore unusual options activity" },
+];
+const navigationLinks = [
+  { path: "/#tools", label: "Tools" },
+  { path: "/pricing/", label: "Pricing" },
+  { path: "/docs/", label: "Docs" },
+  { path: "/blog/", label: "Blog" },
+  { path: "/about/", label: "About" },
+];
 const officialProfiles = [
   { name: "GitHub", url: "https://github.com/predixlab", icon: GithubLogo },
   { name: "X", url: "https://x.com/predixlab", icon: XLogo },
@@ -32,6 +44,14 @@ const textContent = (html) =>
   ).replace(/\s+/g, " ").trim();
 const tags = (html, name) =>
   [...html.matchAll(new RegExp(`<${name}\\b[^>]*>`, "g"))].map(([tag]) => attributes(tag));
+const assertVisibleLink = (html, href, label) => {
+  assert.ok(
+    [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].some(
+      ([, attrs, content]) => attributes(attrs).href === href && textContent(content) === label,
+    ),
+    `Missing visible link: ${label} -> ${href}`,
+  );
+};
 const only = (values, label) => {
   assert.equal(values.length, 1, `Expected one ${label}`);
   return values[0];
@@ -52,10 +72,10 @@ export const validateRobotsTxt = (robots) => {
   const trainingCrawlers = [
     "GPTBot", "CCBot", "Google-Extended", "ClaudeBot", "anthropic-ai", "Bytespider",
     "Applebot-Extended", "meta-externalagent", "Amazonbot", "cohere-training-data-crawler",
-    "PerplexityBot", "Diffbot", "omgili",
+    "Diffbot", "omgili",
   ].map((agent) => agent.toLowerCase());
   const searchCrawlers = [
-    "Googlebot", "Bingbot", "Baiduspider", "PetalBot", "GoogleOther", "YandexBot", "Sogou", "360Spider",
+    "Googlebot", "Bingbot", "Baiduspider", "PetalBot", "GoogleOther", "YandexBot", "Sogou", "360Spider", "PerplexityBot",
   ].map((agent) => agent.toLowerCase());
   const groups = [];
   const sitemaps = [];
@@ -100,6 +120,7 @@ export const validateRobotsTxt = (robots) => {
 
 export const validateSeoOutput = async (directory, expectedPages) => {
   const config = JSON.parse(await readFile(join(directory, "staticwebapp.config.json"), "utf8"));
+  assert.equal(config.trailingSlash, "auto", "Directory requests must redirect to trailing-slash URLs");
   assert.equal(config.navigationFallback, undefined, "No blanket SPA fallback");
   assert.deepEqual(config.responseOverrides?.["404"], { rewrite: "/404.html" }, "Preserve HTTP 404");
   const canonicalRules = config.routes.filter(
@@ -187,6 +208,27 @@ export const validateSeoOutput = async (directory, expectedPages) => {
   const logoWidth = logoPng.readUInt32BE(16);
   const logoHeight = logoPng.readUInt32BE(20);
   assert.ok(logoWidth >= 112 && logoHeight >= 112, "Organization logo must be at least 112x112");
+  assert.deepEqual(
+    await readFile(join(directory, "favicon.ico")),
+    await readFile(join(directory, "icons/icon.ico")),
+    "Root favicon must preserve the existing icon",
+  );
+  const appleIcon = await readFile(join(directory, "apple-touch-icon.png"));
+  assert.equal(appleIcon.subarray(0, 8).toString("hex"), "89504e470d0a1a0a", "Apple touch icon must be a PNG");
+  assert.equal(appleIcon.readUInt32BE(16), 180, "Apple touch icon width");
+  assert.equal(appleIcon.readUInt32BE(20), 180, "Apple touch icon height");
+  const manifest = JSON.parse(await readFile(join(directory, "site.webmanifest"), "utf8"));
+  assert.equal(manifest.name, "PredixLab");
+  assert.equal(manifest.short_name, "PredixLab");
+  assert.equal(manifest.start_url, "/");
+  assert.ok(["browser", "standalone"].includes(manifest.display));
+  assert.equal(manifest.theme_color, "#f5f6f1");
+  assert.equal(manifest.background_color, "#f5f6f1");
+  assert.ok(manifest.icons.length > 0, "Manifest requires icons");
+  for (const icon of manifest.icons) {
+    assert.ok(icon.src.startsWith("/"), "Manifest icons must be local");
+    await access(fileForPath(directory, icon.src));
+  }
 
   for (const pathname of [...publicPaths, ...notFoundPaths]) {
     const html = await readFile(fileForPath(directory, pathname), "utf8");
@@ -203,12 +245,6 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     if (!isNewPage) assert.doesNotMatch(decodeHtml(html), /\u7814\u7a76/, `Outdated Chinese copy: ${pathname}`);
     assert.doesNotMatch(html, /\/(?:en\/)?insights(?:\/|["?#])/, `Retired page reference: ${pathname}`);
     assert.doesNotMatch(html, /\/(?:methodology|open-source)\//, `Unpublished draft reference: ${pathname}`);
-    for (const section of [
-      only([...html.matchAll(/<div class="desktop-nav">([\s\S]*?)<\/div>/g)], `${pathname} desktop navigation`)[1],
-      only([...html.matchAll(/<nav class="mobile-nav"[^>]*>([\s\S]*?)<\/nav>/g)], `${pathname} mobile navigation`)[1],
-    ]) {
-      assert.deepEqual(tags(section, "a").slice(0, 5).map(({ href }) => href), ["/#tools", "/pricing/", "/docs/", "/blog/", "/about/"], `${pathname} flat nav order`);
-    }
     assert.match(html, /<div id="root">[\s\S]+<main\b/, `Empty application: ${pathname}`);
     const languageButton = only(
       tags(html, "button").filter((button) => button.class?.split(" ").includes("language-button")),
@@ -219,7 +255,28 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     assert.equal(languageButton.href, undefined, `Language changes must not navigate: ${pathname}`);
     const head = only([...html.matchAll(/<head>([\s\S]*?)<\/head>/g)], `${pathname} head`)[1];
     const main = only([...html.matchAll(/<main\b[^>]*>([\s\S]*?)<\/main>/g)], `${pathname} main`)[1];
+    const header = only([...html.matchAll(/<header\b[^>]*>([\s\S]*?)<\/header>/g)], `${pathname} header`)[1];
     const footer = only([...html.matchAll(/<footer\b[^>]*>([\s\S]*?)<\/footer>/g)], `${pathname} footer`)[1];
+    const navigation = [...header.matchAll(/<nav\b[^>]*>([\s\S]*?)<\/nav>/g)];
+    assert.equal(navigation.length, 2, `${pathname} desktop and mobile navigation`);
+    for (const [, nav] of navigation) {
+      const links = tags(nav, "a");
+      assert.deepEqual(
+        links.filter((link) => link.class?.split(" ").includes("nav-link")).map(({ href }) => href),
+        navigationLinks.map(({ path }) => path),
+        `${pathname} flat nav order`,
+      );
+      for (const { path, label } of navigationLinks) assertVisibleLink(nav, path, label);
+      assert.ok(!links.some((link) => productLinks.some(({ path }) => link.href === path)), `${pathname} no product header links`);
+      only(links.filter((link) => link.href === officialProfiles[0].url), `${pathname} GitHub navigation link`);
+      only(links.filter((link) => link.href?.startsWith("https://dashboard.predixlab.com/")), `${pathname} Dashboard navigation link`);
+    }
+    if (pathname === "/") {
+      for (const { path, card } of productLinks) assertVisibleLink(main, path, card);
+    } else if (pathname === "/pricing/") {
+      const table = only([...main.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/g)], "pricing comparison table")[1];
+      for (const { path, label } of productLinks) assertVisibleLink(table, path, label);
+    }
     assert.doesNotMatch(textContent(footer), /Open source \(Apache-2\.0\)|开源（Apache-2\.0）/, `Removed open-source status: ${pathname}`);
     assert.doesNotMatch(decodeHtml(footer), /contact@predixlab\.com/i, `Removed footer email: ${pathname}`);
     const footerLinks = [...footer.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)];
@@ -246,6 +303,10 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     const metas = tags(head, "meta");
     const meta = (name) => only(metas.filter((tag) => (tag.name ?? tag.property) === name), `${pathname} ${name}`).content;
     const links = tags(head, "link");
+    assert.equal(only(links.filter((link) => link.rel === "icon" && link.href === "/favicon.ico"), "root favicon").sizes, "48x48");
+    only(links.filter((link) => link.rel === "icon" && link.href === "/icons/icon.svg"), "SVG favicon");
+    assert.equal(only(links.filter((link) => link.rel === "apple-touch-icon"), "Apple touch icon").href, "/apple-touch-icon.png");
+    assert.equal(only(links.filter((link) => link.rel === "manifest"), "web manifest").href, "/site.webmanifest");
     only(
       tags(head, "script").filter((script) => script.type === "module" && script.src?.startsWith("/assets/")),
       `${pathname} hydration entry`,
@@ -280,8 +341,11 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     assert.ok(metas.every((tag) => !tag.property?.startsWith("article:")), pathname);
     assert.ok(metas.every((tag) => tag.property !== "og:locale:alternate"), pathname);
     assert.equal(meta("twitter:card"), "summary_large_image", pathname);
+    assert.equal(meta("twitter:site"), "@predixlab", pathname);
     assert.equal(meta("twitter:image"), meta("og:image"), pathname);
     assert.equal(meta("twitter:image:alt"), meta("og:image:alt"), pathname);
+    assert.notEqual(meta("og:image:alt"), title, "Image alt must describe the artwork, not repeat the page title");
+    assert.ok(meta("og:image:alt").length > 30, "Descriptive sharing-image alt text");
     assert.equal(meta("og:image:width"), "1200", pathname);
     assert.equal(meta("og:image:height"), "630", pathname);
     assert.equal(meta("theme-color"), "#f5f6f1", pathname);
@@ -297,7 +361,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     }
     for (const resource of [
       ...tags(head, "script").map((tag) => tag.src),
-      ...links.filter((link) => ["icon", "stylesheet", "preload", "modulepreload"].includes(link.rel)).map((link) => link.href),
+      ...links.filter((link) => ["icon", "apple-touch-icon", "manifest", "stylesheet", "preload", "modulepreload"].includes(link.rel)).map((link) => link.href),
       ...tags(main, "img").map((tag) => tag.src),
     ].filter((url) => url?.startsWith("/"))) {
       await access(fileForPath(directory, new URL(resource, origin).pathname));
@@ -368,16 +432,30 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     if (pathname === "/") assert.equal(breadcrumbs.length, 0, pathname);
     else {
       const items = only(breadcrumbs, `${pathname} breadcrumb`).itemListElement;
+      const visibleBreadcrumb = isNewPage ? only(
+        [...main.matchAll(/<nav\b[^>]*class="breadcrumb"[^>]*>([\s\S]*?)<\/nav>/g)],
+        `${pathname} visible breadcrumb`,
+      )[1] : null;
+      const name = isDocument ? textContent(only(
+        [...visibleBreadcrumb.matchAll(/<span aria-current="page">([\s\S]*?)<\/span>/g)],
+        `${pathname} document short title`,
+      )[1]) : productLinks.find((link) => link.path === pathname)?.label ?? {
+        "/pricing/": "Pricing", "/about/": "About", "/terms/": "Terms", "/privacy/": "Privacy",
+        "/docs/": "Docs", "/blog/": "Blog",
+      }[pathname];
+      assert.equal(typeof name, "string", `${pathname} missing short breadcrumb name`);
+      assert.deepEqual(items.map((item) => item.name), [
+        "Home",
+        ...(isDocument ? [isPost ? "Blog" : "Docs"] : []),
+        name,
+      ], `${pathname} short breadcrumbs`);
       assert.equal(items.at(-1).item, canonicalUrl, pathname);
       items.forEach((item, index) => {
         assert.equal(item.position, index + 1, pathname);
         assert.ok(entries.some(({ url }) => url === item.item), `Noncanonical breadcrumb: ${item.item}`);
       });
       if (isNewPage) {
-        const visible = textContent(only(
-          [...main.matchAll(/<nav\b[^>]*class="breadcrumb"[^>]*>([\s\S]*?)<\/nav>/g)],
-          `${pathname} visible breadcrumb`,
-        )[1]);
+        const visible = textContent(visibleBreadcrumb);
         for (const item of items) assert.ok(visible.includes(item.name), `${pathname} invisible breadcrumb`);
         assert.notEqual(items.at(-1).name, title, `${pathname} breadcrumb must use a short name`);
         assert.deepEqual(items.map(({ item }) => item), isPost || isDoc

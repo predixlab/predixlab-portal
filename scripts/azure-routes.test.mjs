@@ -46,6 +46,7 @@ test("generated deployment config applies immutable caching only to assets and f
     await readFile(new URL("../staticwebapp.config.json", import.meta.url), "utf8"),
   );
   const config = createAzureConfig(sourceConfig, publicPaths);
+  assert.equal(config.trailingSlash, "auto", "Preserve directory redirects in the generated config");
   const cacheRoutes = ["/assets/*", "/fonts/*"];
   assert.deepEqual(
     config.routes.filter(({ route }) => cacheRoutes.includes(route)),

@@ -51,10 +51,35 @@ const languageTags = { zh: "zh-CN", en: "en" } as const;
 const openGraphLocales = { zh: "zh_CN", en: "en_US" };
 const organizationId = `${config.siteUrl}/#organization`;
 const websiteId = `${config.siteUrl}/#website`;
-const socialImages: Partial<Record<PageKey, string>> = {
-  stockSignals: "/social/predixlab-us-stock-signals.png",
-  stockScreener: "/social/quantitative-stock-screener.png",
-  unusualOptions: "/social/unusual-options-activity.png",
+const defaultSocialImage = {
+  path: "/social/predixlab-research.png",
+  alt: {
+    en: "PredixLab overview with a price-chart illustration and a highlighted daily signal",
+    zh: "PredixLab 产品概览，配有价格图表示意图和高亮的每日信号",
+  },
+};
+const socialImages: Partial<Record<PageKey, typeof defaultSocialImage>> = {
+  stockSignals: {
+    path: "/social/predixlab-us-stock-signals.png",
+    alt: {
+      en: "PredixLab daily stock signals illustration with a price chart and a highlighted historical signal marker",
+      zh: "PredixLab 每日美股信号示意图，展示价格图表和高亮的历史信号标记",
+    },
+  },
+  stockScreener: {
+    path: "/social/quantitative-stock-screener.png",
+    alt: {
+      en: "PredixLab stock screener illustration with momentum, trend structure, and risk criteria",
+      zh: "PredixLab 选股器示意图，展示动量、趋势结构和风险筛选条件",
+    },
+  },
+  unusualOptions: {
+    path: "/social/unusual-options-activity.png",
+    alt: {
+      en: "PredixLab options activity diagram linking an underlying stock to call and put contracts, expirations, strikes, and changes in open interest",
+      zh: "PredixLab 期权异动示意图，将标的股票与看涨、看跌合约相连，列出到期日、行权价和持仓量变化",
+    },
+  },
 };
 const softwareProducts: Partial<Record<PageKey, ProductId>> = {
   stockSignals: "signals",
@@ -177,10 +202,23 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
   ];
 
   if (key !== "home") {
+    const names = {
+      stockSignals: copy.nav.stockSignals,
+      stockScreener: copy.footer.stockScreener,
+      unusualOptions: copy.footer.unusualOptions,
+      pricing: copy.nav.pricing,
+      about: copy.nav.about,
+      terms: copy.nav.terms,
+      privacy: copy.nav.privacy,
+      docs: copy.nav.docs,
+      doc: document?.shortTitle ?? seo.title,
+      blog: copy.nav.blog,
+      blogPost: document?.shortTitle ?? seo.title,
+    };
     const items = [{ name: copy.nav.home, item: pageUrl("/") }];
-    if (key === "blogPost") items.push({ name: "Blog", item: pageUrl("/blog/") });
-    if (key === "doc") items.push({ name: "Docs", item: pageUrl("/docs/") });
-    items.push({ name: document?.shortTitle ?? (key === "blog" ? "Blog" : seo.title), item: canonicalUrl });
+    if (key === "blogPost") items.push({ name: copy.nav.blog, item: pageUrl("/blog/") });
+    if (key === "doc") items.push({ name: copy.nav.docs, item: pageUrl("/docs/") });
+    items.push({ name: names[key], item: canonicalUrl });
     const breadcrumbId = `${canonicalUrl}#breadcrumb`;
     webpage.breadcrumb = { "@id": breadcrumbId };
     graph.push({
@@ -287,6 +325,8 @@ export const getPageSeo = (pathname: string, language: SiteLanguage = DEFAULT_SI
   } else {
     meta = translations[language].meta[key];
   }
+  const image = (page && socialImages[page.key]) || defaultSocialImage;
+  const post = document?.kind === "post" ? document : undefined;
   const seo: PageSeo = {
     pageKey: key,
     language,
@@ -296,12 +336,8 @@ export const getPageSeo = (pathname: string, language: SiteLanguage = DEFAULT_SI
     robots: page ? "index, follow, max-image-preview:large" : "noindex, follow",
     canonicalUrl: page ? pageUrl(page.path) : null,
     alternates: [],
-    imageUrl: absoluteUrl(
-      (document?.kind === "post" && document.image) || (page && socialImages[page.key]) || "/social/predixlab-research.png",
-    ),
-    imageAlt: document?.kind === "post"
-      ? document.imageAlt ?? 'PredixLab stock-analysis workflow illustration with a line chart and highlighted signal, alongside "Spot the signals. See the bigger picture."'
-      : meta.title,
+    imageUrl: absoluteUrl(post?.image ?? image.path),
+    imageAlt: post?.imageAlt ?? image.alt[language],
     openGraphType: "website",
     openGraphLocale: openGraphLocales[language],
     structuredData: null,
@@ -338,6 +374,7 @@ export const renderSeoHead = (seo: PageSeo): string => {
     meta("og:image:height", "630", true),
     meta("og:image:alt", seo.imageAlt, true),
     meta("twitter:card", "summary_large_image"),
+    meta("twitter:site", "@predixlab"),
     meta("twitter:title", seo.title),
     meta("twitter:description", seo.description),
     meta("twitter:image", seo.imageUrl),

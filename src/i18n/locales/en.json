@@ -40,6 +40,9 @@
   "nav": {
     "home": "Home",
     "tools": "Tools",
+    "stockSignals": "Daily signals",
+    "terms": "Terms",
+    "privacy": "Privacy",
     "pricing": "Pricing",
     "docs": "Docs",
     "blog": "Blog",

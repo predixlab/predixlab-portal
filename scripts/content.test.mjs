@@ -22,7 +22,7 @@ const [
   { render },
   { default: App },
   { createSiteI18n },
-  { homeContent },
+  { homeContent, faqContent },
 ] = await Promise.all([
   server.ssrLoadModule("/src/content/markdown.ts"),
   server.ssrLoadModule("/src/content/documents.ts"),
@@ -318,9 +318,10 @@ for (const [path, document] of [
     assert.doesNotMatch(page.appHtml, /real[- ]?time|实时|\/learn\/|\/zh\/|[?&]lng=|<!--\s*Reviewer note|\[待核实\]/i);
     const json = JSON.parse(page.headHtml.match(/type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
     const breadcrumb = json["@graph"].find((node) => node["@type"] === "BreadcrumbList");
-    assert.equal(breadcrumb.itemListElement.at(-1).name, document.shortTitle);
+    assert.deepEqual(breadcrumb.itemListElement.map(({ name }) => name), [
+      "Home", document.kind === "doc" ? "Docs" : "Blog", document.shortTitle,
+    ]);
     if (document.kind === "doc") {
-      assert.deepEqual(breadcrumb.itemListElement.map(({ name }) => name), ["Home", "Docs", document.shortTitle]);
       assert.match(page.appHtml, /class="docs-sidebar"/);
       const sidebar = page.appHtml.match(/<nav class="docs-sidebar"[^>]*>([\s\S]*?)<\/nav>/)[1];
       for (const doc of docs) {
@@ -355,9 +356,42 @@ test("article schemas reference the shared organization and use the existing 120
     assert.equal(article.datePublished, post.date);
     assert.equal(article.dateModified, post.updated);
     assert.deepEqual(article.image, { "@type": "ImageObject", url: seo.imageUrl, width: 1200, height: 630 });
-    assert.match(seo.imageAlt, /workflow illustration with a line chart and highlighted signal/);
+    assert.equal(seo.imageUrl, getPageSeo("/").imageUrl);
+    assert.equal(seo.imageAlt, getPageSeo("/").imageAlt);
     assert.equal(seo.rssUrl, "https://predixlab.com/blog/rss.xml");
   }
+});
+
+test("posts retain custom sharing images and alt text in English metadata and article schemas", () => {
+  const post = blogPosts[0];
+  const original = { image: post.image, imageAlt: post.imageAlt };
+  try {
+    post.image = "/social/predixlab-us-stock-signals.png";
+    post.imageAlt = 'Custom chart illustration with a "daily signal" marker';
+    const seo = getPageSeo(post.path, "zh");
+    assert.equal(seo.language, "en");
+    assert.equal(seo.title, post.title);
+    assert.equal(seo.description, post.description);
+    assert.equal(seo.imageUrl, `https://predixlab.com${post.image}`);
+    assert.equal(seo.imageAlt, post.imageAlt);
+    const head = renderSeoHead(seo);
+    for (const name of ["og:image:alt", "twitter:image:alt"]) {
+      assert.ok(head.includes(`${name}" content="${renderToStaticMarkup(post.imageAlt)}"`));
+    }
+    assert.equal(seo.structuredData["@graph"].find((node) => node["@type"] === "BlogPosting").image.url, seo.imageUrl);
+  } finally {
+    Object.assign(post, original);
+  }
+});
+
+test("approved Chinese risk disclaimers and the daily-data FAQ remain unchanged", () => {
+  for (const document of [...docs, ...blogPosts]) {
+    assert.ok(document.disclaimerHtml.includes("本页内容仅用于信息和研究参考，不构成投资建议。投资有风险，过往表现不代表未来结果。"));
+  }
+  assert.equal(faqContent.en.find(({ question }) => question === "Is the data real-time?").answer,
+    "No. PredixLab uses daily price data and daily signal updates, not live quotes or intraday trade alerts. Check the date shown in the dashboard to see how current each result is.");
+  assert.equal(faqContent.zh.find(({ question }) => question === "数据是实时的吗？").answer,
+    "不是。PredixLab 以日线行情和每日信号为主，不提供实时行情或盘中交易提醒。数据更新到哪一天，请以工作台显示的日期为准。");
 });
 
 test("self-hosting schema has one Apache-2.0 SoftwareSourceCode per repository table row", () => {
@@ -446,6 +480,7 @@ test("blog index renders grouped posts, short breadcrumbs, CollectionPage and an
     assert.ok(page.appHtml.includes(`<time dateTime="${post.date}">`));
   }
   const graph = page.seo.structuredData["@graph"];
+  assert.deepEqual(graph.find((node) => node["@type"] === "BreadcrumbList").itemListElement.map(({ name }) => name), ["Home", "Blog"]);
   assert.equal(graph.filter((node) => node["@type"] === "CollectionPage").length, 1);
   const list = graph.find((node) => node["@type"] === "ItemList");
   assert.deepEqual(list.itemListElement.map(({ url }) => url), blogPosts.map(({ path }) => `https://predixlab.com${path}`));

@@ -87,6 +87,8 @@ Keep descriptions grounded in shipped tools. Never imply that daily data is real
 
 Build-time metadata and client navigation use the same SEO definitions. Each indexable page has one canonical trailing-slash URL, Open Graph/Twitter metadata, and relevant structured data. Switching languages updates page content, document language, metadata and structured data without changing the canonical URL. There are no language-specific URLs or hreflang alternates; English is the default indexed content, and Chinese is an in-page presentation choice rather than a separately indexable version. Organization, website, page, breadcrumb, software, and FAQ entities describe the actual visible content; do not add unverified ratings or performance claims.
 
+Header and mobile navigation stay flat: Tools (`/#tools`), Pricing, Docs, Blog, About, plus GitHub and Dashboard links. Product pages remain linked from the homepage cards, pricing comparison table, and footer. Sharing images use image-specific localized alt text; English-only blog posts can override both the image and its alt text in frontmatter. Breadcrumbs use short localized page names, with English-only `Home > Docs > <shortTitle>` and `Home > Blog > <shortTitle>` hierarchies for articles.
+
 The Organization entity uses those official profiles as `sameAs` and the existing
 512×512 transparent PNG (`/icons/icon-transparent.png`) as its logo. Build validation
 checks the footer links, open-source status, profile identities, and PNG logo dimensions.
@@ -118,7 +120,7 @@ VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 
 Without this value, no analytics script or consent prompt is loaded. Production deployment reads the same value from the `VITE_GA_MEASUREMENT_ID` GitHub Actions secret.
 
-With this value, the Google tag loads on every page, before the visitor makes a cookie choice. Analytics storage defaults to `denied`, so GA4 can send cookieless measurement requests. A saved or new acceptance grants analytics storage; declining or withdrawing consent restores `denied` without disabling cookieless measurement. Consent changes do not manually resend page views. Advertising storage, advertising user data and ad personalization always remain denied, and Google signals are disabled. Cookieless requests still transmit data to Google: this configuration does not itself establish a consent exemption. Confirm the applicable legal basis before deploying it.
+With this value, consent defaults and page-view commands are queued synchronously on every page. The Google tag loads when the browser is idle (with a two-second timeout), or in a timer after window load if idle callbacks are unavailable; it does not wait for a cookie choice. Analytics storage defaults to `denied`, so GA4 can send cookieless measurement requests. A saved or new acceptance grants analytics storage; declining or withdrawing consent restores `denied` without disabling cookieless measurement. Consent changes do not manually resend page views. Advertising storage, advertising user data and ad personalization always remain denied, and Google signals are disabled. Cookieless requests still transmit data to Google: this configuration does not itself establish a consent exemption. Confirm the applicable legal basis before deploying it.
 
 For page-view-focused measurement, configure the GA4 property as follows:
 
@@ -165,10 +167,20 @@ existing caching, with no global long-lived cache header.
 Azure normalizes a directory route with and without its trailing slash to the
 same configuration key. The generated configuration therefore has one rewrite
 per public page, not a second slashless redirect rule that Azure would reject.
-Slashless directory requests serve the same content with a trailing-slash
-canonical URL in the HTML; explicit `index.html` aliases redirect to that URL.
+Top-level `trailingSlash: "auto"` makes slashless directory requests 301 to the
+trailing-slash URL; explicit `index.html` aliases also redirect to that URL.
+File requests such as `/robots.txt`, `/sitemap.xml`, verification text files,
+scripts, and images are served without a trailing-slash redirect.
 Build validation checks route uniqueness after Azure-style slash normalization,
 as well as not-found responses and index-alias redirect behavior.
+
+After a successful production deployment from `main` (push or manual dispatch),
+the workflow notifies IndexNow of the canonical URLs in `dist/sitemap.xml` using
+the existing public verification key file. Pull-request previews never notify
+IndexNow. Notifications are best-effort, time out after 15 seconds, and only warn
+on request or local-file errors; they cannot fail deployment.
+Preview the payload with `npm run build && npm run indexnow -- --dry-run`.
+To submit it manually after deployment, run `npm run indexnow` without `--dry-run`.
 
 ## Operating boundaries
 

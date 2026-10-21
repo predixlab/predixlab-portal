@@ -77,7 +77,6 @@ export const homeContent = {
     toolsTitle: ["看盘、选股、查异动，", "都在一个工作台。"],
     toolsDescription:
       "先看大盘，再筛选股票，或直接查看某只股票的期权异动。常用信息集中展示，少在多个页面之间来回查找。",
-    toolsLink: "了解详情",
     methodEyebrow: "02 / 如何看待信号",
     methodTitle: ["信号只是参考，", "判断还要结合行情。"],
     methodDescription:
@@ -116,7 +115,6 @@ export const homeContent = {
     toolsTitle: ["Your daily market review.", "All in one place."],
     toolsDescription:
       "Start with the broader market, narrow your stock list, or look into options activity for a particular company. Spend less time switching between sources.",
-    toolsLink: "Learn more",
     methodEyebrow: "02 / USING THE SIGNALS",
     methodTitle: ["A signal is a starting point.", "Put it in context."],
     methodDescription:
