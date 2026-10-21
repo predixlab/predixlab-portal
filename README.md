@@ -14,6 +14,9 @@ api.predixlab.com       -> Application API
 
 The Portal and Dashboard URLs are source constants in [`src/config.ts`](src/config.ts). Dashboard links use that module's shared referral helper. The Portal does not call the application API.
 
+The shared footer links to PredixLab's official GitHub and X profiles using URLs
+from the same configuration and states that the project is open source under Apache-2.0.
+
 ## Site content
 
 | Route | Purpose |
@@ -54,6 +57,10 @@ Keep descriptions grounded in shipped tools. Never imply that daily data is real
 [`src/routing.ts`](src/routing.ts) is the public route inventory. The production build renders every page in English to full HTML before hydration: headings, body copy, internal links, FAQs, and legal documents are not dependent on JavaScript for discovery. The client hydrates that same English content before restoring a stored language preference, avoiding mismatched server/client markup.
 
 Build-time metadata and client navigation use the same SEO definitions. Each indexable page has one canonical trailing-slash URL, Open Graph/Twitter metadata, and relevant structured data. Switching languages updates page content, document language, metadata and structured data without changing the canonical URL. There are no language-specific URLs or hreflang alternates; English is the default indexed content, and Chinese is an in-page presentation choice rather than a separately indexable version. Organization, website, page, breadcrumb, software, and FAQ entities describe the actual visible content; do not add unverified ratings or performance claims.
+
+The Organization entity uses those official profiles as `sameAs` and the existing
+512×512 transparent PNG (`/icons/icon-transparent.png`) as its logo. Build validation
+checks the footer links, open-source status, profile identities, and PNG logo dimensions.
 
 The sitemap is generated from the route inventory and contains only the 8 unprefixed canonical URLs. Do not maintain a separate list of URLs or language alternates. The not-found document is excluded from indexing. The Azure configuration serves actual 404 responses rather than rewriting arbitrary URLs to the homepage. Its global error override serves the default-English `/404.html`, which supports the same in-page language choice. Unknown, language-prefixed and retired paths remain 404s.
 

@@ -1,6 +1,8 @@
 export const config = {
   siteUrl: "https://predixlab.com",
   dashboardUrl: "https://dashboard.predixlab.com",
+  githubUrl: "https://github.com/predixlab",
+  xUrl: "https://x.com/predixlab",
 };
 
 export const dashboardLink = (path = "/", source = "portal") => {

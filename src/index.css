@@ -339,6 +339,7 @@ html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line
 .footer-brand .footer-manifesto { font-size: 1.1rem; line-height: 1.5; margin-top: 1.3rem; font-weight: 500; }
 .footer-contact { display: inline-flex; align-items: center; gap: 0.7rem; min-height: 44px; margin-top: 1rem; color: #c8d6c1; font-size: 0.75rem; text-decoration: none; }
 .footer-contact svg { width: 16px; height: 16px; }
+.footer-profiles { display: flex; flex-wrap: wrap; column-gap: 1.5rem; }
 .footer-column h2 { font-size: 0.72rem; font-weight: 500; letter-spacing: 0; color: #b2c0b0; margin: 0.7rem 0 1rem; }
 .footer-column ul { list-style: none; padding: 0; margin: 0; }
 .footer-column a, .footer-link-button { display: inline-flex; align-items: center; min-height: 39px; font-size: 0.77rem; text-decoration: none; color: #e5eddf; }
