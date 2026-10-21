@@ -5,6 +5,7 @@ import { renderToString } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
 import { StaticRouter } from "react-router-dom";
 import { createServer } from "vite";
+import { validateFaqMarkup, validateJsonLd } from "./validate-seo.mjs";
 
 const server = await createServer({
   appType: "custom",
@@ -19,6 +20,10 @@ const [
   { getPageSeo, renderSeoHead },
   { sitePages },
   { getContentForPath },
+  { default: App },
+  { productContent, productPaths: toolPaths },
+  { faqContent },
+  { pricingContent },
 ] = await Promise.all([
   server.ssrLoadModule("/src/components/Layout.tsx"),
   server.ssrLoadModule("/src/pages/HomePage.tsx"),
@@ -26,6 +31,10 @@ const [
   server.ssrLoadModule("/src/seo.ts"),
   server.ssrLoadModule("/src/routing.ts"),
   server.ssrLoadModule("/src/content/documents.ts"),
+  server.ssrLoadModule("/src/App.tsx"),
+  server.ssrLoadModule("/src/content/products.ts"),
+  server.ssrLoadModule("/src/content/site.ts"),
+  server.ssrLoadModule("/src/content/company.ts"),
 ]);
 
 const productPaths = ["/us-stock-signals/", "/quantitative-stock-screener/", "/unusual-options-activity/"];
@@ -57,8 +66,51 @@ for (const language of ["en", "zh"]) {
       } else {
         assert.equal(scripts.length, 1, path);
         assert.deepEqual(JSON.parse(scripts[0][1]), seo.structuredData, path);
+        const graph = seo.structuredData["@graph"];
+        assert.equal(graph.find((item) => item["@type"] === "WebSite").inLanguage, "en", path);
+        for (const node of graph.filter((item) => item.inLanguage && item["@type"] !== "WebSite")) {
+          assert.equal(node.inLanguage, seo.htmlLanguage, `${path} ${node["@type"]}`);
+        }
+        if (language === "en") validateJsonLd(renderSeoHead(seo), path);
+        if (!["/", ...productPaths].includes(path)) {
+          assert.ok(graph.every((item) => item["@type"] !== "FAQPage"), path);
+        }
       }
     }
+  });
+
+  test(`${language}: homepage and tool FAQ schemas exactly match their visible localized questions`, () => {
+    for (const { path, questions } of [
+      { path: "/", questions: faqContent[language] },
+      ...Object.entries(toolPaths).map(([id, path]) => ({
+        path, questions: productContent[language][id].questions,
+      })),
+    ]) {
+      const seo = getPageSeo(path, language);
+      const graph = seo.structuredData["@graph"];
+      const faq = graph.find((item) => item["@type"] === "FAQPage");
+      assert.deepEqual(faq.mainEntity, questions.map(({ question, answer }) => ({
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: { "@type": "Answer", text: answer },
+      })), path);
+      if (path !== "/") assert.equal(faq.mainEntity.length, 2, path);
+      const html = renderToString(createElement(
+        I18nextProvider, { i18n: createSiteI18n(language) },
+        createElement(StaticRouter, { location: path }, createElement(App)),
+      ));
+      validateFaqMarkup(html, graph, seo.canonicalUrl);
+    }
+  });
+
+  test(`${language}: pricing retains its visible FAQ without adding FAQPage`, () => {
+    const html = renderToString(createElement(
+      I18nextProvider, { i18n: createSiteI18n(language) },
+      createElement(StaticRouter, { location: "/pricing/" }, createElement(App)),
+    ));
+    assert.ok(pricingContent[language].questions.length > 0);
+    assert.equal([...html.matchAll(/<details class="question">/g)].length, pricingContent[language].questions.length);
+    validateFaqMarkup(html, getPageSeo("/pricing/", language).structuredData["@graph"], "https://predixlab.com/pricing/");
   });
 
   test(`${language}: every page has short breadcrumbs, with English-only Docs and Blog hierarchies`, () => {
@@ -106,8 +158,9 @@ for (const language of ["en", "zh"]) {
   });
 
   test(`${language}: desktop and mobile keep the flat Docs navigation and homepage cards keep descriptive product links`, () => {
+    const i18n = createSiteI18n(language);
     const html = renderToString(
-      createElement(I18nextProvider, { i18n: createSiteI18n(language) },
+      createElement(I18nextProvider, { i18n },
         createElement(StaticRouter, { location: "/" },
           createElement(Layout, null, createElement(HomePage)))),
     );
@@ -136,5 +189,54 @@ for (const language of ["en", "zh"]) {
     });
     assert.match(html, /class="research-scene is-paused"/, "Keep the scene in the server-rendered HTML");
     assert.doesNotMatch(html, /Switched to client rendering|did not finish this Suspense boundary/);
+    const footer = html.match(/<footer\b[^>]*>([\s\S]*?)<\/footer>/)[1];
+    assert.doesNotMatch(footer, /<h[1-6]\b/i);
+    assert.deepEqual(
+      [...footer.matchAll(/<p class="footer-column-title">([^<]+)<\/p>/g)].map(([, text]) => text),
+      ["tools", "explore", "legal"].map((key) => renderToString(i18n.t(`footer.${key}`))),
+    );
   });
 }
+
+test("FAQ artifact validation decodes entities and rejects missing, extra or mismatched schema", () => {
+  const canonicalUrl = "https://predixlab.com/unusual-options-activity/";
+  const webpage = {
+    "@type": "WebPage", "@id": `${canonicalUrl}#webpage`,
+    hasPart: [{ "@id": `${canonicalUrl}#other` }, { "@id": `${canonicalUrl}#faq` }],
+  };
+  const faq = {
+    "@type": "FAQPage", "@id": `${canonicalUrl}#faq`,
+    isPartOf: { "@id": webpage["@id"] },
+    mainEntity: [{
+      "@type": "Question", name: 'Is "A & B" <real>?',
+      acceptedAnswer: { "@type": "Answer", text: "No. It's > daily." },
+    }],
+  };
+  const html = '<details class="question"><summary><span>Is &quot;A &amp; B&quot; &lt;real&gt;?</span></summary><p>No. It&#x27;s &gt; daily.</p></details>';
+  assert.doesNotThrow(() => validateFaqMarkup(html, [webpage, faq], canonicalUrl));
+  assert.throws(() => validateFaqMarkup(html, [webpage], canonicalUrl), /Expected one.*FAQPage/);
+  assert.throws(() => validateFaqMarkup("", [webpage, faq], canonicalUrl), /requires visible FAQs/);
+  assert.throws(() => validateFaqMarkup(html, [webpage, { ...faq, mainEntity: [] }], canonicalUrl), /FAQ count and text/);
+  assert.throws(() => validateFaqMarkup(html, [webpage, {
+    ...faq, mainEntity: [...faq.mainEntity, ...faq.mainEntity],
+  }], canonicalUrl), /FAQ count and text/);
+  assert.throws(() => validateFaqMarkup(html, [webpage, {
+    ...faq, mainEntity: [{ ...faq.mainEntity[0], name: "Wrong question" }],
+  }], canonicalUrl), /FAQ count and text/);
+  assert.throws(() => validateFaqMarkup(html, [webpage, {
+    ...faq, mainEntity: [{
+      ...faq.mainEntity[0], acceptedAnswer: { "@type": "Answer", text: "Wrong answer" },
+    }],
+  }], canonicalUrl), /FAQ count and text/);
+  assert.throws(() => validateFaqMarkup(html, [{ ...webpage, hasPart: [] }, faq], canonicalUrl), /must link to FAQPage/);
+});
+
+test("artifact validation parses every JSON-LD block, including body scripts, and rejects Chinese inLanguage", () => {
+  const script = (schema) => `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
+  const html = `<head>${script({ "@type": "WebSite", inLanguage: "en" })}</head><body>${script({ inLanguage: "en" })}</body>`;
+  assert.equal(validateJsonLd(html, "/").length, 2);
+  assert.throws(() => validateJsonLd(`${html}<script type="application/ld+json">{invalid}</script>`, "/"), SyntaxError);
+  for (const inLanguage of ["zh-CN", ["en", "zh-CN"]]) {
+    assert.throws(() => validateJsonLd(`${html}${script({ "@graph": [{ inLanguage }] })}`, "/"), /inLanguage must be en/);
+  }
+});

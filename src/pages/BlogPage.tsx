@@ -31,10 +31,10 @@ const BlogPage = () => (
                 <p>{post.description}</p>
               </article>
             ))}
-            <ContentDisclaimer />
           </div>
         </section>
       ))}
+      <ContentDisclaimer />
     </div>
   </div>
 );
