@@ -93,7 +93,7 @@ It doesn't meet every item on the checklist below, and the gaps matter:
 
 The repository's tests check several of these rules automatically. One example: appending future data must not change past features or events.
 
-Walk-forward validation doesn't make a model good, and it can't promise that patterns from the past will continue. What it does is make the evidence honest: the results you're looking at come from dates the model didn't see during training.
+Walk-forward validation doesn't make a model good, and it can't promise that patterns from the past will continue. What it does is keep the test fair: each result comes from dates the model didn't see during training. It can't fix problems in the data itself, such as missing delisted stocks.
 
 ## A checklist before you trust a result
 
@@ -105,9 +105,3 @@ Walk-forward validation doesn't make a model good, and it can't promise that pat
 - Do results hold up fold by fold, not just on average?
 
 If you can't answer yes to all of them, treat the backtest as a draft, not as evidence.
-
----
-
-*For information and independent analysis only — not investment advice. Data can be delayed or wrong, models can fail, and past performance doesn't predict future results.*
-
-本页内容仅用于信息和研究参考，不构成投资建议。投资有风险，过往表现不代表未来结果。

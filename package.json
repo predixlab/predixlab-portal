@@ -8,6 +8,7 @@
     "dev": "vite",
     "test": "node --test scripts/*.test.mjs",
     "build": "tsc && node scripts/prerender.mjs",
+    "indexnow": "node scripts/indexnow.mjs",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
@@ -35,6 +36,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "5.2.0",
     "eslint-plugin-react-refresh": "^0.4.4",
+    "fast-xml-parser": "^5.11.2",
     "globals": "^14.0.0",
     "postcss": "^8.4.32",
     "tailwindcss": "4.1.12",

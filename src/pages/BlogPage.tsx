@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import ContentDisclaimer from "@/components/ContentDisclaimer";
 import { blogContent, formatPostDate, groupBlogPosts } from "@/content/blog";
 import { blogPosts } from "@/content/documents";
 import { headingId } from "@/content/markdown";
@@ -12,7 +13,7 @@ const BlogPage = () => (
           <span aria-current="page">Blog</span>
         </nav>
         <p className="eyebrow">PREDIXLAB / BLOG</p>
-        <h1>Blog</h1>
+        <h1>Guides to backtesting and validating stock signals</h1>
         <p>{blogContent.description}</p>
         <p>Read <Link to="/docs/how-it-works/">how PredixLab builds and tests its signals</Link>, including <Link to="/docs/limitations/">known limitations</Link>.</p>
         <a className="text-link" href="/blog/rss.xml">Subscribe via RSS</a>
@@ -30,6 +31,7 @@ const BlogPage = () => (
                 <p>{post.description}</p>
               </article>
             ))}
+            <ContentDisclaimer />
           </div>
         </section>
       ))}

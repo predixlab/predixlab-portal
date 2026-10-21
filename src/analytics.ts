@@ -69,12 +69,6 @@ export const enableGoogleAnalytics = () => {
     });
   }
 
-  const script = document.createElement("script");
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
-  script.dataset.predixlabAnalytics = "true";
-  document.head.appendChild(script);
-
   window.gtag("js", new Date());
   window.gtag("config", measurementId, {
     send_page_view: true,
@@ -83,4 +77,19 @@ export const enableGoogleAnalytics = () => {
     allow_ad_personalization_signals: false,
   });
   initialized = true;
+
+  const insertScript = () => {
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
+    script.dataset.predixlabAnalytics = "true";
+    document.head.appendChild(script);
+  };
+  if (typeof window.requestIdleCallback === "function") {
+    window.requestIdleCallback(insertScript, { timeout: 2000 });
+  } else if (document.readyState === "complete") {
+    window.setTimeout(insertScript, 0);
+  } else {
+    window.addEventListener("load", () => window.setTimeout(insertScript, 0), { once: true });
+  }
 };

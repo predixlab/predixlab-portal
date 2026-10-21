@@ -8,6 +8,18 @@ import { dashboardLink } from "@/config";
 import { useSiteLanguage } from "@/hooks/useSiteLanguage";
 
 const productIds: ProductId[] = ["signals", "screener", "options"];
+const methodLinkLabels = {
+  en: {
+    signals: "How the signals are built and tested",
+    screener: "Where the screener data comes from and when it updates",
+    options: "How options activity is detected and scored",
+  },
+  zh: {
+    signals: "信号如何构建和检验",
+    screener: "选股器数据来源与更新时间",
+    options: "期权异动如何识别和评分",
+  },
+};
 
 const ProductPage = ({ product }: { product: ProductId }) => {
   const { language, isEnglish, localPath } = useSiteLanguage();
@@ -72,7 +84,8 @@ const ProductPage = ({ product }: { product: ProductId }) => {
           <div className="section-heading"><p className="eyebrow">{isEnglish ? "03 / KEEP IN MIND" : "03 / 使用前请注意"}</p><h2>{copy.boundaryTitle}</h2></div>
           <div>
             <ul className="boundary-list">{copy.boundaries.map((item) => <li key={item}><span aria-hidden="true">↗</span>{item}</li>)}</ul>
-            <p><Link className="text-link" to={localPath("/docs/how-it-works/")}>{isEnglish ? "How the signals are built and tested" : "信号如何构建和检验"}</Link></p>
+            <p><Link className="text-link" to={localPath("/docs/how-it-works/")}>{methodLinkLabels[language][product]}</Link></p>
+            <p><Link className="text-link" to={localPath("/docs/limitations/")}>{isEnglish ? "Known limitations" : "已知局限"}</Link></p>
           </div>
         </div>
       </section>

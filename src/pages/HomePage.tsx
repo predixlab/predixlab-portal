@@ -54,7 +54,7 @@ const HomePage = () => {
                     <h3>{item.name}</h3>
                     <p>{item.shortDescription}</p>
                     <ul className="tag-list">{item.tags.map((tag) => <li key={tag}>{tag}</li>)}</ul>
-                    <Link to={localPath(productPaths[product])} className="text-link" aria-label={`${copy.toolsLink}: ${item.name}`}>{copy.toolsLink}<ArrowUpRight aria-hidden="true" /></Link>
+                    <Link to={localPath(productPaths[product])} className="text-link">{item.linkLabel}<ArrowUpRight aria-hidden="true" /></Link>
                   </div>
                   <div className="product-story-visual">
                     <ProductIllustration product={product} />

@@ -2,7 +2,7 @@ import { config } from "@/config";
 import { escapeXml, type BlogPost } from "@/content/markdown";
 
 export const blogContent = {
-  title: "PredixLab Blog | Backtesting, Validation & Stock Analysis",
+  title: "PredixLab blog | Backtesting, validation & stock analysis",
   description: "Practical guides to backtesting, walk-forward validation, and the limitations of stock-signal research.",
 };
 
@@ -31,6 +31,7 @@ export const formatPostDate = (date: string) => new Intl.DateTimeFormat("en", {
 
 export const renderBlogRss = (posts: BlogPost[]) => {
   const blogUrl = new URL("/blog/", config.siteUrl).href;
+  const latestDate = posts.flatMap((post) => [post.updated, post.date]).sort().pop();
   const items = [...posts].sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug))
     .map((post) => {
       const url = escapeXml(new URL(post.path, config.siteUrl).href);
@@ -51,6 +52,8 @@ export const renderBlogRss = (posts: BlogPost[]) => {
     `    <title>${escapeXml(blogContent.title)}</title>`,
     `    <link>${escapeXml(blogUrl)}</link>`,
     `    <description>${escapeXml(blogContent.description)}</description>`,
+    "    <language>en</language>",
+    ...(latestDate ? [`    <lastBuildDate>${new Date(`${latestDate}T00:00:00Z`).toUTCString()}</lastBuildDate>`] : []),
     `    <atom:link href="${escapeXml(new URL("rss.xml", blogUrl).href)}" rel="self" type="application/rss+xml" />`,
     ...items,
     "  </channel>",

@@ -93,9 +93,3 @@ Where it falls short, by the standards in this article:
 The repository's tests include the "append future data" check described above.
 
 The full list is in the [Known limitations](/docs/limitations/) doc. None of these steps makes a strategy profitable. Closing the leaks makes a backtest a fairer test of an idea, which is the most a backtest can do.
-
----
-
-*For information and independent analysis only — not investment advice. Data can be delayed or wrong, models can fail, and past performance doesn't predict future results.*
-
-本页内容仅用于信息和研究参考，不构成投资建议。投资有风险，过往表现不代表未来结果。
