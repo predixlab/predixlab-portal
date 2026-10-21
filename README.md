@@ -134,7 +134,7 @@ npm run build
 npm run preview
 ```
 
-`test` runs isolated language-preference, canonical-routing, crawler-policy, bilingual pricing-rendering, analytics consent-mode, Markdown/frontmatter, blog grouping, RSS, sitemap date, and Azure redirect/header regression checks without contacting Google.
+`test` runs isolated language-preference, canonical-routing, crawler-policy, bilingual homepage-copy and pricing-rendering, analytics consent-mode, Markdown/frontmatter, blog grouping, RSS, sitemap date, and Azure redirect/header regression checks without contacting Google. Homepage checks preserve the approved two-line H1, subhead, localized metadata, and derived schema descriptions; build validation requires exactly one H1 with the approved copy in the prerendered HTML.
 
 `build` type-checks, bundles, and prerenders the deployable static site into `dist/`. It also verifies full English page bodies, canonical URLs, in-page language buttons, internal links, structured data, sharing images, and routing invariants. Regression checks require the retired insights 301s, forbid links to those URLs, reject language-specific sitemap entries and unapproved language redirects, and check article dates, short breadcrumbs, risk disclaimers, RSS discovery and its content-type rule. Rerun that artifact check independently with `node scripts/validate-seo.mjs`.
 

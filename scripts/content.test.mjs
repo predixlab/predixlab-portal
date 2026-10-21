@@ -18,10 +18,11 @@ const [
   { blogPosts, contentPages },
   { groupBlogPosts, relatedBlogPosts, renderBlogRss, blogContent },
   { sitePages },
-  { getPageSeo, renderSitemap },
+  { getPageSeo, renderSeoHead, renderSitemap },
   { render },
   { default: App },
   { createSiteI18n },
+  { homeContent },
 ] = await Promise.all([
   server.ssrLoadModule("/src/content/markdown.ts"),
   server.ssrLoadModule("/src/content/documents.ts"),
@@ -31,6 +32,7 @@ const [
   server.ssrLoadModule("/src/entry-server.tsx"),
   server.ssrLoadModule("/src/App.tsx"),
   server.ssrLoadModule("/src/i18n/index.ts"),
+  server.ssrLoadModule("/src/content/site.ts"),
 ]);
 
 const fixture = `---
@@ -212,7 +214,54 @@ test("adding one Markdown file discovers a post without editing a registry", asy
   assert.equal(posts.find(({ slug }) => slug === "new-post").path, "/blog/new-post/");
 });
 
+const expectedHomeContent = {
+  en: {
+    title: ["Open-source US stock analysis:", "daily signals, screener, and options activity"],
+    description: "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and every signal shown next to its history.",
+    metaTitle: "Open-Source US Stock Analysis & Daily Signals | PredixLab",
+    metaDescription: "Open-source analysis for S&P 500 and Nasdaq-100 stocks: daily signals, screener, options activity. Hosted or self-hosted. Free signals have a 10-day delay.",
+  },
+  zh: {
+    title: ["美股选股器、每日信号和期权异动，", "代码全部开源"],
+    description: "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，也可以按 Apache-2.0 协议自己部署。方法公开写明，每个信号都附带它过去的表现。",
+    metaTitle: "PredixLab | 开源美股选股器、每日信号与期权异动",
+    metaDescription: "美股选股器、每日信号和期权异动，代码全部开源。覆盖标普 500 和纳斯达克 100，基于日线数据，可用托管版或自己部署。免费版信号延迟 10 天。",
+  },
+};
+
 for (const language of ["en", "zh"]) {
+  test(`${language}: homepage keeps one two-line H1, exact subhead, metadata and derived schema descriptions`, () => {
+    const expected = expectedHomeContent[language];
+    assert.deepEqual(homeContent[language].title, expected.title);
+    assert.equal(homeContent[language].description, expected.description);
+    const html = language === "en" ? render("/").appHtml : renderToStaticMarkup(createElement(
+      I18nextProvider, { i18n: createSiteI18n(language) },
+      createElement(StaticRouter, { location: "/" }, createElement(App)),
+    ));
+    const headings = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g)];
+    assert.equal(headings.length, 1);
+    assert.equal(headings[0][1], `${renderToStaticMarkup(expected.title[0])}<br/><span>${renderToStaticMarkup(expected.title[1])}</span>`);
+    assert.ok(html.includes(`<p class="hero-description">${renderToStaticMarkup(expected.description)}</p>`));
+
+    const seo = getPageSeo("/", language);
+    assert.equal(seo.title, expected.metaTitle);
+    assert.equal(seo.description, expected.metaDescription);
+    const head = language === "en" ? render("/").headHtml : renderSeoHead(seo);
+    assert.ok(head.includes(`<title data-predixlab-seo>${renderToStaticMarkup(expected.metaTitle)}</title>`));
+    for (const [attribute, name] of [
+      ["name", "description"],
+      ["property", "og:description"],
+      ["name", "twitter:description"],
+    ]) {
+      assert.ok(head.includes(`${attribute}="${name}" content="${renderToStaticMarkup(expected.metaDescription)}"`));
+    }
+    for (const type of ["WebPage", "SoftwareApplication"]) {
+      const nodes = seo.structuredData["@graph"].filter((node) => node["@type"] === type);
+      assert.equal(nodes.length, 1);
+      assert.equal(nodes[0].description, expected.metaDescription);
+    }
+  });
+
   test(`${language}: shared desktop/mobile navigation, footer, and all product bodies link to methodology and blog`, () => {
     for (const path of ["/us-stock-signals/", "/quantitative-stock-screener/", "/unusual-options-activity/"]) {
       const html = renderToStaticMarkup(createElement(

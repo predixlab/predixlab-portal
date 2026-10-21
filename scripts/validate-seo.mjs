@@ -237,6 +237,16 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     const alternates = links.filter((link) => link.rel === "alternate");
     const description = meta("description");
     assert.ok(title.length > 0 && description.length > 0, pathname);
+    if (pathname === "/") {
+      assert.equal(h1, "Open-source US stock analysis: daily signals, screener, and options activity");
+      const subhead = only(
+        [...main.matchAll(/<p class="hero-description">([\s\S]*?)<\/p>/g)],
+        "homepage hero subhead",
+      )[1];
+      assert.equal(textContent(subhead), "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and every signal shown next to its history.");
+      assert.equal(title, "Open-Source US Stock Analysis & Daily Signals | PredixLab");
+      assert.equal(description, "Open-source analysis for S&P 500 and Nasdaq-100 stocks: daily signals, screener, options activity. Hosted or self-hosted. Free signals have a 10-day delay.");
+    }
     assert.equal(meta("og:title"), title, pathname);
     assert.equal(meta("twitter:title"), title, pathname);
     assert.equal(meta("og:description"), description, pathname);
