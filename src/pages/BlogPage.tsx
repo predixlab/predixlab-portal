@@ -14,7 +14,7 @@ const BlogPage = () => (
         <p className="eyebrow">PREDIXLAB / BLOG</p>
         <h1>Blog</h1>
         <p>{blogContent.description}</p>
-        <p>Read <Link to="/methodology/">how PredixLab builds and tests its signals</Link>, including known limitations.</p>
+        <p>Read <Link to="/docs/how-it-works/">how PredixLab builds and tests its signals</Link>, including <Link to="/docs/limitations/">known limitations</Link>.</p>
         <a className="text-link" href="/blog/rss.xml">Subscribe via RSS</a>
       </div>
     </section>

@@ -14,8 +14,8 @@ const server = await createServer({
 });
 after(() => server.close());
 const [
-  { loadBlogPosts, parseFrontmatter, parseMarkdownDocument, sourceRepositories },
-  { blogPosts, contentPages },
+  { loadBlogPosts, loadDocs, parseFrontmatter, parseMarkdownDocument, sourceRepositories },
+  { blogPosts, docs, docsPages, docsIndex, docsUpdated },
   { groupBlogPosts, relatedBlogPosts, renderBlogRss, blogContent },
   { sitePages },
   { getPageSeo, renderSeoHead, renderSitemap },
@@ -116,7 +116,7 @@ test("Markdown emits semantic HTML, stable unique heading IDs, safe external lin
 
 ## Known limitations
 
-[Limits](#known-limitations), [Methodology](/methodology/), [Source](https://example.com/?a=1&b=2).
+[Limits](#known-limitations), [How it works](/docs/how-it-works/), [Source](https://example.com/?a=1&b=2).
 
 | Header | Details |
 | --- | --- |
@@ -197,9 +197,12 @@ test("sitemap derives every URL and lastmod from sitePages, with no language or 
   for (const post of blogPosts) {
     assert.equal(entries.find(({ path }) => path === post.path).lastmod, post.updated);
   }
-  for (const path of ["/methodology/", "/open-source/"]) {
-    assert.equal(entries.find((entry) => entry.path === path).lastmod, "2026-10-21");
+  for (const doc of docs) {
+    assert.equal(entries.find((entry) => entry.path === doc.path).lastmod, doc.updated);
   }
+  assert.equal(entries.find(({ path }) => path === "/docs/").lastmod, docsUpdated);
+  assert.equal(docsUpdated, docs.map(({ updated }) => updated).sort().at(-1));
+  assert.doesNotMatch(sitemap, /\/(?:methodology|open-source)\//);
   assert.equal(entries.find(({ path }) => path === "/blog/").lastmod, blogPosts.map(({ updated }) => updated).sort().at(-1));
   assert.equal(entries.find(({ path }) => path === "/").lastmod, undefined);
   assert.doesNotMatch(sitemap, /hreflang|xhtml|\/(?:zh|en|insights)\/|[?&]lng=/);
@@ -241,7 +244,10 @@ for (const language of ["en", "zh"]) {
     const headings = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g)];
     assert.equal(headings.length, 1);
     assert.equal(headings[0][1], `${renderToStaticMarkup(expected.title[0])}<br/><span>${renderToStaticMarkup(expected.title[1])}</span>`);
-    assert.ok(html.includes(`<p class="hero-description">${renderToStaticMarkup(expected.description)}</p>`));
+    const subhead = html.match(/<p class="hero-description">([\s\S]*?)<\/p>/)[1];
+    assert.equal(subhead.replace(/<[^>]+>/g, ""), renderToStaticMarkup(expected.description));
+    assert.ok(subhead.includes(`<a href="/docs/how-it-works/" data-discover="true">${homeContent[language].descriptionLink}</a>`));
+    assert.match(html, /<section class="section tools-section" id="tools">/);
 
     const seo = getPageSeo("/", language);
     assert.equal(seo.title, expected.metaTitle);
@@ -262,7 +268,7 @@ for (const language of ["en", "zh"]) {
     }
   });
 
-  test(`${language}: shared desktop/mobile navigation, footer, and all product bodies link to methodology and blog`, () => {
+  test(`${language}: flat desktop/mobile navigation and product/footer links point to Docs`, () => {
     for (const path of ["/us-stock-signals/", "/quantitative-stock-screener/", "/unusual-options-activity/"]) {
       const html = renderToStaticMarkup(createElement(
         I18nextProvider, { i18n: createSiteI18n(language) },
@@ -270,16 +276,21 @@ for (const language of ["en", "zh"]) {
       ));
       const linkText = language === "en" ? "How the signals are built and tested" : "信号如何构建和检验";
       const main = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)[1];
-      assert.match(main, new RegExp(`href="/methodology/"[^>]*>${linkText}</a>`));
+      assert.match(main, new RegExp(`href="/docs/how-it-works/"[^>]*>${linkText}</a>`));
       const footer = html.match(/<footer\b[^>]*>([\s\S]*?)<\/footer>/)[1];
       const desktop = html.match(/<div class="desktop-nav">([\s\S]*?)<\/div>/)[1];
       const mobile = html.match(/<nav class="mobile-nav"[^>]*>([\s\S]*?)<\/nav>/)[1];
       for (const section of [desktop, mobile, footer]) {
         for (const [href, label] of [
           ["/blog/", language === "en" ? "Blog" : "博客"],
-          ["/methodology/", language === "en" ? "Methodology" : "方法论"],
+          ["/docs/", language === "en" ? "Docs" : "文档"],
         ]) {
           assert.match(section, new RegExp(`href="${href}"[^>]*>${label}`));
+        }
+        for (const section of [desktop, mobile]) {
+          const links = [...section.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)];
+          assert.deepEqual(links.slice(0, 5).map(([, href]) => href), ["/#tools", "/pricing/", "/docs/", "/blog/", "/about/"]);
+          assert.equal(links[0][2].replace(/<svg[\s\S]*?<\/svg>/g, ""), language === "en" ? "Tools" : "工具");
         }
       }
     }
@@ -287,8 +298,7 @@ for (const language of ["en", "zh"]) {
 }
 
 for (const [path, document] of [
-  ["/methodology/", contentPages.methodology],
-  ["/open-source/", contentPages.openSource],
+  ...docs.map((doc) => [doc.path, doc]),
   ...blogPosts.map((post) => [post.path, post]),
 ]) {
   test(`${path}: raw HTML includes complete body, dates, short breadcrumbs, disclaimers and exact metadata`, () => {
@@ -301,14 +311,34 @@ for (const [path, document] of [
     assert.ok(page.appHtml.includes(document.disclaimerHtml));
     assert.equal([...page.appHtml.matchAll(/<h1\b/g)].length, 1);
     const dates = document.kind === "post" ? [document.date, document.updated]
-      : [document.frontmatter.datePublished, document.frontmatter.dateModified];
+      : [document.updated];
     assert.deepEqual([...page.appHtml.matchAll(/<time dateTime="([^"]+)"/g)].map(([, date]) => date), dates);
-    assert.match(page.appHtml, /href="\/methodology\/"/);
+    assert.match(page.appHtml, /href="\/docs\/how-it-works\/"/);
     assert.ok(page.appHtml.includes(`<span aria-current="page">${document.shortTitle}</span>`));
     assert.doesNotMatch(page.appHtml, /real[- ]?time|实时|\/learn\/|\/zh\/|[?&]lng=|<!--\s*Reviewer note|\[待核实\]/i);
     const json = JSON.parse(page.headHtml.match(/type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
     const breadcrumb = json["@graph"].find((node) => node["@type"] === "BreadcrumbList");
     assert.equal(breadcrumb.itemListElement.at(-1).name, document.shortTitle);
+    if (document.kind === "doc") {
+      assert.deepEqual(breadcrumb.itemListElement.map(({ name }) => name), ["Home", "Docs", document.shortTitle]);
+      assert.match(page.appHtml, /class="docs-sidebar"/);
+      const sidebar = page.appHtml.match(/<nav class="docs-sidebar"[^>]*>([\s\S]*?)<\/nav>/)[1];
+      for (const doc of docs) {
+        const link = [...sidebar.matchAll(/<a\b[^>]+>/g)].map(([tag]) => tag).find((tag) => tag.includes(`href="${doc.path}"`));
+        assert.ok(link);
+        assert.equal(link.includes('aria-current="page"'), doc.path === path);
+      }
+      const article = json["@graph"].find((node) => node["@type"] === "TechArticle");
+      assert.equal(article.headline, document.title);
+      assert.equal(article.description, document.description);
+      assert.equal(article.dateModified, document.updated);
+      assert.equal(article.mainEntityOfPage, page.seo.canonicalUrl);
+      assert.deepEqual(article.author, { "@id": "https://predixlab.com/#organization" });
+      assert.deepEqual(article.publisher, article.author);
+      assert.ok(document.title.length <= 60);
+      assert.ok(document.description.length <= 155);
+      assert.deepEqual(page.seo.alternates, []);
+    }
     assert.deepEqual(getPageSeo(path, "zh"), getPageSeo(path, "en"));
   });
 }
@@ -330,16 +360,79 @@ test("article schemas reference the shared organization and use the existing 120
   }
 });
 
-test("open-source schema has one Apache-2.0 SoftwareSourceCode per repository table row", () => {
-  const repositories = sourceRepositories(contentPages.openSource);
-  const schemas = getPageSeo("/open-source/").structuredData["@graph"].filter((node) => node["@type"] === "SoftwareSourceCode");
+test("self-hosting schema has one Apache-2.0 SoftwareSourceCode per repository table row", () => {
+  const repositories = sourceRepositories(docs.find(({ slug }) => slug === "self-hosting"));
+  const schemas = getPageSeo("/docs/self-hosting/").structuredData["@graph"].filter((node) => node["@type"] === "SoftwareSourceCode");
   assert.equal(schemas.length, repositories.length);
   assert.equal(schemas.length, 8);
   schemas.forEach((schema, index) => {
     assert.equal(schema.codeRepository, repositories[index].codeRepository);
     assert.deepEqual(schema.programmingLanguage, repositories[index].programmingLanguage);
     assert.equal(schema.license, "https://www.apache.org/licenses/LICENSE-2.0");
+    assert.deepEqual(schema.author, { "@id": "https://predixlab.com/#organization" });
+    assert.deepEqual(schema.publisher, schema.author);
   });
+});
+
+test("Docs index is Markdown-driven, lists every document in order and has English-only collection metadata", () => {
+  const page = render("/docs/");
+  assert.equal(page.statusCode, 200);
+  assert.ok(page.appHtml.includes(docsIndex.html));
+  assert.equal([...page.appHtml.matchAll(/<h1\b/g)].length, 1);
+  assert.deepEqual([...page.appHtml.matchAll(/<h2><a href="([^"]+)"/g)].map(([, path]) => path), docs.map(({ path }) => path));
+  for (const doc of docs) assert.ok(page.appHtml.includes(renderToStaticMarkup(doc.description)));
+  assert.equal(page.seo.title, docsIndex.title);
+  assert.equal(page.seo.description, docsIndex.description);
+  assert.equal(page.seo.canonicalUrl, "https://predixlab.com/docs/");
+  assert.ok(docsIndex.title.length <= 60 && docsIndex.description.length <= 155);
+  assert.equal(page.seo.structuredData["@graph"].filter((node) => node["@type"] === "CollectionPage").length, 1);
+  assert.deepEqual(page.seo.structuredData["@graph"].find((node) => node["@type"] === "BreadcrumbList").itemListElement.map(({ name }) => name), ["Home", "Docs"]);
+  assert.deepEqual(getPageSeo("/docs/", "zh"), page.seo);
+  assert.deepEqual(page.seo.alternates, []);
+  assert.equal(docsPages.length, docs.length + 1);
+});
+
+test("unpublished draft routes are absent from the inventory and return genuine not-found responses", () => {
+  for (const slug of ["methodology", "open-source"]) {
+    const path = `/${slug}/`;
+    assert.equal(sitePages.some((page) => page.path === path), false);
+    const result = render(path);
+    assert.equal(result.statusCode, 404);
+    assert.equal(result.seo.canonicalUrl, null);
+    assert.equal(result.seo.structuredData, null);
+  }
+});
+
+const docsFixture = fixture.replace('date: "2026-10-20"\n', "").replace('category: "Backtesting & validation"', 'order: "1"');
+const loadDocFixture = (source = docsFixture) => loadDocs({ "./docs/example.md": source })[0];
+
+test("Docs frontmatter validates required metadata, dates, ordering, language and SEO limits", () => {
+  assert.equal(loadDocFixture().path, "/docs/example/");
+  for (const field of ["title", "shortTitle", "description", "lang", "updated", "order", "translationKey"]) {
+    assert.throws(() => loadDocFixture(docsFixture.replace(new RegExp(`^${field}:.*\\n`, "m"), "")), new RegExp(`missing required field ${field}`));
+  }
+  for (const value of ["-1", "1.5", "invalid", "9007199254740992"]) {
+    assert.throws(() => loadDocFixture(docsFixture.replace('order: "1"', `order: "${value}"`)), /order must be/);
+  }
+  assert.throws(() => loadDocFixture(docsFixture.replace('updated: "2026-10-21"', 'updated: "2026-02-30"')), /invalid updated/);
+  assert.throws(() => loadDocFixture(docsFixture.replace("lang: en", "lang: zh")), /lang must be en/);
+  assert.throws(() => loadDocFixture(docsFixture.replace("translationKey: example", "translationKey: Bad Key")), /invalid translationKey/);
+  for (const [field, limit] of [["title", 60], ["description", 155]]) {
+    assert.doesNotThrow(() => loadDocFixture(docsFixture.replace(new RegExp(`^${field}:.*$`, "m"), `${field}: "${"x".repeat(limit)}"`)));
+    assert.throws(() => loadDocFixture(docsFixture.replace(new RegExp(`^${field}:.*$`, "m"), `${field}: "${"x".repeat(limit + 1)}"`)), /exceeds/);
+  }
+  assert.throws(() => loadDocs({ "./Bad_Slug.md": docsFixture }), /invalid slug/);
+  assert.throws(() => loadDocs({ "./one/example.md": docsFixture, "./two/example.md": docsFixture }), /duplicate slug/);
+  assert.throws(() => loadDocs({ "./one.md": docsFixture, "./two.md": docsFixture }), /duplicate order/);
+  assert.throws(() => loadDocs({ "./one.md": docsFixture, "./two.md": docsFixture.replace('order: "1"', 'order: "2"') }), /duplicate translationKey/);
+});
+
+test("adding a doc discovers its path and order without editing a registry", () => {
+  const discovered = loadDocs({
+    "./docs/second.md": docsFixture.replace('order: "1"', 'order: "2"').replace("translationKey: example", "translationKey: second"),
+    "./docs/example.md": docsFixture,
+  });
+  assert.deepEqual(discovered.map(({ path }) => path), ["/docs/example/", "/docs/second/"]);
 });
 
 test("blog index renders grouped posts, short breadcrumbs, CollectionPage and an ItemList", () => {

@@ -13,6 +13,7 @@ import StockSignalsPage from "@/pages/StockSignalsPage";
 import UnusualOptionsActivityPage from "@/pages/UnusualOptionsActivityPage";
 import MarkdownPage from "@/pages/MarkdownPage";
 import BlogPage from "@/pages/BlogPage";
+import DocsPage from "@/pages/DocsPage";
 import { sitePages, type PageKey } from "@/routing";
 
 const pages: Record<PageKey, ReactNode> = {
@@ -24,8 +25,8 @@ const pages: Record<PageKey, ReactNode> = {
   unusualOptions: <UnusualOptionsActivityPage />,
   terms: <LegalPage type="terms" />,
   privacy: <LegalPage type="privacy" />,
-  methodology: <MarkdownPage />,
-  openSource: <MarkdownPage />,
+  docs: <DocsPage />,
+  doc: <MarkdownPage />,
   blog: <BlogPage />,
   blogPost: <MarkdownPage />,
 };

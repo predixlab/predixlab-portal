@@ -7,7 +7,7 @@ import {
 } from "@/content/products";
 import { faqContent } from "@/content/site";
 import { blogContent, renderBlogRss } from "@/content/blog";
-import { blogPosts, contentPages, getContentForPath } from "@/content/documents";
+import { blogPosts, getContentForPath } from "@/content/documents";
 import { sourceRepositories } from "@/content/markdown";
 import { DEFAULT_SITE_LANGUAGE } from "@/i18n/language";
 import en from "@/i18n/locales/en.json";
@@ -135,7 +135,7 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
   const webpageId = `${canonicalUrl}#webpage`;
   const document = getContentForPath(new URL(canonicalUrl).pathname);
   const webpage: JsonLdObject = {
-    "@type": key === "blog" ? "CollectionPage" : "WebPage",
+    "@type": key === "blog" || key === "docs" ? "CollectionPage" : "WebPage",
     "@id": webpageId,
     url: canonicalUrl,
     name: seo.title,
@@ -179,6 +179,7 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
   if (key !== "home") {
     const items = [{ name: copy.nav.home, item: pageUrl("/") }];
     if (key === "blogPost") items.push({ name: "Blog", item: pageUrl("/blog/") });
+    if (key === "doc") items.push({ name: "Docs", item: pageUrl("/docs/") });
     items.push({ name: document?.shortTitle ?? (key === "blog" ? "Blog" : seo.title), item: canonicalUrl });
     const breadcrumbId = `${canonicalUrl}#breadcrumb`;
     webpage.breadcrumb = { "@id": breadcrumbId };
@@ -193,7 +194,7 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
     });
   }
 
-  if (document && (key === "methodology" || document.kind === "post")) {
+  if (document && (key === "doc" || document.kind === "post")) {
     const isPost = document.kind === "post";
     const articleId = `${canonicalUrl}#article`;
     webpage.mainEntity = { "@id": articleId };
@@ -202,8 +203,8 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
       "@id": articleId,
       headline: document.title,
       description: document.description,
-      datePublished: isPost ? document.date : document.frontmatter.datePublished,
-      dateModified: isPost ? document.updated : document.frontmatter.dateModified,
+      ...(isPost ? { datePublished: document.date } : {}),
+      dateModified: document.updated,
       author: { "@id": organizationId },
       publisher: { "@id": organizationId },
       mainEntityOfPage: canonicalUrl,
@@ -232,13 +233,14 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
     });
   }
 
-  if (key === "openSource") {
-    const repositories = sourceRepositories(contentPages.openSource).map((repository) => ({
+  if (document?.kind === "doc" && document.slug === "self-hosting") {
+    const repositories = sourceRepositories(document).map((repository) => ({
       "@type": "SoftwareSourceCode",
       "@id": `${repository.codeRepository}#source`,
       ...repository,
       license: "https://www.apache.org/licenses/LICENSE-2.0",
       author: { "@id": organizationId },
+      publisher: { "@id": organizationId },
       isPartOf: { "@id": webpageId },
     }));
     webpage.hasPart = repositories.map((repository) => ({ "@id": repository["@id"] }));
@@ -275,7 +277,7 @@ export const getPageSeo = (pathname: string, language: SiteLanguage = DEFAULT_SI
   const key = page?.key ?? "notFound";
   const document = getContentForPath(pathname);
   let meta: { title: string; description: string };
-  if (key === "methodology" || key === "openSource" || key === "blogPost") {
+  if (key === "docs" || key === "doc" || key === "blogPost") {
     if (!document) throw new Error(`Missing content for public route ${pathname}`);
     meta = document;
     language = "en";

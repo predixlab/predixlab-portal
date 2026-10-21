@@ -77,7 +77,7 @@ Several of these are forms of look-ahead bias. Our article on [look-ahead bias i
 
 ## How PredixLab applies it
 
-PredixLab's [signal models](/us-stock-signals/) are trained with this structure. The details are in the open-source [predixlab-signals](https://github.com/predixlab/predixlab-signals) repository and summarized on the [Methodology](/methodology/) page:
+PredixLab's [signal models](/us-stock-signals/) are trained with this structure. The details are in the open-source [predixlab-signals](https://github.com/predixlab/predixlab-signals) repository and summarized in the [How it works](/docs/how-it-works/) doc:
 
 - Features use only present and past data, normalized against each stock's trailing 252 trading days.
 - Forward labels start on the next trading day and run over a fixed horizon (10 trading days by default).
@@ -89,7 +89,7 @@ It doesn't meet every item on the checklist below, and the gaps matter:
 
 - Pivot's event rules were developed while looking at the walk-forward history, so those event results aren't fully independent out-of-sample evidence.
 - Membership dates are applied, but the membership history is incomplete, and acquired or delisted companies are largely missing from the price history. Historical results are likely more favorable than a point-in-time universe would show.
-- Prices are mostly split-only or unadjusted, without dividends, and the backtests include optimistic fill simplifications. The [Methodology](/methodology/#known-limitations) page lists them.
+- Prices are mostly split-only or unadjusted, without dividends, and the backtests include optimistic fill simplifications. The [Known limitations](/docs/limitations/) doc lists them.
 
 The repository's tests check several of these rules automatically. One example: appending future data must not change past features or events.
 

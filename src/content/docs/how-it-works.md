@@ -1,14 +1,15 @@
 ---
 lang: en
-title: "Methodology: How PredixLab Builds and Tests Its Signals"
-shortTitle: "Methodology"
+title: "How PredixLab works: data, updates, signals and backtests"
+shortTitle: "How it works"
 description: "Data sources, nightly schedule, features, walk-forward validation, backtest assumptions and known limits behind PredixLab signals. Not investment advice."
-h1: "How PredixLab builds and tests its signals"
-datePublished: "2026-10-21"
-dateModified: "2026-10-21"
+h1: "How PredixLab works: data, updates, signals and backtests"
+updated: "2026-10-21"
+order: "1"
+translationKey: how-it-works
 ---
 
-# How PredixLab builds and tests its signals
+# How PredixLab works: data, updates, signals and backtests
 
 PredixLab is a set of analysis tools for US stocks. This page explains where the data comes from, when it updates, how the models are trained and tested, and what the results can't tell you. The full code is open source, so every step described here can be checked in the repositories linked below.
 
@@ -17,7 +18,7 @@ PredixLab is a set of analysis tools for US stocks. This page explains where the
 - **Daily data only.** Prices are daily bars. Signals and options data are produced by scheduled nightly jobs and labeled with a data date.
 - **Coverage.** The platform tracks S&P 500 and Nasdaq-100 constituents. Some tools may cover a different set; each page shows what it includes.
 - **Out-of-sample testing.** Models are evaluated with walk-forward validation: each test period is predicted by a model that never saw it.
-- **Backtest fills.** Signals are never filled at the close that produced them, ambiguous bars assume the stop was hit first, and 10 bps is charged per side. The backtests also contain optimistic simplifications, listed under [Known limitations](#known-limitations).
+- **Backtest fills.** Signals are never filled at the close that produced them, ambiguous bars assume the stop was hit first, and 10 bps is charged per side. The backtests also contain optimistic simplifications, listed under [Known limitations](/docs/limitations/).
 - **No performance claims here.** This page explains method, not results. A model score is not a probability of profit.
 
 ## Data sources
@@ -118,22 +119,9 @@ For each stock, the options job compares today's chain with the previous session
 
 Candidates get a 0–100 activity score. A stock needs at least two qualifying contracts to appear. SPY, QQQ, IWM, and DIA use a higher threshold. The score describes how unusual the change is. It is not a probability, and it doesn't reveal whether a trade was bullish, bearish, a hedge, or part of a spread. Gamma exposure figures are estimates built on a simplifying assumption about who holds calls and puts, not observed dealer positions.
 
-## Known limitations
-
-- Daily bars can't show intraday paths or execution prices.
-- **Survivorship bias:** companies that were acquired or delisted are largely missing from the price history used for training and backtests, so historical results are likely more favorable than a fully point-in-time universe would show.
-- **Delisting losses aren't modeled.** A stock that collapses and is delisted doesn't produce the loss it would in a real portfolio.
-- **No dividend or full corporate-action adjustment.** Most symbols use split-only or unadjusted prices without dividends, so returns are price returns, and other corporate actions can distort them.
-- **Fill simplifications.** Stops and targets fill at their exact level even through price gaps, and Pivot opposite-signal exits fill at the same close that produced the exit signal. Both make backtests look better than live trading.
-- **Event rules developed on the walk-forward history.** Pivot event rules were designed while looking at that history, so their results aren't fully independent out-of-sample evidence.
-- Event rules and thresholds can stop working as market structure changes.
-- Rankings are relative to the stocks available that day.
-- Data from third-party sources can be delayed or wrong.
-- Version 0.1.0: interfaces and storage formats may still change.
-
 ## Check it yourself
 
-All of this is implemented in open-source repositories under the Apache-2.0 license: [predixlab-collector](https://github.com/predixlab/predixlab-collector), [predixlab-signals](https://github.com/predixlab/predixlab-signals), and [predixlab-options](https://github.com/predixlab/predixlab-options). The signals repository's tests check leakage rules directly: appending future data must not change past features or events, and Pivot backtest entries must occur on the next session, never the signal day. See [Open source](/open-source/) for how to run them.
+All of this is implemented in open-source repositories under the Apache-2.0 license: [predixlab-collector](https://github.com/predixlab/predixlab-collector), [predixlab-signals](https://github.com/predixlab/predixlab-signals), and [predixlab-options](https://github.com/predixlab/predixlab-options). The signals repository's tests check leakage rules directly: appending future data must not change past features or events, and Pivot backtest entries must occur on the next session, never the signal day. See [Self-hosting](/docs/self-hosting/) for how to run them.
 
 ---
 

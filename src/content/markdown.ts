@@ -24,8 +24,13 @@ export interface BlogPost extends MarkdownDocument {
   imageAlt?: string;
 }
 
-export interface ContentPage extends MarkdownDocument {
-  kind: "page";
+export interface DocPage extends MarkdownDocument {
+  kind: "doc";
+  slug: string;
+  path: string;
+  updated: string;
+  order: number;
+  translationKey: string;
 }
 
 export const escapeXml = (value: string) =>
@@ -83,7 +88,11 @@ export const validateDate = (value: string, field: string, filename: string) => 
 export const headingId = (text: string) =>
   text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-export const parseMarkdownDocument = (source: string, filename: string): MarkdownDocument => {
+export const parseMarkdownDocument = (
+  source: string,
+  filename: string,
+  { requireDisclaimer = true } = {},
+): MarkdownDocument => {
   const { frontmatter, body } = parseFrontmatter(source, filename);
   requireFields(frontmatter, ["title", "shortTitle", "description", "lang"], filename);
   if (frontmatter.lang !== "en") throw new Error(`${filename}: lang must be en`);
@@ -133,10 +142,10 @@ export const parseMarkdownDocument = (source: string, filename: string): Markdow
   if (frontmatter.h1 && frontmatter.h1 !== h1) throw new Error(`${filename}: h1 does not match the document`);
   const disclaimerIndex = tokens.map((token) => token.type).lastIndexOf("hr");
   const disclaimers = tokens.slice(disclaimerIndex + 1);
-  if (disclaimerIndex < 0 || disclaimers.length !== 2
+  if ((requireDisclaimer || disclaimerIndex >= 0) && (disclaimerIndex < 0 || disclaimers.length !== 2
     || !disclaimers.every((token) => token.type === "paragraph")
     || !/not investment advice/.test(disclaimers[0].raw)
-    || !/不构成投资建议/.test(disclaimers[1].raw)) {
+    || !/不构成投资建议/.test(disclaimers[1].raw))) {
     throw new Error(`${filename}: end the document with separated English and Chinese risk disclaimers`);
   }
   return {
@@ -145,8 +154,8 @@ export const parseMarkdownDocument = (source: string, filename: string): Markdow
     description: frontmatter.description,
     lang: "en",
     h1,
-    html: markdown.parser(tokens.slice(0, disclaimerIndex)),
-    disclaimerHtml: markdown.parser(tokens.slice(disclaimerIndex)),
+    html: markdown.parser(disclaimerIndex < 0 ? tokens : tokens.slice(0, disclaimerIndex)),
+    disclaimerHtml: disclaimerIndex < 0 ? "" : markdown.parser(tokens.slice(disclaimerIndex)),
     frontmatter,
     body,
   };
@@ -183,11 +192,44 @@ export const loadBlogPosts = (sources: Record<string, string>): BlogPost[] => {
   }).sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
 };
 
+export const loadDocs = (sources: Record<string, string>): DocPage[] => {
+  const slugs = new Set<string>();
+  const orders = new Set<number>();
+  const translationKeys = new Set<string>();
+  return Object.entries(sources).map(([filename, source]): DocPage => {
+    const slug = filename.split("/").pop()?.replace(/\.md$/, "") ?? "";
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error(`${filename}: invalid slug`);
+    if (slugs.has(slug)) throw new Error(`${filename}: duplicate slug ${slug}`);
+    slugs.add(slug);
+    const document = parseMarkdownDocument(source, filename, { requireDisclaimer: slug !== "index" });
+    const { frontmatter } = document;
+    requireFields(frontmatter, ["updated", "order", "translationKey"], filename);
+    validateDate(frontmatter.updated, "updated", filename);
+    if (!/^(?:0|[1-9]\d*)$/.test(frontmatter.order) || !Number.isSafeInteger(Number(frontmatter.order))) {
+      throw new Error(`${filename}: order must be a nonnegative integer string`);
+    }
+    const order = Number(frontmatter.order);
+    if (orders.has(order)) throw new Error(`${filename}: duplicate order ${order}`);
+    orders.add(order);
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(frontmatter.translationKey)) {
+      throw new Error(`${filename}: invalid translationKey`);
+    }
+    if (translationKeys.has(frontmatter.translationKey)) throw new Error(`${filename}: duplicate translationKey`);
+    translationKeys.add(frontmatter.translationKey);
+    if (document.title.length > 60) throw new Error(`${filename}: title exceeds 60 characters`);
+    if (document.description.length > 155) throw new Error(`${filename}: description exceeds 155 characters`);
+    return {
+      ...document, kind: "doc", slug, path: slug === "index" ? "/docs/" : `/docs/${slug}/`,
+      updated: frontmatter.updated, order, translationKey: frontmatter.translationKey,
+    };
+  }).sort((a, b) => a.order - b.order);
+};
+
 export const sourceRepositories = (document: MarkdownDocument) => {
   const table = new Marked().lexer(document.body).find((token): token is Tokens.Table =>
     token.type === "table" && token.header[0]?.text === "Repository" && token.header[2]?.text === "Stack",
   );
-  if (!table) throw new Error("Open-source content requires a repository table");
+  if (!table) throw new Error("Self-hosting content requires a repository table");
   return table.rows.map((row) => {
     const link = row[0].tokens.find((token): token is Tokens.Link => token.type === "link");
     const languages = row[2].text.match(/\b(?:Python|TypeScript|Bicep|shell)\b/g);

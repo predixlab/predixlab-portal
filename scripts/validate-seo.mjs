@@ -108,6 +108,14 @@ export const validateSeoOutput = async (directory, expectedPages) => {
   const publicPaths = canonicalRules.map((rule) => rule.route);
   assert.ok(publicPaths.length > 0, "Public canonical routes are required");
   assert.ok(publicPaths.every((pathname) => !/^\/(?:en|zh)\//.test(pathname)), "Language-prefixed canonical route");
+  const docsPaths = publicPaths.filter((pathname) => pathname.startsWith("/docs/"));
+  for (const pathname of ["/docs/", "/docs/how-it-works/", "/docs/limitations/", "/docs/self-hosting/"]) {
+    assert.ok(docsPaths.includes(pathname), `Missing Docs route: ${pathname}`);
+  }
+  assert.ok(config.routes.every(({ route }) => !/^\/(?:methodology|open-source)(?:\/|$)/.test(route)), "Unpublished drafts must have no deployment rules");
+  for (const slug of ["methodology", "open-source"]) {
+    await assert.rejects(access(join(directory, slug)), { code: "ENOENT" }, `Unpublished output directory: ${slug}`);
+  }
   validateRetiredRedirects(config.routes);
   assert.ok(
     config.routes.every((rule) => !/^\/(?:en|zh)(?:\/|$)/.test(rule.route) || retiredRedirects.some(({ route }) => route === rule.route)),
@@ -143,6 +151,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
   assert.equal(config.globalHeaders?.["Cache-Control"], undefined, "No global caching override");
 
   const sitemap = await readFile(join(directory, "sitemap.xml"), "utf8");
+  assert.doesNotMatch(sitemap, /\/(?:methodology|open-source)\//, "Unpublished drafts must not be in the sitemap");
   assert.doesNotMatch(sitemap, /xmlns:xhtml|xhtml:link|hreflang|[?&]lng=|404\.html|\/insights(?:\/|<)|https:\/\/predixlab\.com\/(?:en|zh)(?:\/|<)/);
   const entries = [...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(([, xml]) => ({
     url: decodeHtml(only([...xml.matchAll(/<loc>([^<]+)<\/loc>/g)], "sitemap location")[1]),
@@ -184,13 +193,22 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     const isNotFound = notFoundPaths.includes(pathname);
     const isBlog = pathname.startsWith("/blog/");
     const isPost = isBlog && pathname !== "/blog/";
-    const isDocument = isPost || pathname === "/methodology/" || pathname === "/open-source/";
-    const isNewPage = isBlog || isDocument;
+    const isDocs = pathname.startsWith("/docs/");
+    const isDoc = isDocs && pathname !== "/docs/";
+    const isDocument = isPost || isDoc;
+    const isNewPage = isBlog || isDocs;
     const language = "en";
     assert.match(html, new RegExp(`<html lang="${language}">`), pathname);
     assert.doesNotMatch(html, /<!--(?:seo-head|app-html)-->|fonts\.(?:googleapis|gstatic)\.com|[?&]lng=/, pathname);
     if (!isNewPage) assert.doesNotMatch(decodeHtml(html), /\u7814\u7a76/, `Outdated Chinese copy: ${pathname}`);
     assert.doesNotMatch(html, /\/(?:en\/)?insights(?:\/|["?#])/, `Retired page reference: ${pathname}`);
+    assert.doesNotMatch(html, /\/(?:methodology|open-source)\//, `Unpublished draft reference: ${pathname}`);
+    for (const section of [
+      only([...html.matchAll(/<div class="desktop-nav">([\s\S]*?)<\/div>/g)], `${pathname} desktop navigation`)[1],
+      only([...html.matchAll(/<nav class="mobile-nav"[^>]*>([\s\S]*?)<\/nav>/g)], `${pathname} mobile navigation`)[1],
+    ]) {
+      assert.deepEqual(tags(section, "a").slice(0, 5).map(({ href }) => href), ["/#tools", "/pricing/", "/docs/", "/blog/", "/about/"], `${pathname} flat nav order`);
+    }
     assert.match(html, /<div id="root">[\s\S]+<main\b/, `Empty application: ${pathname}`);
     const languageButton = only(
       tags(html, "button").filter((button) => button.class?.split(" ").includes("language-button")),
@@ -237,6 +255,10 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     const alternates = links.filter((link) => link.rel === "alternate");
     const description = meta("description");
     assert.ok(title.length > 0 && description.length > 0, pathname);
+    if (isDocs) {
+      assert.ok(title.length <= 60, `${pathname} title exceeds 60 characters`);
+      assert.ok(description.length <= 155, `${pathname} description exceeds 155 characters`);
+    }
     if (pathname === "/") {
       assert.equal(h1, "Open-source US stock analysis: daily signals, screener, and options activity");
       const subhead = only(
@@ -246,6 +268,8 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       assert.equal(textContent(subhead), "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and every signal shown next to its history.");
       assert.equal(title, "Open-Source US Stock Analysis & Daily Signals | PredixLab");
       assert.equal(description, "Open-source analysis for S&P 500 and Nasdaq-100 stocks: daily signals, screener, options activity. Hosted or self-hosted. Free signals have a 10-day delay.");
+      only(tags(main, "section").filter(({ id }) => id === "tools"), "homepage Tools target");
+      assert.match(subhead, /href="\/docs\/how-it-works\/"/, "Documented method link");
     }
     assert.equal(meta("og:title"), title, pathname);
     assert.equal(meta("twitter:title"), title, pathname);
@@ -325,7 +349,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     assert.doesNotMatch(JSON.stringify(schema), /"(?:aggregateRating|review|reviews|ratingValue|performance|accuracy|returns?)"/, pathname);
     const graph = schema["@graph"];
     assert.ok(graph.every((item) => item["@type"] !== "Article"), `Retired article schema: ${pathname}`);
-    const pageType = pathname === "/blog/" ? "CollectionPage" : "WebPage";
+    const pageType = pathname === "/blog/" || pathname === "/docs/" ? "CollectionPage" : "WebPage";
     for (const type of ["Organization", "WebSite", pageType]) {
       only(graph.filter((item) => item["@type"] === type), `${pathname} ${type}`);
     }
@@ -356,16 +380,15 @@ export const validateSeoOutput = async (directory, expectedPages) => {
         )[1]);
         for (const item of items) assert.ok(visible.includes(item.name), `${pathname} invisible breadcrumb`);
         assert.notEqual(items.at(-1).name, title, `${pathname} breadcrumb must use a short name`);
-        assert.deepEqual(items.map(({ item }) => item), isPost
-          ? [`${origin}/`, `${origin}/blog/`, canonicalUrl]
+        assert.deepEqual(items.map(({ item }) => item), isPost || isDoc
+          ? [`${origin}/`, `${origin}/${isPost ? "blog" : "docs"}/`, canonicalUrl]
           : [`${origin}/`, canonicalUrl], pathname);
+        if (isDocs) assert.equal(items[1].name, "Docs", pathname);
       }
     }
     if (isNewPage) {
       assert.doesNotMatch(textContent(main), /real[- ]?time|实时/i, pathname);
-      if (pathname !== "/methodology/") {
-        assert.ok(tags(main, "a").some(({ href }) => href === "/methodology/"), `${pathname} methodology link`);
-      }
+      assert.ok(tags(main, "a").some(({ href }) => href === "/docs/how-it-works/"), `${pathname} how-it-works link`);
     }
     if (isDocument) {
       for (const link of tags(main, "a").filter(({ href }) => href?.startsWith("https://"))) {
@@ -374,12 +397,12 @@ export const validateSeoOutput = async (directory, expectedPages) => {
         assert.deepEqual(link.rel?.split(/\s+/).sort(), ["noopener", "noreferrer"], `${pathname} external link`);
       }
       const disclaimer = only(
-        [...main.matchAll(/<div class="content-disclaimer markdown-content">([\s\S]*?)<\/div><\/article>$/g)],
+        [...main.matchAll(/<div class="content-disclaimer markdown-content">([\s\S]*?)<\/div><\/article>/g)],
         `${pathname} final risk disclaimer`,
       )[1];
       assert.match(textContent(disclaimer), /not investment advice.*不构成投资建议/, pathname);
       const dates = tags(main, "time").map(({ datetime }) => datetime);
-      if (isPost || pathname === "/methodology/") {
+      if (isPost || isDoc) {
         const article = only(
           graph.filter((item) => item["@type"] === (isPost ? "BlogPosting" : "TechArticle")),
           `${pathname} article`,
@@ -390,15 +413,16 @@ export const validateSeoOutput = async (directory, expectedPages) => {
         assert.equal(article.mainEntityOfPage, canonicalUrl, pathname);
         assert.deepEqual(article.author, { "@id": organization["@id"] }, pathname);
         assert.deepEqual(article.publisher, { "@id": organization["@id"] }, pathname);
-        assert.deepEqual(dates, [article.datePublished, article.dateModified], pathname);
+        assert.deepEqual(dates, isPost ? [article.datePublished, article.dateModified] : [article.dateModified], pathname);
         assert.deepEqual(entry.lastmods, [article.dateModified], pathname);
         assert.deepEqual(article.image, {
           "@type": "ImageObject", url: meta("og:image"), width: 1200, height: 630,
         }, pathname);
         if (!isPost) {
-          assert.equal(article.datePublished, "2026-10-21", pathname);
-          assert.equal(article.dateModified, "2026-10-21", pathname);
-          assert.match(main, /<h2 id="known-limitations">Known limitations<\/h2>/, pathname);
+          const sidebar = only([...main.matchAll(/<nav class="docs-sidebar"[^>]*>([\s\S]*?)<\/nav>/g)], `${pathname} Docs sidebar`)[1];
+          assert.deepEqual(tags(sidebar, "a").map(({ href }) => href), docsPaths, `${pathname} Docs sidebar inventory`);
+          const currentDoc = only(tags(sidebar, "a").filter((link) => link["aria-current"] === "page"), `${pathname} current doc`);
+          assert.equal(currentDoc.href, pathname, pathname);
         } else {
           assert.notEqual(meta("og:image:alt"), title, `${pathname} needs a real image description`);
           assert.match(main, /<aside class="post-related"/, pathname);
@@ -407,16 +431,29 @@ export const validateSeoOutput = async (directory, expectedPages) => {
         }
       }
     }
-    if (pathname === "/open-source/") {
+    if (pathname === "/docs/how-it-works/") {
+      assert.doesNotMatch(main, /id="known-limitations"/, "Limitations must have their own page");
+      assert.match(main, /id="check-it-yourself"/, pathname);
+      assert.ok(tags(main, "a").some(({ href }) => href === "/docs/self-hosting/"), pathname);
+    }
+    if (pathname === "/docs/self-hosting/") {
       const repositories = graph.filter((item) => item["@type"] === "SoftwareSourceCode");
       assert.equal(repositories.length, 8, pathname);
       for (const repository of repositories) {
         assert.equal(repository.license, "https://www.apache.org/licenses/LICENSE-2.0", pathname);
         assert.match(repository.codeRepository, /^https:\/\/github.com\/predixlab\/predixlab-[a-z]+$/, pathname);
         assert.ok(repository.programmingLanguage.length > 0, pathname);
+        assert.deepEqual(repository.author, { "@id": organization["@id"] }, pathname);
+        assert.deepEqual(repository.publisher, repository.author, pathname);
         assert.ok(tags(main, "a").some(({ href }) => href === repository.codeRepository), pathname);
       }
-      assert.deepEqual(entry.lastmods, ["2026-10-21"], pathname);
+    }
+    if (pathname === "/docs/") {
+      const cards = [...main.matchAll(/<h2><a href="([^"]+)"/g)].map(([, href]) => href);
+      assert.deepEqual(cards, docsPaths.slice(1), "Docs index must list every doc in order");
+      assert.equal(entry.lastmods[0], entries.filter(({ url }) =>
+        new URL(url).pathname.startsWith("/docs/") && url !== canonicalUrl,
+      ).flatMap(({ lastmods }) => lastmods).sort().at(-1), "Docs lastmod must be the newest doc update");
     }
     if (pathname === "/blog/") {
       const list = only(graph.filter((item) => item["@type"] === "ItemList"), "blog ItemList");

@@ -120,14 +120,14 @@ p { line-height: 1.8; }
 .brand-period { color: var(--blue); }
 .desktop-nav, .nav-actions { display: flex; align-items: center; }
 .desktop-nav { gap: 1.4rem; }
-.nav-link { padding-block: 0.75rem; font-size: 0.85rem; font-weight: 600; color: var(--secondary); text-decoration: none; transition: color 180ms; }
+.nav-link { padding-block: 0.75rem; font-size: 0.85rem; font-weight: 600; color: var(--secondary); text-decoration: none; white-space: nowrap; transition: color 180ms; }
 .nav-link:hover, .nav-link[aria-current="page"] { color: var(--blue); }
 .nav-actions { gap: 0.45rem; }
 .icon-button, .language-button { min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: transparent; text-decoration: none; }
 .icon-button svg { width: 19px; height: 19px; }
 .icon-button:hover, .language-button:hover { background: var(--surface-soft); }
 .language-button { font-size: 0.78rem; font-weight: 600; }
-.nav-dashboard { display: flex; align-items: center; gap: 0.9rem; min-height: 44px; padding: 0.6rem 1rem; margin-left: 0.55rem; border: 1px solid var(--ink); border-radius: 6px; font-size: 0.78rem; font-weight: 700; text-decoration: none; transition: background 180ms, color 180ms; }
+.nav-dashboard { display: flex; align-items: center; gap: 0.9rem; min-height: 44px; padding: 0.6rem 1rem; margin-left: 0.55rem; border: 1px solid var(--ink); border-radius: 6px; font-size: 0.78rem; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background 180ms, color 180ms; }
 .nav-dashboard:hover { background: var(--ink); color: var(--canvas); }
 .nav-dashboard svg { width: 15px; height: 15px; }
 .menu-button, .mobile-nav { display: none; }
@@ -158,6 +158,9 @@ html[lang^="zh"] .eyebrow { letter-spacing: 0.09em; }
 .hero-intro h1 > span { color: var(--blue); }
 html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line-height: 1.25; letter-spacing: -0.055em; }
 .hero-description { max-width: 620px; margin: 1.35rem auto 1.6rem; color: var(--secondary); font-size: 1rem; line-height: 1.85; text-wrap: pretty; }
+.hero-description a { text-underline-offset: 0.2em; }
+.hero-description a:hover { color: var(--blue); }
+#tools { scroll-margin-top: 1rem; }
 .hero-buttons { justify-content: center; }
 .hero-note { color: var(--muted); font-size: 0.69rem; margin-top: 0.85rem; }
 
@@ -470,6 +473,19 @@ html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line
 .page-intro .legal-updated { font-family: var(--mono); font-size: 0.68rem !important; }
 
 .content-page { max-width: 900px; padding-block: 3.5rem 6rem; }
+.docs-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 3rem; align-items: start; }
+.docs-article { min-width: 0; width: 100%; }
+.docs-sidebar { position: sticky; top: 7rem; padding-block: 3.5rem 2rem; font-size: 0.85rem; }
+.docs-sidebar-title { font-weight: 700; text-decoration: none; }
+.docs-sidebar ul { list-style: none; padding: 0; margin: 1rem 0 0; }
+.docs-sidebar li a { display: block; padding-block: 0.7rem; color: var(--secondary); text-decoration: none; }
+.docs-sidebar li a:hover, .docs-sidebar li a[aria-current="page"] { color: var(--blue); }
+.docs-sidebar li a[aria-current="page"] { font-weight: 700; }
+.docs-cards { display: grid; gap: 1rem; margin-top: 2rem; }
+.docs-cards article { padding: 1.5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.docs-cards h2 { font-size: 1.3rem; letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+.docs-cards h2 a { color: var(--blue); text-underline-offset: 0.2em; }
+.docs-cards p { color: var(--secondary); font-size: 0.9rem; }
 .markdown-content { font-size: 0.94rem; line-height: 1.9; overflow-wrap: anywhere; }
 .markdown-content h1 { font-size: clamp(2.4rem, 4.7vw, 4.25rem); line-height: 1.2; margin-bottom: 2rem; }
 .markdown-content h2, .post-related h2, .blog-category h2 { font-size: 1.65rem; line-height: 1.4; margin-block: 2.75rem 1rem; }
@@ -550,7 +566,12 @@ html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line
 }
 
 @media (max-width: 860px) {
-  .desktop-nav, .nav-dashboard { display: none; }
+  .desktop-nav, .nav-dashboard, .nav-github { display: none; }
+  .docs-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .docs-sidebar { position: static; padding-block: 2rem 1rem; border-bottom: 1px solid var(--line); }
+  .docs-sidebar ul { display: flex; flex-wrap: wrap; gap: 0 1.5rem; margin-top: 0.5rem; }
+  .docs-sidebar li a { white-space: nowrap; }
+  .docs-article { padding-top: 2rem; }
   .menu-button { display: inline-flex; }
   .mobile-nav { display: block; border-top: 1px solid var(--line); }
   .mobile-nav .site-container { padding-top: 0.7rem; padding-bottom: 1.25rem; }

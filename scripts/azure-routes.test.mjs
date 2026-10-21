@@ -26,8 +26,19 @@ test("canonical pages rewrite once and index aliases redirect without directory 
       redirect: pathname,
       statusCode: 301,
     });
+
   }
   assert.equal(config.routes.some(({ route }) => route === "/us-stock-signals"), false);
+});
+
+test("Docs routes use canonical rewrites while unpublished drafts have no rewrites or redirects", () => {
+  const docsPaths = ["/docs/", "/docs/how-it-works/", "/docs/limitations/", "/docs/self-hosting/"];
+  const config = createAzureConfig(baseConfig, [...publicPaths, ...docsPaths]);
+  for (const path of docsPaths) {
+    assert.deepEqual(config.routes.find(({ route }) => route === path), { route: path, rewrite: `${path}index.html` });
+  }
+  assert.ok(config.routes.every(({ route }) => !/^\/(?:methodology|open-source)(?:\/|$)/.test(route)));
+  validateRetiredRedirects(config.routes);
 });
 
 test("generated deployment config applies immutable caching only to assets and fonts", async () => {

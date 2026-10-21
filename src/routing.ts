@@ -1,4 +1,4 @@
-import { blogPosts, blogUpdated, contentPages } from "@/content/documents";
+import { blogPosts, blogUpdated, docs, docsUpdated } from "@/content/documents";
 
 export type SiteLanguage = "zh" | "en";
 
@@ -13,8 +13,8 @@ export const sitePages = [
   { key: "about", path: "/about/" },
   { key: "terms", path: "/terms/" },
   { key: "privacy", path: "/privacy/" },
-  { key: "methodology", path: "/methodology/", lastmod: contentPages.methodology.frontmatter.dateModified },
-  { key: "openSource", path: "/open-source/", lastmod: contentPages.openSource.frontmatter.dateModified },
+  { key: "docs", path: "/docs/", lastmod: docsUpdated },
+  ...docs.map((doc) => ({ key: "doc" as const, path: doc.path, lastmod: doc.updated })),
   { key: "blog", path: "/blog/", lastmod: blogUpdated },
   ...blogPosts.map((post) => ({ key: "blogPost" as const, path: post.path, lastmod: post.updated })),
 ] as const;

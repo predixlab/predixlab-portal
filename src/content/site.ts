@@ -68,6 +68,7 @@ export const homeContent = {
     title: ["美股选股器、每日信号和期权异动，", "代码全部开源"],
     description:
       "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，也可以按 Apache-2.0 协议自己部署。方法公开写明，每个信号都附带它过去的表现。",
+    descriptionLink: "方法公开写明",
     primary: "免费开始使用",
     secondary: "了解产品功能",
     note: "无需信用卡 · 免费版信号延迟 10 天",
@@ -106,6 +107,7 @@ export const homeContent = {
     title: ["Open-source US stock analysis:", "daily signals, screener, and options activity"],
     description:
       "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and every signal shown next to its history.",
+    descriptionLink: "the method documented",
     primary: "Get started free",
     secondary: "Explore the tools",
     note: "No credit card required · Free signals have a 10-day delay",

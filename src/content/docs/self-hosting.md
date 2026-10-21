@@ -1,11 +1,12 @@
 ---
 lang: en
-title: "PredixLab Is Open Source: Code From Data to Daily Signals"
-shortTitle: "Open source"
+title: "Self-hosting PredixLab: code from data to daily signals"
+shortTitle: "Self-hosting"
 description: "All PredixLab components are Apache-2.0 on GitHub: data collection, signal models, options analysis, API, dashboard. How to run, verify and contribute."
 h1: "PredixLab is open source"
-datePublished: "2026-10-21"
-dateModified: "2026-10-21"
+updated: "2026-10-21"
+order: "3"
+translationKey: self-hosting
 ---
 
 # PredixLab is open source
@@ -14,7 +15,7 @@ PredixLab's product, from price collection to the dashboard you sign in to, is b
 
 ## Why open source
 
-Signal tools ask you to rely on numbers you can't see being made. We would rather show the work. The data sources, features, labels, validation splits, and backtest assumptions described on the [Methodology](/methodology/) page all live in code. Anyone can reproduce or challenge them.
+Signal tools ask you to rely on numbers you can't see being made. We would rather show the work. The data sources, features, labels, validation splits, and backtest assumptions described in the [How it works](/docs/how-it-works/) doc all live in code. Anyone can reproduce or challenge them.
 
 ## The repositories
 
@@ -52,7 +53,7 @@ uv sync --frozen --extra dev --extra job
 uv run pytest -q
 ```
 
-The tests cover leakage rules directly. Appending future data must not change past features or events. Forward labels must exclude the signal day. The purge gap must cover the label horizon. Pivot backtest entries must occur on the next session, never the signal day, and same-day target/stop touches are resolved stop-first. The tests don't remove the data limitations listed on the [Methodology](/methodology/#known-limitations) page, such as missing delisted companies.
+The tests cover leakage rules directly. Appending future data must not change past features or events. Forward labels must exclude the signal day. The purge gap must cover the label horizon. Pivot backtest entries must occur on the next session, never the signal day, and same-day target/stop touches are resolved stop-first. The tests don't remove the data limitations listed in the [Known limitations](/docs/limitations/) doc, such as missing delisted companies.
 
 **Collect a small sample of prices:**
 
@@ -85,7 +86,7 @@ Contributions are accepted under Apache-2.0.
 
 ## Related
 
-- [Methodology](/methodology/): data, schedule, validation, and backtest assumptions in plain language
+- [How it works](/docs/how-it-works/): data, schedule, validation, and backtest assumptions in plain language
 - [Walk-forward validation for stock signals](/blog/walk-forward-validation/)
 - Product pages: [daily signals](/us-stock-signals/), [stock screener](/quantitative-stock-screener/), [unusual options activity](/unusual-options-activity/)
 

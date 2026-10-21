@@ -21,6 +21,7 @@ export const pricingContent = {
     selfHostedPeriod: "源码免费",
     selfHostedBilling: "Apache-2.0 仅适用于源码",
     selfHostedAction: "在 GitHub 查看源码",
+    selfHostedGuide: "自托管指南",
     externalLinkNote: "（在新标签页中打开）",
     selfHostedNote: "需要一定技术基础，请按各仓库的 README 自行部署和运行。",
     selfHostedFeatures: [
@@ -101,6 +102,7 @@ export const pricingContent = {
     selfHostedPeriod: "free source code",
     selfHostedBilling: "Apache-2.0 covers source code only",
     selfHostedAction: "View source on GitHub",
+    selfHostedGuide: "Self-hosting guide",
     externalLinkNote: " (opens in a new tab)",
     selfHostedNote: "Technical setup required. Follow each repository's README to deploy and run it.",
     selfHostedFeatures: [

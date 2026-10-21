@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ArrowUpRight, Check } from "@phosphor-icons/react";
+import { Link } from "react-router-dom";
 import Questions from "@/components/Questions";
 import { planTerms, pricingContent } from "@/content/company";
 import { config, dashboardLink } from "@/config";
@@ -43,6 +44,7 @@ const PricingPage = () => {
               <a href={config.githubUrl} target="_blank" rel="noopener noreferrer" className="button button-secondary">
                 {copy.selfHostedAction}<span className="sr-only">{copy.externalLinkNote}</span><ArrowUpRight aria-hidden="true" />
               </a>
+              <Link to="/docs/self-hosting/" className="text-link">{copy.selfHostedGuide}<ArrowUpRight aria-hidden="true" /></Link>
               <p className="plan-trial">{copy.selfHostedNote}</p>
               <ul className="plan-features">
                 {copy.selfHostedFeatures.map((feature) => <li key={feature}><Check aria-hidden="true" /><span>{feature}</span></li>)}

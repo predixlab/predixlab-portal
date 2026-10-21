@@ -74,7 +74,7 @@ Two more habits help. Report results at more than one cost level, so you can see
 
 ## How PredixLab handles these
 
-PredixLab's [daily signals](/us-stock-signals/) are built in the open-source [predixlab-signals](https://github.com/predixlab/predixlab-signals) repository. The [Methodology](/methodology/) page describes the assumptions:
+PredixLab's [daily signals](/us-stock-signals/) are built in the open-source [predixlab-signals](https://github.com/predixlab/predixlab-signals) repository. The [How it works](/docs/how-it-works/) doc describes the assumptions:
 
 What it does:
 
@@ -92,7 +92,7 @@ Where it falls short, by the standards in this article:
 
 The repository's tests include the "append future data" check described above.
 
-The full list is on the [Methodology](/methodology/#known-limitations) page. None of these steps makes a strategy profitable. Closing the leaks makes a backtest a fairer test of an idea, which is the most a backtest can do.
+The full list is in the [Known limitations](/docs/limitations/) doc. None of these steps makes a strategy profitable. Closing the leaks makes a backtest a fairer test of an idea, which is the most a backtest can do.
 
 ---
 

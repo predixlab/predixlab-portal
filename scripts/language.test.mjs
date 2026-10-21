@@ -88,22 +88,24 @@ const server = await createServer({
   optimizeDeps: { noDiscovery: true, include: [] },
 });
 after(() => server.close());
-const [routing, { blogPosts }] = await Promise.all([
+const [routing, { blogPosts, docs }] = await Promise.all([
   server.ssrLoadModule("/src/routing.ts"),
   server.ssrLoadModule("/src/content/documents.ts"),
 ]);
 
 test("public links never add a language prefix and preserve query strings and anchors", () => {
   assert.equal(routing.publicPath("/pricing/?plan=annual#plans"), "/pricing/?plan=annual#plans");
-  assert.equal(routing.publicPath("/#research-tools"), "/#research-tools");
+  assert.equal(routing.publicPath("/#tools"), "/#tools");
   assert.equal(routing.publicPath("/"), "/");
 });
 
 test("the public inventory contains one route per page and unknown paths stay unknown", () => {
-  assert.equal(routing.sitePages.length, 11 + blogPosts.length);
+  assert.equal(routing.sitePages.length, 10 + blogPosts.length + docs.length);
   assert.equal(new Set(routing.sitePages.map(page => page.path)).size, routing.sitePages.length);
   assert.equal(routing.sitePages.some(page => /^\/(?:en|zh)\//.test(page.path)), false);
   for (const post of blogPosts) assert.equal(routing.getPageForPath(post.path).key, "blogPost");
+  for (const doc of docs) assert.equal(routing.getPageForPath(doc.path).key, "doc");
+  assert.equal(routing.getPageForPath("/docs/").key, "docs");
   assert.equal(routing.getPageForPath("/pricing/").key, "pricing");
   assert.equal(routing.getPageForPath("/en/pricing/"), undefined);
   assert.equal(routing.getPageForPath("/en/"), undefined);
