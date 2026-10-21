@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ArrowUpRight, Check } from "@phosphor-icons/react";
 import Questions from "@/components/Questions";
 import { planTerms, pricingContent } from "@/content/company";
-import { dashboardLink } from "@/config";
+import { config, dashboardLink } from "@/config";
 import { useSiteLanguage } from "@/hooks/useSiteLanguage";
 
 const PricingPage = () => {
@@ -35,6 +35,19 @@ const PricingPage = () => {
             </div>
           </fieldset>
           <div className="plan-grid">
+            <article className="plan">
+              <div className="plan-label"><h2>{copy.selfHosted}</h2><span className="plan-badge">{copy.selfHostedBadge}</span></div>
+              <p className="plan-description">{copy.selfHostedDescription}</p>
+              <div className="plan-price"><strong>$0</strong><span>{copy.selfHostedPeriod}</span></div>
+              <p className="plan-billing-note">{copy.selfHostedBilling}</p>
+              <a href={config.githubUrl} target="_blank" rel="noopener noreferrer" className="button button-secondary">
+                {copy.selfHostedAction}<span className="sr-only">{copy.externalLinkNote}</span><ArrowUpRight aria-hidden="true" />
+              </a>
+              <p className="plan-trial">{copy.selfHostedNote}</p>
+              <ul className="plan-features">
+                {copy.selfHostedFeatures.map((feature) => <li key={feature}><Check aria-hidden="true" /><span>{feature}</span></li>)}
+              </ul>
+            </article>
             <article className="plan">
               <div className="plan-label"><h2>{copy.free}</h2></div>
               <p className="plan-description">{copy.freeDescription}</p>
@@ -71,16 +84,19 @@ const PricingPage = () => {
         <div className="site-container">
           <div className="section-heading">
             <p className="eyebrow">{copy.compareEyebrow}</p>
-            <h2>{copy.compareTitle}</h2>
+            <h2 id="plan-comparison-title">{copy.compareTitle}</h2>
             <p>{copy.compareDescription}</p>
           </div>
-          <table className="comparison-table">
-            <caption className="sr-only">{copy.compareTitle}</caption>
-            <thead><tr><th scope="col">{copy.featureColumn}</th><th scope="col">{copy.free}</th><th scope="col">{copy.premium}</th></tr></thead>
-            <tbody>
-              {copy.rows.map((row, index) => <tr key={row}><th scope="row">{row}</th><td>{index < 3 ? copy.included : copy.delayed}</td><td>{index < 3 ? copy.included : copy.latest}</td></tr>)}
-            </tbody>
-          </table>
+          {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Keyboard access to the horizontally scrollable table. */}
+          <div className="comparison-table-scroll" role="region" aria-labelledby="plan-comparison-title" tabIndex={0}>
+            <table className="comparison-table">
+              <caption className="sr-only">{copy.compareTitle}</caption>
+              <thead><tr><th scope="col">{copy.featureColumn}</th><th scope="col">{copy.selfHosted}</th><th scope="col">{copy.free}</th><th scope="col">{copy.premium}</th></tr></thead>
+              <tbody>
+                {copy.rows.map((row, index) => <tr key={row}><th scope="row">{row}</th><td>{copy.selfHostedAvailability}</td><td>{index < 3 ? copy.included : copy.delayed}</td><td>{index < 3 ? copy.included : copy.latest}</td></tr>)}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
       <section className="section">
