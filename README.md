@@ -14,8 +14,8 @@ api.predixlab.com       -> Application API
 
 The Portal and Dashboard URLs are source constants in [`src/config.ts`](src/config.ts). Dashboard links use that module's shared referral helper. The Portal does not call the application API.
 
-The shared footer links to PredixLab's official GitHub and X profiles using URLs
-from the same configuration and states that the project is open source under Apache-2.0.
+The shared footer uses icon-only links to PredixLab's official GitHub and X profiles
+from the same configuration, with localized accessible labels that announce opening a new tab.
 
 ## Site content
 

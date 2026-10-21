@@ -2,12 +2,15 @@ import assert from "node:assert/strict";
 import { access, readFile, readdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { GithubLogo, XLogo } from "@phosphor-icons/react";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { azureRouteKey, validateAzureRouteKeys } from "./azure-routes.mjs";
 
 const origin = "https://predixlab.com";
 const officialProfiles = [
-  { name: "GitHub", url: "https://github.com/predixlab" },
-  { name: "X", url: "https://x.com/predixlab" },
+  { name: "GitHub", url: "https://github.com/predixlab", icon: GithubLogo },
+  { name: "X", url: "https://x.com/predixlab", icon: XLogo },
 ];
 const notFoundPaths = ["/404.html"];
 export const retiredPagePaths = [
@@ -185,7 +188,8 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     const head = only([...html.matchAll(/<head>([\s\S]*?)<\/head>/g)], `${pathname} head`)[1];
     const main = only([...html.matchAll(/<main\b[^>]*>([\s\S]*?)<\/main>/g)], `${pathname} main`)[1];
     const footer = only([...html.matchAll(/<footer\b[^>]*>([\s\S]*?)<\/footer>/g)], `${pathname} footer`)[1];
-    assert.ok(textContent(footer).includes("Open source (Apache-2.0)"), `Missing open-source status: ${pathname}`);
+    assert.doesNotMatch(textContent(footer), /Open source \(Apache-2\.0\)|开源（Apache-2\.0）/, `Removed open-source status: ${pathname}`);
+    assert.doesNotMatch(decodeHtml(footer), /contact@predixlab\.com/i, `Removed footer email: ${pathname}`);
     const footerLinks = [...footer.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)];
     for (const profile of officialProfiles) {
       const link = only(
@@ -195,14 +199,14 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       const attrs = attributes(link[1]);
       assert.equal(attrs.target, "_blank", pathname);
       assert.deepEqual(attrs.rel?.split(/\s+/).sort(), ["noopener", "noreferrer"], pathname);
-      assert.ok(textContent(link[2]).startsWith(profile.name), `Missing profile label: ${pathname}`);
-      const hint = only(
-        [...link[2].matchAll(/<span\b([^>]*)>([\s\S]*?)<\/span>/g)].filter(
-          ([, spanAttrs]) => attributes(spanAttrs).class?.split(/\s+/).includes("sr-only"),
-        ),
-        `${pathname} ${profile.name} new-tab hint`,
+      assert.ok(attrs["aria-label"]?.trim(), `Missing accessible profile label: ${pathname}`);
+      assert.equal(attrs["aria-label"], `PredixLab on ${profile.name} (opens in a new tab)`, pathname);
+      assert.equal(textContent(link[2]), "", `Profile links must not contain text: ${pathname}`);
+      assert.equal(
+        link[2].trim(),
+        renderToStaticMarkup(createElement(profile.icon, { "aria-hidden": "true" })),
+        `${pathname} ${profile.name} link must contain only its aria-hidden logo, without an external-link glyph`,
       );
-      assert.equal(textContent(hint[2]), "(opens in a new tab)", pathname);
     }
     const h1 = textContent(only([...main.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g)], `${pathname} h1`)[1]);
     assert.ok(h1.length > 0 && textContent(main).length > (isNotFound ? 30 : 200), `Missing page copy: ${pathname}`);

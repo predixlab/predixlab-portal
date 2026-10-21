@@ -115,3 +115,19 @@ test("the not-found dashboard CTA keeps shared referral attribution", async () =
   assert.match(notFoundPage, /import \{ dashboardLink \} from "@\/config"/);
   assert.match(notFoundPage, /href=\{dashboardLink\("\/", "not-found"\)\}/);
 });
+
+test("footer profile labels are localized and obsolete footer strings are removed", async () => {
+  const [en, zh] = await Promise.all(["en", "zh"].map(async (language) =>
+    JSON.parse(await readFile(new URL(`../src/i18n/locales/${language}.json`, import.meta.url), "utf8")),
+  ));
+  assert.deepEqual(Object.keys(en.footer), Object.keys(zh.footer));
+  assert.equal(en.footer.githubLabel, "PredixLab on GitHub (opens in a new tab)");
+  assert.equal(en.footer.xLabel, "PredixLab on X (opens in a new tab)");
+  assert.equal(zh.footer.githubLabel, "PredixLab 的 GitHub（在新标签页中打开）");
+  assert.equal(zh.footer.xLabel, "PredixLab 的 X 账号（在新标签页中打开）");
+  for (const locale of [en, zh]) {
+    for (const key of ["github", "x", "opensInNewTab", "openSource"]) {
+      assert.equal(Object.hasOwn(locale.footer, key), false, `Unused footer string: ${key}`);
+    }
+  }
+});

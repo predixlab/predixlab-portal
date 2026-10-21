@@ -62,10 +62,8 @@
   "footer": {
     "manifesto": "看懂行情，独立判断。",
     "description": "面向个人投资者的美股分析工具，汇集每日信号、股票筛选和期权异动。",
-    "github": "GitHub",
-    "x": "X",
-    "openSource": "开源（Apache-2.0）",
-    "opensInNewTab": "（在新标签页中打开）",
+    "githubLabel": "PredixLab 的 GitHub（在新标签页中打开）",
+    "xLabel": "PredixLab 的 X 账号（在新标签页中打开）",
     "tools": "产品功能",
     "explore": "了解更多",
     "stockSignals": "每日美股信号",
