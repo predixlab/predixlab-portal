@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowUpRight, List, Moon, Sun, X } from "@phosphor-icons/react";
+import { ArrowUpRight, GithubLogo, List, Moon, Sun, X, XLogo } from "@phosphor-icons/react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import Seo from "@/components/Seo";
@@ -178,16 +178,14 @@ const Layout = ({ children }: { children: ReactNode }) => {
               <Link to={localPath("/")} className="brand-lockup"><img className="brand-mark" src="/icons/icon.svg" width="34" height="34" alt="" /><span>PredixLab.</span></Link>
               <p className="footer-manifesto">{t("footer.manifesto")}</p>
               <p>{t("footer.description")}</p>
-              <a className="footer-contact" href="mailto:contact@predixlab.com">contact@predixlab.com<ArrowUpRight aria-hidden="true" /></a>
               <div className="footer-profiles">
-                <a className="footer-contact" href={config.githubUrl} target="_blank" rel="noopener noreferrer">
-                  {t("footer.github")}<ArrowUpRight aria-hidden="true" /><span className="sr-only"> {t("footer.opensInNewTab")}</span>
+                <a className="footer-profile" href={config.githubUrl} target="_blank" rel="noopener noreferrer" aria-label={t("footer.githubLabel")}>
+                  <GithubLogo aria-hidden="true" />
                 </a>
-                <a className="footer-contact" href={config.xUrl} target="_blank" rel="noopener noreferrer">
-                  {t("footer.x")}<ArrowUpRight aria-hidden="true" /><span className="sr-only"> {t("footer.opensInNewTab")}</span>
+                <a className="footer-profile" href={config.xUrl} target="_blank" rel="noopener noreferrer" aria-label={t("footer.xLabel")}>
+                  <XLogo aria-hidden="true" />
                 </a>
               </div>
-              <p>{t("footer.openSource")}</p>
             </div>
             <div className="footer-column">
               <h2>{t("footer.tools")}</h2>
