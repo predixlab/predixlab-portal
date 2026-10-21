@@ -112,7 +112,15 @@ and prerenders before uploading. `VITE_GA_MEASUREMENT_ID` is supplied to the
 explicit build step. The deployment action uploads prebuilt `dist/` with its
 app build disabled; it does not run a second build with an implicit Node version.
 
-The Azure Static Web Apps workflow builds and deploys `dist/` from the repository root. [`staticwebapp.config.json`](staticwebapp.config.json) holds the base not-found configuration; the build adds canonical route rewrites and redirects to `dist/staticwebapp.config.json`. Deploy the generated configuration, not just the base file. Deployment needs the Azure token referenced by the workflow. Other hosts must serve generated directory indexes, preserve canonical redirects, and return HTTP 404 for unknown paths; do not add a blanket successful SPA fallback.
+The Azure Static Web Apps workflow builds and deploys `dist/` from the repository root. [`staticwebapp.config.json`](staticwebapp.config.json) holds the base not-found and asset-caching configuration; the build adds canonical route rewrites and redirects to `dist/staticwebapp.config.json`. Deploy the generated configuration, not just the base file. Deployment needs the Azure token referenced by the workflow. Other hosts must serve generated directory indexes, preserve canonical redirects, and return HTTP 404 for unknown paths; do not add a blanket successful SPA fallback.
+
+Only `/assets/*` (Vite content-hashed build files) and `/fonts/*` receive
+`Cache-Control: public, max-age=31536000, immutable`: one year of immutable
+caching. Fonts in `public/fonts/` are not content-hashed, so every changed font
+must have a new filename and its CSS references must use that new name; do not
+overwrite an existing font file in place. HTML pages, the sitemap, `robots.txt`,
+icons, social images, and other files outside those directories keep their
+existing caching, with no global long-lived cache header.
 
 Azure normalizes a directory route with and without its trailing slash to the
 same configuration key. The generated configuration therefore has one rewrite

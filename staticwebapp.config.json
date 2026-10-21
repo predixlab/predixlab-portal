@@ -4,6 +4,14 @@
     {
       "route": "/404.html",
       "headers": { "X-Robots-Tag": "noindex, follow" }
+    },
+    {
+      "route": "/assets/*",
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable" }
+    },
+    {
+      "route": "/fonts/*",
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable" }
     }
   ],
   "responseOverrides": {
