@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { GithubLogo, XLogo } from "@phosphor-icons/react";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { azureRouteKey, validateAzureRouteKeys } from "./azure-routes.mjs";
+import { azureRouteKey, retiredRedirects, validateAzureRouteKeys, validateRetiredRedirects } from "./azure-routes.mjs";
 
 const origin = "https://predixlab.com";
 const officialProfiles = [
@@ -13,12 +13,6 @@ const officialProfiles = [
   { name: "X", url: "https://x.com/predixlab", icon: XLogo },
 ];
 const notFoundPaths = ["/404.html"];
-export const retiredPagePaths = [
-  "/insights/",
-  "/insights/walk-forward-validation-stock-signals/",
-  "/en/insights/",
-  "/en/insights/walk-forward-validation-stock-signals/",
-];
 const decodeHtml = (value) =>
   value.replace(/&(#x[\da-f]+|#\d+|amp|lt|gt|quot|apos);/gi, (_, entity) => {
     if (entity.startsWith("#")) {
@@ -30,7 +24,7 @@ const decodeHtml = (value) =>
   });
 const attributes = (tag) =>
   Object.fromEntries(
-    [...tag.matchAll(/([\w:-]+)="([^"]*)"/g)].map(([, key, value]) => [key, decodeHtml(value)]),
+    [...tag.matchAll(/([\w:-]+)="([^"]*)"/g)].map(([, key, value]) => [key.toLowerCase(), decodeHtml(value)]),
   );
 const textContent = (html) =>
   decodeHtml(
@@ -112,12 +106,20 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     (rule) => rule.route.endsWith("/") && rule.rewrite === `${rule.route}index.html`,
   );
   const publicPaths = canonicalRules.map((rule) => rule.route);
-  assert.equal(publicPaths.length, 8, "One canonical route is required per public page");
-  assert.ok(publicPaths.every((pathname) => !pathname.startsWith("/en/")), "Language-prefixed canonical route");
-  assert.ok(config.routes.every((rule) => !/^\/en(?:\/|$)/.test(rule.route)), "No legacy language routes or redirects");
+  assert.ok(publicPaths.length > 0, "Public canonical routes are required");
+  assert.ok(publicPaths.every((pathname) => !/^\/(?:en|zh)\//.test(pathname)), "Language-prefixed canonical route");
+  validateRetiredRedirects(config.routes);
   assert.ok(
-    config.routes.every((rule) => !/^\/(?:en\/)?insights(?:\/|$)/.test(rule.route)),
-    "Retired pages must not remain in the deployed route inventory",
+    config.routes.every((rule) => !/^\/(?:en|zh)(?:\/|$)/.test(rule.route) || retiredRedirects.some(({ route }) => route === rule.route)),
+    "No legacy language routes except the explicit retired insights redirects",
+  );
+  for (const rule of retiredRedirects) {
+    assert.ok(publicPaths.includes(rule.redirect), `Missing redirect target: ${rule.redirect}`);
+  }
+  assert.deepEqual(
+    config.routes.find((rule) => rule.route === "/blog/rss.xml"),
+    { route: "/blog/rss.xml", headers: { "Content-Type": "application/rss+xml" } },
+    "Serve the blog feed as RSS XML",
   );
   validateAzureRouteKeys(config.routes);
   assert.ok(
@@ -141,11 +143,19 @@ export const validateSeoOutput = async (directory, expectedPages) => {
   assert.equal(config.globalHeaders?.["Cache-Control"], undefined, "No global caching override");
 
   const sitemap = await readFile(join(directory, "sitemap.xml"), "utf8");
-  assert.doesNotMatch(sitemap, /xmlns:xhtml|xhtml:link|hreflang|<lastmod>|[?&]lng=|404\.html|\/insights(?:\/|<)|https:\/\/predixlab\.com\/en(?:\/|<)/);
+  assert.doesNotMatch(sitemap, /xmlns:xhtml|xhtml:link|hreflang|[?&]lng=|404\.html|\/insights(?:\/|<)|https:\/\/predixlab\.com\/(?:en|zh)(?:\/|<)/);
   const entries = [...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(([, xml]) => ({
     url: decodeHtml(only([...xml.matchAll(/<loc>([^<]+)<\/loc>/g)], "sitemap location")[1]),
     alternates: tags(xml, "xhtml:link"),
+    lastmods: [...xml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map(([, date]) => date),
   }));
+  for (const entry of entries) {
+    assert.ok(entry.lastmods.length <= 1, `Duplicate sitemap lastmod: ${entry.url}`);
+    for (const date of entry.lastmods) {
+      assert.match(date, /^\d{4}-\d{2}-\d{2}$/, entry.url);
+      assert.equal(new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10), date, entry.url);
+    }
+  }
   assert.deepEqual(
     entries.map(({ url }) => url).sort(),
     publicPaths.map((pathname) => `${origin}${pathname}`).sort(),
@@ -172,10 +182,14 @@ export const validateSeoOutput = async (directory, expectedPages) => {
   for (const pathname of [...publicPaths, ...notFoundPaths]) {
     const html = await readFile(fileForPath(directory, pathname), "utf8");
     const isNotFound = notFoundPaths.includes(pathname);
+    const isBlog = pathname.startsWith("/blog/");
+    const isPost = isBlog && pathname !== "/blog/";
+    const isDocument = isPost || pathname === "/methodology/" || pathname === "/open-source/";
+    const isNewPage = isBlog || isDocument;
     const language = "en";
     assert.match(html, new RegExp(`<html lang="${language}">`), pathname);
     assert.doesNotMatch(html, /<!--(?:seo-head|app-html)-->|fonts\.(?:googleapis|gstatic)\.com|[?&]lng=/, pathname);
-    assert.doesNotMatch(decodeHtml(html), /\u7814\u7a76/, `Outdated Chinese copy: ${pathname}`);
+    if (!isNewPage) assert.doesNotMatch(decodeHtml(html), /\u7814\u7a76/, `Outdated Chinese copy: ${pathname}`);
     assert.doesNotMatch(html, /\/(?:en\/)?insights(?:\/|["?#])/, `Retired page reference: ${pathname}`);
     assert.match(html, /<div id="root">[\s\S]+<main\b/, `Empty application: ${pathname}`);
     const languageButton = only(
@@ -275,23 +289,34 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       if (!link.href) continue;
       const destination = new URL(link.href, canonicalUrl);
       if (destination.origin === origin) {
-        assert.ok(publicPaths.includes(destination.pathname), `Noncanonical internal link: ${pathname} -> ${link.href}`);
+        assert.ok(
+          publicPaths.includes(destination.pathname) || destination.pathname === "/blog/rss.xml",
+          `Noncanonical internal link: ${pathname} -> ${link.href}`,
+        );
+        assert.equal(destination.searchParams.has("lng"), false, pathname);
       }
     }
     assert.equal(only(canonical, `${pathname} canonical`).href, canonicalUrl, pathname);
     assert.equal(meta("og:url"), canonicalUrl, pathname);
     assert.match(meta("robots"), /^index, follow/, pathname);
-    assert.deepEqual(alternates, [], `No separate language URLs: ${pathname}`);
+    assert.deepEqual(alternates, isBlog ? [{
+      rel: "alternate",
+      type: "application/rss+xml",
+      title: "PredixLab Blog RSS",
+      href: `${origin}/blog/rss.xml`,
+    }] : [], `Only blog RSS discovery is allowed; no language alternates: ${pathname}`);
     const entry = only(entries.filter(({ url }) => url === canonicalUrl), `${pathname} sitemap entry`);
     assert.deepEqual(entry.alternates, [], pathname);
+    if (expected) assert.deepEqual(entry.lastmods, expected.lastmod ? [expected.lastmod] : [], pathname);
 
     const schema = JSON.parse(only(jsonScripts, `${pathname} JSON-LD`)[1]);
     if (expected) assert.deepEqual(schema, expected.structuredData, pathname);
     assert.equal(schema["@context"], "https://schema.org", pathname);
-    assert.doesNotMatch(JSON.stringify(schema), /"(?:aggregateRating|review|ratingValue)"/, pathname);
+    assert.doesNotMatch(JSON.stringify(schema), /"(?:aggregateRating|review|reviews|ratingValue|performance|accuracy|returns?)"/, pathname);
     const graph = schema["@graph"];
     assert.ok(graph.every((item) => item["@type"] !== "Article"), `Retired article schema: ${pathname}`);
-    for (const type of ["Organization", "WebSite", "WebPage"]) {
+    const pageType = pathname === "/blog/" ? "CollectionPage" : "WebPage";
+    for (const type of ["Organization", "WebSite", pageType]) {
       only(graph.filter((item) => item["@type"] === type), `${pathname} ${type}`);
     }
     const organization = graph.find((item) => item["@type"] === "Organization");
@@ -302,7 +327,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       width: logoWidth,
       height: logoHeight,
     }, `${pathname} PNG organization logo`);
-    const webpage = graph.find((item) => item["@type"] === "WebPage");
+    const webpage = graph.find((item) => item["@type"] === pageType);
     assert.equal(webpage.url, canonicalUrl, pathname);
     assert.equal(webpage.inLanguage, language, pathname);
     const breadcrumbs = graph.filter((item) => item["@type"] === "BreadcrumbList");
@@ -314,6 +339,85 @@ export const validateSeoOutput = async (directory, expectedPages) => {
         assert.equal(item.position, index + 1, pathname);
         assert.ok(entries.some(({ url }) => url === item.item), `Noncanonical breadcrumb: ${item.item}`);
       });
+      if (isNewPage) {
+        const visible = textContent(only(
+          [...main.matchAll(/<nav\b[^>]*class="breadcrumb"[^>]*>([\s\S]*?)<\/nav>/g)],
+          `${pathname} visible breadcrumb`,
+        )[1]);
+        for (const item of items) assert.ok(visible.includes(item.name), `${pathname} invisible breadcrumb`);
+        assert.notEqual(items.at(-1).name, title, `${pathname} breadcrumb must use a short name`);
+        assert.deepEqual(items.map(({ item }) => item), isPost
+          ? [`${origin}/`, `${origin}/blog/`, canonicalUrl]
+          : [`${origin}/`, canonicalUrl], pathname);
+      }
+    }
+    if (isNewPage) {
+      assert.doesNotMatch(textContent(main), /real[- ]?time|实时/i, pathname);
+      if (pathname !== "/methodology/") {
+        assert.ok(tags(main, "a").some(({ href }) => href === "/methodology/"), `${pathname} methodology link`);
+      }
+    }
+    if (isDocument) {
+      for (const link of tags(main, "a").filter(({ href }) => href?.startsWith("https://"))) {
+        if (new URL(link.href).origin === origin) continue;
+        assert.equal(link.target, "_blank", `${pathname} external link`);
+        assert.deepEqual(link.rel?.split(/\s+/).sort(), ["noopener", "noreferrer"], `${pathname} external link`);
+      }
+      const disclaimer = only(
+        [...main.matchAll(/<div class="content-disclaimer markdown-content">([\s\S]*?)<\/div><\/article>$/g)],
+        `${pathname} final risk disclaimer`,
+      )[1];
+      assert.match(textContent(disclaimer), /not investment advice.*不构成投资建议/, pathname);
+      const dates = tags(main, "time").map(({ datetime }) => datetime);
+      if (isPost || pathname === "/methodology/") {
+        const article = only(
+          graph.filter((item) => item["@type"] === (isPost ? "BlogPosting" : "TechArticle")),
+          `${pathname} article`,
+        );
+        assert.equal(article.headline, title, pathname);
+        assert.equal(article.description, description, pathname);
+        assert.equal(article.inLanguage, "en", pathname);
+        assert.equal(article.mainEntityOfPage, canonicalUrl, pathname);
+        assert.deepEqual(article.author, { "@id": organization["@id"] }, pathname);
+        assert.deepEqual(article.publisher, { "@id": organization["@id"] }, pathname);
+        assert.deepEqual(dates, [article.datePublished, article.dateModified], pathname);
+        assert.deepEqual(entry.lastmods, [article.dateModified], pathname);
+        assert.deepEqual(article.image, {
+          "@type": "ImageObject", url: meta("og:image"), width: 1200, height: 630,
+        }, pathname);
+        if (!isPost) {
+          assert.equal(article.datePublished, "2026-10-21", pathname);
+          assert.equal(article.dateModified, "2026-10-21", pathname);
+          assert.match(main, /<h2 id="known-limitations">Known limitations<\/h2>/, pathname);
+        } else {
+          assert.notEqual(meta("og:image:alt"), title, `${pathname} needs a real image description`);
+          assert.match(main, /<aside class="post-related"/, pathname);
+          assert.ok(tags(main, "a").some(({ href }) =>
+            href?.startsWith("/blog/") && href !== pathname), `${pathname} related post`);
+        }
+      }
+    }
+    if (pathname === "/open-source/") {
+      const repositories = graph.filter((item) => item["@type"] === "SoftwareSourceCode");
+      assert.equal(repositories.length, 8, pathname);
+      for (const repository of repositories) {
+        assert.equal(repository.license, "https://www.apache.org/licenses/LICENSE-2.0", pathname);
+        assert.match(repository.codeRepository, /^https:\/\/github.com\/predixlab\/predixlab-[a-z]+$/, pathname);
+        assert.ok(repository.programmingLanguage.length > 0, pathname);
+        assert.ok(tags(main, "a").some(({ href }) => href === repository.codeRepository), pathname);
+      }
+      assert.deepEqual(entry.lastmods, ["2026-10-21"], pathname);
+    }
+    if (pathname === "/blog/") {
+      const list = only(graph.filter((item) => item["@type"] === "ItemList"), "blog ItemList");
+      assert.deepEqual(
+        list.itemListElement.map(({ url }) => url).sort(),
+        entries.filter(({ url }) => new URL(url).pathname.startsWith("/blog/") && url !== canonicalUrl).map(({ url }) => url).sort(),
+        "Blog listing must contain every post",
+      );
+      assert.equal(entry.lastmods[0], entries.filter(({ url }) =>
+        new URL(url).pathname.startsWith("/blog/") && url !== canonicalUrl,
+      ).flatMap(({ lastmods }) => lastmods).sort().at(-1), "Blog lastmod must be the newest post update");
     }
     for (const faq of graph.filter((item) => item["@type"] === "FAQPage")) {
       assert.equal(pathname, "/", pathname);
@@ -357,5 +461,17 @@ export const validateSeoOutput = async (directory, expectedPages) => {
 };
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
-  await validateSeoOutput(fileURLToPath(new URL("../dist/", import.meta.url)));
+  const { createServer } = await import("vite");
+  const server = await createServer({
+    appType: "custom",
+    server: { middlewareMode: true, watch: null, hmr: false, ws: false },
+    optimizeDeps: { noDiscovery: true, include: [] },
+  });
+  try {
+    const { publicPaths, getPageSeo } = await server.ssrLoadModule("/src/seo.ts");
+    const expectedPages = new Map([...publicPaths, ...notFoundPaths].map((path) => [path, getPageSeo(path)]));
+    await validateSeoOutput(fileURLToPath(new URL("../dist/", import.meta.url)), expectedPages);
+  } finally {
+    await server.close();
+  }
 }

@@ -70,7 +70,10 @@ const ProductPage = ({ product }: { product: ProductId }) => {
       <section className="section">
         <div className="site-container boundaries-layout">
           <div className="section-heading"><p className="eyebrow">{isEnglish ? "03 / KEEP IN MIND" : "03 / 使用前请注意"}</p><h2>{copy.boundaryTitle}</h2></div>
-          <ul className="boundary-list">{copy.boundaries.map((item) => <li key={item}><span aria-hidden="true">↗</span>{item}</li>)}</ul>
+          <div>
+            <ul className="boundary-list">{copy.boundaries.map((item) => <li key={item}><span aria-hidden="true">↗</span>{item}</li>)}</ul>
+            <p><Link className="text-link" to={localPath("/methodology/")}>{isEnglish ? "How the signals are built and tested" : "信号如何构建和检验"}</Link></p>
+          </div>
         </div>
       </section>
       <section className="section faq-section">

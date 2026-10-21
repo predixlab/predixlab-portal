@@ -34,6 +34,8 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const navItems = [
     { path: "/#research-tools", label: t("nav.tools") },
     { path: "/pricing/", label: t("nav.pricing") },
+    { path: "/methodology/", label: t("nav.methodology") },
+    { path: "/blog/", label: t("nav.blog") },
     { path: "/about/", label: t("nav.about") },
   ];
 
@@ -200,6 +202,8 @@ const Layout = ({ children }: { children: ReactNode }) => {
               <h2>{t("footer.explore")}</h2>
               <ul>
                 <li><Link to={localPath("/pricing/")}>{t("nav.pricing")}</Link></li>
+                <li><Link to={localPath("/methodology/")}>{t("nav.methodology")}</Link></li>
+                <li><Link to={localPath("/blog/")}>{t("nav.blog")}</Link></li>
                 <li><Link to={localPath("/about/")}>{t("nav.about")}</Link></li>
               </ul>
             </div>

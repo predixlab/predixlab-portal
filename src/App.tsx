@@ -11,6 +11,8 @@ import LegalPage from "@/pages/LegalPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import StockSignalsPage from "@/pages/StockSignalsPage";
 import UnusualOptionsActivityPage from "@/pages/UnusualOptionsActivityPage";
+import MarkdownPage from "@/pages/MarkdownPage";
+import BlogPage from "@/pages/BlogPage";
 import { sitePages, type PageKey } from "@/routing";
 
 const pages: Record<PageKey, ReactNode> = {
@@ -22,6 +24,10 @@ const pages: Record<PageKey, ReactNode> = {
   unusualOptions: <UnusualOptionsActivityPage />,
   terms: <LegalPage type="terms" />,
   privacy: <LegalPage type="privacy" />,
+  methodology: <MarkdownPage />,
+  openSource: <MarkdownPage />,
+  blog: <BlogPage />,
+  blogPost: <MarkdownPage />,
 };
 
 function App() {
@@ -29,7 +35,7 @@ function App() {
     <Layout>
       <Routes>
         {sitePages.map((page) => (
-          <Route key={page.key} path={page.path} element={pages[page.key]} />
+          <Route key={page.path} path={page.path} element={pages[page.key]} />
         ))}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

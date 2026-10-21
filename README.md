@@ -28,13 +28,16 @@ from the same configuration, with localized accessible labels that announce open
 | `/pricing/` | Self-hosted/Free/Premium comparison and hosted monthly/annual pricing |
 | `/about/` | Product purpose, research process, and contact information |
 | `/terms/`, `/privacy/` | Legal documents |
+| `/methodology/`, `/open-source/` | English methodology, known limitations, and source repositories |
+| `/blog/`, `/blog/<slug>/` | English research guides, grouped by category |
+| `/blog/rss.xml` | RSS 2.0 feed |
 | `*` | Not-found page |
 
-The listed routes default to English, for 8 indexable pages in total. The language button switches English and Chinese in place without changing the URL, query string, hash, browser history or page state. The choice is stored under `predixlab-language` and restored after hydration, including on subsequent page visits; without a saved choice, the site uses English rather than the browser's language. If browser storage is unavailable, in-page switching still works for the current visit.
+The public HTML pages default to English. The language button switches the original product, company, and legal pages between English and Chinese in place without changing the URL, query string, hash, browser history or page state. Methodology, open source, and blog content remain English (with bilingual risk disclaimers), even when the shared navigation is Chinese. The choice is stored under `predixlab-language` and restored after hydration, including on subsequent page visits; without a saved choice, the site uses English rather than the browser's language. If browser storage is unavailable, in-page switching still works for the current visit.
 
-Language-prefixed routes such as `/en/...` are not supported and return 404. There are no legacy language redirects or query-parameter migrations. New links never contain a language prefix or parameter; language is controlled only by the in-page selection and saved preference.
+Language-prefixed routes such as `/en/...` and `/zh/...` are not supported and return 404, except for the explicit retired insights redirects below. There are no other legacy language redirects or query-parameter migrations. New links never contain a language prefix or parameter; language is controlled only by the in-page selection and saved preference.
 
-The former `/insights/` listing and its article, including English variants, are retired. They are not linked or included in the sitemap and return the site's normal 404 response.
+The retired `/insights/` listing permanently redirects to `/blog/`, and `/insights/walk-forward-validation-stock-signals/` permanently redirects to `/blog/walk-forward-validation/`. Their `/en/insights/...` variants redirect to the same targets. These old URLs are not linked or included in the sitemap.
 
 The $0 Self-hosted option is Apache-2.0 pipeline source code, not a hosted offer. Users deploy it with their own infrastructure, data licenses, and compute; it does not include PredixLab-hosted data, a dashboard, an account, or an SLA. Hosted Free and Premium prices and structured-data offers remain separate.
 
@@ -47,6 +50,25 @@ The homepage scene is an original workflow illustration, not a live chart or an 
 - [`src/content/company.ts`](src/content/company.ts): pricing, plan terms, and product principles.
 - [`src/i18n/locales/`](src/i18n/locales/): shared navigation, metadata, footer, and consent translations.
 - [`src/content/legalDocuments.ts`](src/content/legalDocuments.ts): legal text; do not change contractual terms as part of marketing edits.
+- [`src/content/pages/`](src/content/pages/): methodology and open-source Markdown.
+- [`src/content/blog/`](src/content/blog/): posts discovered automatically by a build-time glob; the filename is the lowercase, hyphen-separated slug.
+
+Add a post by adding one `.md` file in `src/content/blog/`; no route or post registry needs editing. Frontmatter uses a deliberately small subset of YAML: flat, nonempty string fields only, with no nested values or multiline scalars. Quote values containing punctuation. Required fields are `title`, `shortTitle` (short breadcrumb name), `description`, `date`, `updated`, `lang: en`, `category`, and `translationKey` (lowercase hyphen-separated key). Dates must be valid `YYYY-MM-DD` strings and `updated` must not precede `date`. For example:
+
+```yaml
+---
+title: "A Practical Guide to Validation"
+shortTitle: "Validation"
+description: "A guide to checking a research process and understanding its limits."
+date: "2026-10-21"
+updated: "2026-10-21"
+lang: en
+category: "Backtesting & validation"
+translationKey: validation
+---
+```
+
+Start the body with exactly one H1. End with a horizontal rule followed by separate English and Chinese risk-disclaimer paragraphs; preserve approved copy. Markdown supports tables, lists, fenced code and stable heading anchors, but not raw HTML. Draft markers, legacy learn links, invalid fields, and duplicate slugs fail the build. Optional `image` and `imageAlt` must be supplied together; `image` is a local 1200x630 PNG path, and `imageAlt` describes the actual image. Otherwise posts use the existing workflow-illustration sharing image. Blog groups place **Backtesting & validation** first and sort posts newest first; related posts prefer the same category.
 
 The visual system uses an off-white canvas, forest-green editorial sections, and a focused blue accent. Manrope and IBM Plex Mono are self-hosted in `public/fonts/` with their OFL licenses; Chinese uses system font fallbacks. Light and dark themes share the same structure. Original SVG sharing artwork and its 1200×630 PNG exports live in `public/social/`.
 
@@ -64,7 +86,9 @@ The Organization entity uses those official profiles as `sameAs` and the existin
 512×512 transparent PNG (`/icons/icon-transparent.png`) as its logo. Build validation
 checks the footer links, open-source status, profile identities, and PNG logo dimensions.
 
-The sitemap is generated from the route inventory and contains only the 8 unprefixed canonical URLs. Do not maintain a separate list of URLs or language alternates. The not-found document is excluded from indexing. The Azure configuration serves actual 404 responses rather than rewriting arbitrary URLs to the homepage. Its global error override serves the default-English `/404.html`, which supports the same in-page language choice. Unknown, language-prefixed and retired paths remain 404s.
+The sitemap is generated from `sitePages`, including automatically discovered blog posts. It contains only unprefixed canonical HTML-page URLs. Blog posts use `updated` as `lastmod`, the blog index uses the newest post update, and methodology/open source use their `dateModified`; existing pages omit `lastmod`. Do not maintain a separate list of URLs or language alternates. The not-found document is excluded from indexing. The Azure configuration serves actual 404 responses rather than rewriting arbitrary URLs to the homepage. Its global error override serves the default-English `/404.html`, which supports the same in-page language choice. Unknown and unsupported language-prefixed paths remain 404s; only the explicit retired insights paths redirect.
+
+Posts emit `BlogPosting`, methodology emits `TechArticle`, and open source emits one `SoftwareSourceCode` per repository-table row. Articles reference the shared Organization node and include dates, language, canonical URL and sharing image. The blog index emits `CollectionPage` and `ItemList`. Blog pages advertise `/blog/rss.xml` in their head; the generated RSS feed uses post frontmatter and Azure serves it with `Content-Type: application/rss+xml`.
 
 [`public/robots.txt`](public/robots.txt) is the single source of truth for crawler rules on predixlab.com and is meant to replace Cloudflare's managed robots.txt. Vite copies it unchanged to `dist/robots.txt`; build validation checks that general crawling stays allowed, the listed AI-training crawlers are blocked, search crawlers are not blocked, and the sitemap directive is preserved.
 
@@ -110,9 +134,9 @@ npm run build
 npm run preview
 ```
 
-`test` runs isolated language-preference, canonical-routing, crawler-policy, bilingual pricing-rendering and analytics consent-mode regression checks without contacting Google.
+`test` runs isolated language-preference, canonical-routing, crawler-policy, bilingual pricing-rendering, analytics consent-mode, Markdown/frontmatter, blog grouping, RSS, sitemap date, and Azure redirect/header regression checks without contacting Google.
 
-`build` type-checks, bundles, and prerenders the deployable static site into `dist/`. It also verifies full English page bodies, canonical URLs, in-page language buttons, internal links, structured data, sharing images, and routing invariants. Regression checks reject retired article routes, stale article metadata, language-specific sitemap entries, and legacy language redirects. Rerun that artifact check independently with `node scripts/validate-seo.mjs`.
+`build` type-checks, bundles, and prerenders the deployable static site into `dist/`. It also verifies full English page bodies, canonical URLs, in-page language buttons, internal links, structured data, sharing images, and routing invariants. Regression checks require the retired insights 301s, forbid links to those URLs, reject language-specific sitemap entries and unapproved language redirects, and check article dates, short breadcrumbs, risk disclaimers, RSS discovery and its content-type rule. Rerun that artifact check independently with `node scripts/validate-seo.mjs`.
 
 Build-time rendering must fail if a page cannot render; do not replace failures with an empty SPA shell. The temporary `.prerender/` server bundle is removed in a `finally` block. Inspect both generated HTML and hydrated interactions when changing rendering or routing. `preview` uses multi-page mode so unknown routes return 404 rather than falling back to the homepage.
 
