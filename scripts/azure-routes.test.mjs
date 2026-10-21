@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import { azureRouteKey, createAzureConfig, retiredRedirects, validateAzureRouteKeys, validateRetiredRedirects } from "./azure-routes.mjs";
 
-const publicPaths = ["/", "/us-stock-signals/"];
+const publicPaths = ["/", "/pricing/", "/us-stock-signals/"];
 const baseConfig = {
   routes: [{ route: "/404.html", headers: { "X-Robots-Tag": "noindex, follow" } }],
   responseOverrides: { "404": { rewrite: "/404.html" } },
@@ -12,33 +12,54 @@ const baseConfig = {
 test("Azure deployment rules are unique after trailing-slash normalization", () => {
   const config = createAzureConfig(baseConfig, publicPaths);
   validateAzureRouteKeys(config.routes);
-  assert.equal(config.routes.length, 5 + retiredRedirects.length);
+  assert.equal(config.routes.length, publicPaths.length + retiredRedirects.length + baseConfig.routes.length);
 });
 
-test("canonical pages rewrite once and index aliases redirect without directory loops", () => {
+test("native directory indexes have no rewrite routes and index aliases permanently redirect", () => {
   const config = createAzureConfig(baseConfig, publicPaths);
+  assert.ok(config.routes.every(({ rewrite }) => rewrite === undefined), "Do not generate per-page rewrites");
   for (const pathname of publicPaths) {
-    const canonical = config.routes.find(({ route }) => azureRouteKey(route) === azureRouteKey(pathname));
-    assert.equal(canonical.rewrite, `${pathname}index.html`);
-    assert.equal(canonical.redirect, undefined);
+    for (const variant of [pathname, pathname.replace(/\/$/, "") || "/"]) {
+      assert.equal(
+        config.routes.find(({ route }) => azureRouteKey(route) === azureRouteKey(variant)),
+        undefined,
+        `Do not intercept native directory serving or trailing-slash redirects: ${variant}`,
+      );
+    }
     assert.deepEqual(config.routes.find(({ route }) => route === `${pathname}index.html`), {
       route: `${pathname}index.html`,
       redirect: pathname,
       statusCode: 301,
     });
-
   }
-  assert.equal(config.routes.some(({ route }) => route === "/us-stock-signals"), false);
 });
 
-test("Docs routes use canonical rewrites while unpublished drafts have no rewrites or redirects", () => {
+test("Docs indexes permanently redirect without rewrites while unpublished drafts have no routes", () => {
   const docsPaths = ["/docs/", "/docs/how-it-works/", "/docs/limitations/", "/docs/self-hosting/"];
   const config = createAzureConfig(baseConfig, [...publicPaths, ...docsPaths]);
   for (const path of docsPaths) {
-    assert.deepEqual(config.routes.find(({ route }) => route === path), { route: path, rewrite: `${path}index.html` });
+    assert.equal(config.routes.find(({ route }) => azureRouteKey(route) === azureRouteKey(path)), undefined);
+    assert.deepEqual(config.routes.find(({ route }) => route === `${path}index.html`), {
+      route: `${path}index.html`,
+      redirect: path,
+      statusCode: 301,
+    });
   }
   assert.ok(config.routes.every(({ route }) => !/^\/(?:methodology|open-source)(?:\/|$)/.test(route)));
   validateRetiredRedirects(config.routes);
+});
+
+test("all base top-level settings and existing routes survive generation, including the web manifest MIME type", async () => {
+  const sourceConfig = JSON.parse(await readFile(new URL("../staticwebapp.config.json", import.meta.url), "utf8"));
+  const base = { ...sourceConfig, globalHeaders: { "X-Content-Type-Options": "nosniff" } };
+  const config = createAzureConfig(base, publicPaths);
+  const { routes: baseRoutes, ...baseSettings } = base;
+  const { routes, ...settings } = config;
+  assert.deepEqual(settings, baseSettings);
+  assert.deepEqual(routes.slice(-baseRoutes.length), baseRoutes);
+  assert.equal(config.trailingSlash, "auto");
+  assert.equal(config.mimeTypes?.[".webmanifest"], "application/manifest+json");
+  assert.equal(config.mimeTypes?.[".xml"], undefined);
 });
 
 test("generated deployment config applies immutable caching only to assets and fonts", async () => {
@@ -105,7 +126,7 @@ test("conflicting directory aliases are rejected rather than silently deduplicat
     /Duplicate Azure routes/,
   );
   assert.throws(
-    () => createAzureConfig({ routes: [{ route: "/us-stock-signals" }] }, publicPaths),
+    () => createAzureConfig({ routes: [{ route: "/us-stock-signals/index.html/" }] }, publicPaths),
     /Duplicate Azure routes/,
   );
 });

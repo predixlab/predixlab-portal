@@ -1,6 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/staticwebapp.config.json",
   "trailingSlash": "auto",
+  "mimeTypes": {
+    ".webmanifest": "application/manifest+json"
+  },
   "routes": [
     {
       "route": "/blog/rss.xml",

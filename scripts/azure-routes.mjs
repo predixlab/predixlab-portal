@@ -10,11 +10,7 @@ export const retiredRedirects = [
 ];
 
 export const createAzureConfig = (baseConfig, publicPaths) => {
-  const canonicalRoutes = publicPaths.map((pathname) => ({
-    route: pathname,
-    rewrite: `${pathname}index.html`,
-  }));
-  // Azure treats /page and /page/ as the same route key.
+  // Directory rewrites intercept Azure's native trailing-slash redirects.
   const redirects = publicPaths.map((pathname) => ({
     route: `${pathname}index.html`,
     redirect: pathname,
@@ -22,7 +18,7 @@ export const createAzureConfig = (baseConfig, publicPaths) => {
   }));
   const config = {
     ...baseConfig,
-    routes: [...canonicalRoutes, ...redirects, ...retiredRedirects, ...(baseConfig.routes ?? [])],
+    routes: [...redirects, ...retiredRedirects, ...(baseConfig.routes ?? [])],
   };
   validateAzureRouteKeys(config.routes);
   return config;

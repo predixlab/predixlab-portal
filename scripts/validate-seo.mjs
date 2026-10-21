@@ -123,13 +123,17 @@ export const validateRobotsTxt = (robots) => {
 export const validateSeoOutput = async (directory, expectedPages) => {
   const config = JSON.parse(await readFile(join(directory, "staticwebapp.config.json"), "utf8"));
   assert.equal(config.trailingSlash, "auto", "Directory requests must redirect to trailing-slash URLs");
+  assert.equal(config.mimeTypes?.[".webmanifest"], "application/manifest+json", "Serve the web manifest with its MIME type");
   assert.equal(config.navigationFallback, undefined, "No blanket SPA fallback");
   assert.deepEqual(config.responseOverrides?.["404"], { rewrite: "/404.html" }, "Preserve HTTP 404");
-  const canonicalRules = config.routes.filter(
-    (rule) => rule.route.endsWith("/") && rule.rewrite === `${rule.route}index.html`,
+  assert.ok(
+    config.routes.every((rule) => !rule.route.endsWith("/") || rule.rewrite === undefined),
+    "Directory routes must not rewrite native indexes",
   );
-  const publicPaths = canonicalRules.map((rule) => rule.route);
-  assert.ok(publicPaths.length > 0, "Public canonical routes are required");
+  const publicPaths = config.routes
+    .filter((rule) => rule.route.endsWith("/index.html"))
+    .map((rule) => rule.route.slice(0, -"index.html".length));
+  assert.ok(publicPaths.length > 0, "Public index-alias redirects are required");
   assert.ok(publicPaths.every((pathname) => !/^\/(?:en|zh)\//.test(pathname)), "Language-prefixed canonical route");
   const docsPaths = publicPaths.filter((pathname) => pathname.startsWith("/docs/"));
   for (const pathname of ["/docs/", "/docs/how-it-works/", "/docs/limitations/", "/docs/self-hosting/"]) {
@@ -627,18 +631,13 @@ export const validateSeoOutput = async (directory, expectedPages) => {
   }
 
   for (const pathname of publicPaths) {
-    const match = (url) => config.routes.find((rule) =>
-      azureRouteKey(rule.route) === azureRouteKey(url)
-      || (rule.route.endsWith("/index.html") && rule.route.slice(0, -"index.html".length) === url),
-    );
-    assert.equal(match(pathname)?.rewrite, `${pathname}index.html`, `Canonical redirect loop: ${pathname}`);
+    const match = (url) => config.routes.find((rule) => azureRouteKey(rule.route) === azureRouteKey(url));
+    assert.equal(match(pathname), undefined, `Serve the directory index natively: ${pathname}`);
     if (pathname !== "/") {
-      assert.equal(match(pathname.slice(0, -1))?.rewrite, `${pathname}index.html`, pathname);
+      assert.equal(match(pathname.slice(0, -1)), undefined, `Do not intercept trailing-slash redirects: ${pathname}`);
     }
-    for (const alias of [`${pathname}index.html`]) {
-      assert.equal(match(alias)?.redirect, pathname, alias);
-      assert.equal(match(alias)?.statusCode, 301, alias);
-    }
+    const alias = `${pathname}index.html`;
+    assert.deepEqual(match(alias), { route: alias, redirect: pathname, statusCode: 301 }, alias);
   }
   const publicDirectory = fileURLToPath(new URL("../public/", import.meta.url));
   for (const name of await readdir(publicDirectory)) {

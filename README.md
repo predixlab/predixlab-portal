@@ -156,7 +156,7 @@ and prerenders before uploading. `VITE_GA_MEASUREMENT_ID` is supplied to the
 explicit build step. The deployment action uploads prebuilt `dist/` with its
 app build disabled; it does not run a second build with an implicit Node version.
 
-The Azure Static Web Apps workflow builds and deploys `dist/` from the repository root. [`staticwebapp.config.json`](staticwebapp.config.json) holds the base not-found and asset-caching configuration; the build adds canonical route rewrites and redirects to `dist/staticwebapp.config.json`. Deploy the generated configuration, not just the base file. Deployment needs the Azure token referenced by the workflow. Other hosts must serve generated directory indexes, preserve canonical redirects, and return HTTP 404 for unknown paths; do not add a blanket successful SPA fallback.
+The Azure Static Web Apps workflow builds and deploys `dist/` from the repository root. [`staticwebapp.config.json`](staticwebapp.config.json) holds the base not-found, MIME-type, and asset-caching configuration; the build preserves all top-level settings and existing routes while adding `index.html` alias and retired insights redirects to `dist/staticwebapp.config.json`. Deploy the generated configuration, not just the base file. Deployment needs the Azure token referenced by the workflow. Other hosts must serve generated directory indexes, preserve canonical redirects, and return HTTP 404 for unknown paths; do not add a blanket successful SPA fallback.
 
 Only `/assets/*` (Vite content-hashed build files) and `/fonts/*` receive
 `Cache-Control: public, max-age=31536000, immutable`: one year of immutable
@@ -167,14 +167,22 @@ icons, social images, and other files outside those directories keep their
 existing caching, with no global long-lived cache header.
 
 Azure normalizes a directory route with and without its trailing slash to the
-same configuration key. The generated configuration therefore has one rewrite
-per public page, not a second slashless redirect rule that Azure would reject.
-Top-level `trailingSlash: "auto"` makes slashless directory requests 301 to the
-trailing-slash URL; explicit `index.html` aliases also redirect to that URL.
+same configuration key. The generated configuration has no per-page rewrite
+routes, including for `/`: Azure serves folder `index.html` files natively.
+Directory rewrites would intercept the native redirect, so top-level
+`trailingSlash: "auto"` is left to make slashless directory requests 301 to the
+trailing-slash URL. Every page's explicit `index.html` alias also has a 301
+redirect to that URL. Retired `/insights` URLs, including slashless and
+English-prefixed variants, permanently redirect to the corresponding blog URLs.
 File requests such as `/robots.txt`, `/sitemap.xml`, verification text files,
 scripts, and images are served without a trailing-slash redirect.
-Build validation checks route uniqueness after Azure-style slash normalization,
-as well as not-found responses and index-alias redirect behavior.
+The top-level `mimeTypes` maps `.webmanifest` to `application/manifest+json`
+without overriding `.xml`; the existing RSS content-type header is preserved.
+Build validation checks every generated directory index has a 301 alias and no
+intercepting directory route, route uniqueness after Azure-style slash
+normalization, retired insights redirects, `trailingSlash`, and MIME types.
+The `/404.html` noindex header and `responseOverrides` 404 rewrite stay intact,
+with no `navigationFallback`, so unknown paths remain real HTTP 404 responses.
 
 After a successful production deployment from `main` (push or manual dispatch),
 the workflow notifies IndexNow of the canonical URLs in `dist/sitemap.xml` using
