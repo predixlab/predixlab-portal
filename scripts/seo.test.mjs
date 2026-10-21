@@ -5,7 +5,7 @@ import { renderToString } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
 import { StaticRouter } from "react-router-dom";
 import { createServer } from "vite";
-import { validateFaqMarkup, validateJsonLd } from "./validate-seo.mjs";
+import { validateFaqMarkup, validateInternalLinks, validateJsonLd } from "./validate-seo.mjs";
 
 const server = await createServer({
   appType: "custom",
@@ -229,6 +229,21 @@ test("FAQ artifact validation decodes entities and rejects missing, extra or mis
     }],
   }], canonicalUrl), /FAQ count and text/);
   assert.throws(() => validateFaqMarkup(html, [{ ...webpage, hasPart: [] }, faq], canonicalUrl), /must link to FAQPage/);
+});
+
+test("internal-link validation accepts external insights sources but rejects retired PredixLab routes", () => {
+  const canonicalUrl = "https://predixlab.com/blog/backtest-biases/";
+  const publicPaths = ["/", "/blog/", "/blog/backtest-biases/"];
+  const validate = (href) => validateInternalLinks(`<a href="${href}">Source</a>`, canonicalUrl, publicPaths);
+  for (const href of [
+    "https://www.cfainstitute.org/insights/professional-learning/refresher-readings/2026/backtesting-and-simulation",
+    "/blog/", "https://predixlab.com/blog/", "/blog/rss.xml", "#further-reading",
+  ]) assert.doesNotThrow(() => validate(href));
+  for (const href of [
+    "/insights/", "/insights?source=blog", "/en/insights/look-ahead-bias/",
+    "https://predixlab.com/insights/", "//predixlab.com/insights/",
+  ]) assert.throws(() => validate(href), /Noncanonical internal link/);
+  assert.throws(() => validate("/blog/?lng=zh"), /AssertionError/);
 });
 
 test("artifact validation parses every JSON-LD block, including body scripts, and rejects Chinese inLanguage", () => {

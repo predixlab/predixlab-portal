@@ -124,6 +124,8 @@ test("Markdown emits semantic HTML, stable unique heading IDs, safe external lin
 | One | Two |
 
 - A list item
+- [ ] An unchecked task
+- [x] A checked task
 
 ---
 
@@ -136,6 +138,8 @@ const x = "<not-html>";
   assert.match(document.html, /<h2 id="known-limitations-2">/);
   assert.match(document.html, /<table><thead><tr><th>Header<\/th>/);
   assert.match(document.html, /<ul>\n<li>A list item<\/li>/);
+  assert.match(document.html, /<li><input disabled="" type="checkbox"> An unchecked task<\/li>/);
+  assert.match(document.html, /<li><input checked="" disabled="" type="checkbox"> A checked task<\/li>/);
   assert.match(document.html, /<hr>/);
   assert.match(document.html, /<pre><code class="language-js">const x = &quot;&lt;not-html&gt;&quot;;/);
   assert.match(document.html, /href="https:\/\/example.com\/\?a=1&amp;b=2" target="_blank" rel="noopener noreferrer"/);
@@ -155,6 +159,37 @@ test("invalid Markdown and noncompliant draft content fail explicitly", () => {
     "# Example\n\nReal-time data",
   ]) assert.throws(() => loadFixture(fixture.replace("# Example\n\nAn example body.", body)), /example.md:/);
 });
+
+for (const [slug, shortTitle, otherSlug, taskCount] of [
+  ["backtest-biases", "Backtest biases", "survivorship-bias-backtesting", 8],
+  ["survivorship-bias-backtesting", "Survivorship bias", "backtest-biases", 0],
+]) {
+  test(`${slug}: discovers the English draft with publication metadata, cross-links and task lists intact`, () => {
+    const post = blogPosts.find((post) => post.slug === slug);
+    assert.ok(post, `Missing blog post: ${slug}`);
+    assert.equal(post.path, `/blog/${slug}/`);
+    assert.ok(sitePages.some(({ path, key }) => path === post.path && key === "blogPost"));
+    assert.equal(post.shortTitle, shortTitle);
+    assert.equal(post.lang, "en");
+    assert.equal(post.date, "2026-10-21");
+    assert.equal(post.updated, "2026-10-21");
+    assert.equal(post.category, "Backtesting & validation");
+    assert.equal(post.translationKey, slug);
+    assert.equal(post.frontmatter.h1, post.h1);
+    assert.equal(post.body.split("\n")[0], `# ${post.h1}`);
+    assert.doesNotMatch(post.body, /<!--|For information and independent analysis only/);
+    for (const path of [
+      `/blog/${otherSlug}/`, "/blog/look-ahead-bias/", "/blog/walk-forward-validation/",
+      "/docs/how-it-works/", "/docs/limitations/",
+    ]) {
+      assert.ok(post.body.includes(`](${path})`), `Missing Markdown link: ${path}`);
+      assert.ok(post.html.includes(`href="${path}"`), `Missing rendered link: ${path}`);
+    }
+    assert.equal([...post.body.matchAll(/^- \[ \] /gm)].length, taskCount);
+    assert.equal([...post.html.matchAll(/<input\b/g)].length, taskCount);
+    assert.equal([...post.html.matchAll(/<li><input disabled="" type="checkbox"> /g)].length, taskCount);
+  });
+}
 
 for (const { path } of sitePages.filter(({ path }) => /^\/(?:docs|blog)\//.test(path))) {
   for (const language of ["en", "zh"]) {
@@ -277,6 +312,17 @@ test("RSS 2.0 includes channel metadata, self discovery, canonical GUIDs, RFC-82
   assert.equal(channel.item.description, post.description);
   assert.equal(channel.item.link, "https://predixlab.com/blog/example/");
   assert.equal([...renderBlogRss(blogPosts).matchAll(/<item>/g)].length, blogPosts.length);
+  const publishedItems = new XMLParser({
+    isArray: (_name, path) => path === "rss.channel.item",
+  }).parse(renderBlogRss(blogPosts)).rss.channel.item;
+  assert.deepEqual(publishedItems.map(({ title, description, link, pubDate }) => ({
+    title, description, link, pubDate,
+  })), blogPosts.map((post) => ({
+    title: post.title,
+    description: post.description,
+    link: `https://predixlab.com${post.path}`,
+    pubDate: new Date(`${post.date}T00:00:00Z`).toUTCString(),
+  })));
   assert.doesNotMatch(renderBlogRss([]), /<item>/);
   assert.equal(XMLValidator.validate(renderBlogRss([])), true);
   assert.doesNotMatch(renderBlogRss([]), /<lastBuildDate>/);
@@ -430,9 +476,13 @@ for (const [path, document] of [
     assert.equal(page.statusCode, 200);
     assert.equal(page.seo.title, document.title);
     assert.equal(page.seo.description, document.description);
+    assert.ok(document.title.length > 0 && document.title.length <= 60);
+    assert.ok(document.description.length > 0 && document.description.length <= 155);
     assert.equal(page.seo.canonicalUrl, `https://predixlab.com${path}`);
     assert.ok(page.appHtml.includes(document.html));
     assert.equal([...page.appHtml.matchAll(/<h1\b/g)].length, 1);
+    assert.ok(page.appHtml.includes(`>${renderToStaticMarkup(document.h1)}</h1>`));
+    assert.equal(page.appHtml.split(renderToStaticMarkup(expectedRiskNote)).length - 1, 1);
     const dates = document.kind === "post" ? [document.date, document.updated]
       : [document.updated];
     assert.deepEqual([...page.appHtml.matchAll(/<time dateTime="([^"]+)"/g)].map(([, date]) => date), dates);
@@ -444,6 +494,18 @@ for (const [path, document] of [
     assert.deepEqual(breadcrumb.itemListElement.map(({ name }) => name), [
       "Home", document.kind === "doc" ? "Docs" : "Blog", document.shortTitle,
     ]);
+    const articles = json["@graph"].filter((node) => node["@type"] === (
+      document.kind === "post" ? "BlogPosting" : "TechArticle"
+    ));
+    assert.equal(articles.length, 1);
+    const article = articles[0];
+    assert.equal(article.headline, document.title);
+    assert.equal(article.description, document.description);
+    assert.equal(article.datePublished, document.date);
+    assert.equal(article.dateModified, document.updated);
+    assert.equal(article.mainEntityOfPage, page.seo.canonicalUrl);
+    assert.deepEqual(article.author, { "@id": "https://predixlab.com/#organization" });
+    assert.deepEqual(article.publisher, article.author);
     if (document.kind === "doc") {
       assert.match(page.appHtml, /class="docs-sidebar"/);
       const sidebar = page.appHtml.match(/<nav class="docs-sidebar"[^>]*>([\s\S]*?)<\/nav>/)[1];
@@ -452,16 +514,6 @@ for (const [path, document] of [
         assert.ok(link);
         assert.equal(link.includes('aria-current="page"'), doc.path === path);
       }
-      const article = json["@graph"].find((node) => node["@type"] === "TechArticle");
-      assert.equal(article.headline, document.title);
-      assert.equal(article.description, document.description);
-      assert.equal(article.datePublished, document.date);
-      assert.equal(article.dateModified, document.updated);
-      assert.equal(article.mainEntityOfPage, page.seo.canonicalUrl);
-      assert.deepEqual(article.author, { "@id": "https://predixlab.com/#organization" });
-      assert.deepEqual(article.publisher, article.author);
-      assert.ok(document.title.length <= 60);
-      assert.ok(document.description.length <= 155);
       assert.deepEqual(page.seo.alternates, []);
     }
     assert.deepEqual(getPageSeo(path, "zh"), getPageSeo(path, "en"));
@@ -637,7 +689,7 @@ test("blog index renders grouped posts, short breadcrumbs, CollectionPage and an
   assert.match(page.appHtml, /<p class="eyebrow">PREDIXLAB \/ BLOG<\/p>/);
   for (const post of blogPosts) {
     assert.ok(page.appHtml.includes(`href="${post.path}"`));
-    assert.ok(page.appHtml.includes(post.description));
+    assert.ok(page.appHtml.includes(renderToStaticMarkup(post.description)));
     assert.ok(page.appHtml.includes(`<time dateTime="${post.date}">`));
   }
   const graph = page.seo.structuredData["@graph"];
