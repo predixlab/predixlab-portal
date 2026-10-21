@@ -32,11 +32,36 @@ test("pricing translations have matching fields and feature counts", () => {
   assert.equal(pricingContent.zh.questions.length, pricingContent.en.questions.length);
 });
 
+test("English pricing intro describes free open-source self-hosting", () => {
+  assert.equal(
+    pricingContent.en.description,
+    "Run the open-source pipeline yourself for free (Apache-2.0) with your own data sources, or use the hosted dashboard. Free includes charts, the screener, and past signals. Choose Premium for the latest daily data, with the same features on monthly and annual billing.",
+  );
+});
+
 for (const language of ["zh", "en"]) {
   const copy = pricingContent[language];
   const html = renderToStaticMarkup(
     createElement(I18nextProvider, { i18n: createSiteI18n(language) }, createElement(PricingPage)),
   );
+
+  test(`${language}: rendered pricing page has no real-time data wording`, () => {
+    assert.doesNotMatch(html, /real[- ]?time|实时/i);
+  });
+
+  test(`${language}: Premium update FAQ retains its position and explains daily updates`, () => {
+    const expected = language === "en" ? {
+      question: "How often does Premium data update?",
+      answer: "Once per trading day, after the US market closes. Signals and options data come from nightly jobs on daily data, not intraday quotes.",
+    } : {
+      question: "Premium 的数据多久更新一次？",
+      answer: "每个交易日更新一次，在美股收盘后进行。信号和期权数据由每晚的任务基于日线数据生成，不是盘中行情。",
+    };
+    assert.deepEqual(copy.questions[2], expected);
+    const faq = [...html.matchAll(/<details\b[^>]*>([\s\S]*?)<\/details>/g)][2][0];
+    assert.ok(faq.includes(renderToStaticMarkup(expected.question)));
+    assert.ok(faq.includes(renderToStaticMarkup(expected.answer)));
+  });
 
   test(`${language}: self-hosted copy states the license without implying intraday data`, () => {
     const strings = [
@@ -51,7 +76,7 @@ for (const language of ["zh", "en"]) {
       copy.questions[0].answer,
     ];
     for (const text of strings) {
-      assert.doesNotMatch(text, /real[- ]?time|\blive\b|实时/i);
+      assert.doesNotMatch(text, /\blive\b/i);
     }
     assert.match(strings.join("\n"), /Apache-2\.0/);
     assert.match(copy.selfHostedBilling, /Apache-2\.0/);

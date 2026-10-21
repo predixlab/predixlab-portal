@@ -77,8 +77,8 @@ export const pricingContent = {
         answer: "一样。年付为每年 $192，比连续 12 个月按月支付 $20 节省 $48。年付是每年一次性扣款，并非每月扣款 $16。",
       },
       {
-        question: "Premium 提供实时数据吗？",
-        answer: "不提供。Premium 可查看免费版延迟开放的最新数据，但平台仍以日线行情和每日信号为主，不提供实时行情或盘中逐笔成交。",
+        question: "Premium 的数据多久更新一次？",
+        answer: "每个交易日更新一次，在美股收盘后进行。信号和期权数据由每晚的任务基于日线数据生成，不是盘中行情。",
       },
       {
         question: "怎么管理或取消订阅？",
@@ -90,7 +90,7 @@ export const pricingContent = {
     eyebrow: "SELF-HOSTED OR HOSTED. YOUR CHOICE.",
     title: ["Start with Free.", "Stay current with Premium."],
     description:
-      "Run the pipeline from free Apache-2.0 source code with your own data sources, or use the hosted dashboard. Free includes charts, the screener, and past signals. Choose Premium for the latest daily data, with the same features on monthly and annual billing.",
+      "Run the open-source pipeline yourself for free (Apache-2.0) with your own data sources, or use the hosted dashboard. Free includes charts, the screener, and past signals. Choose Premium for the latest daily data, with the same features on monthly and annual billing.",
     billingLabel: "Choose how to pay for Premium",
     monthly: "Monthly",
     annual: "Annual",
@@ -157,8 +157,8 @@ export const pricingContent = {
         answer: "Yes. Annual billing costs $192 per year, saving $48 compared with twelve monthly payments of $20. You're charged once a year, not in monthly installments of $16.",
       },
       {
-        question: "Does Premium include real-time data?",
-        answer: "No. Premium gives you access to the latest data that is delayed on the Free plan. PredixLab still uses daily price data and daily signals, not live quotes or intraday transaction feeds.",
+        question: "How often does Premium data update?",
+        answer: "Once per trading day, after the US market closes. Signals and options data come from nightly jobs on daily data, not intraday quotes.",
       },
       {
         question: "How do I manage or cancel my subscription?",
