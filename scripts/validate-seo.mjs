@@ -51,6 +51,56 @@ const listHtmlFiles = async (directory, prefix = "") => {
   return files;
 };
 
+export const validateRobotsTxt = (robots) => {
+  const trainingCrawlers = [
+    "GPTBot", "CCBot", "Google-Extended", "ClaudeBot", "anthropic-ai", "Bytespider",
+    "Applebot-Extended", "meta-externalagent", "Amazonbot", "cohere-training-data-crawler",
+    "PerplexityBot", "Diffbot", "omgili",
+  ].map((agent) => agent.toLowerCase());
+  const searchCrawlers = [
+    "Googlebot", "Bingbot", "Baiduspider", "PetalBot", "GoogleOther", "YandexBot", "Sogou", "360Spider",
+  ].map((agent) => agent.toLowerCase());
+  const groups = [];
+  const sitemaps = [];
+  for (const line of robots.split(/\r?\n/)) {
+    const content = line.replace(/#.*$/, "").trim();
+    if (!content) continue;
+    const directive = content.match(/^([^:]+):\s*(.*)$/);
+    assert.ok(directive, `Invalid robots.txt directive: ${content}`);
+    const name = directive[1].trim().toLowerCase();
+    const value = directive[2].trim();
+    if (name === "sitemap") {
+      sitemaps.push(value);
+    } else if (name === "user-agent") {
+      if (!groups.length || groups.at(-1).rules.length) {
+        groups.push({ agents: [], rules: [] });
+      }
+      groups.at(-1).agents.push(value.toLowerCase());
+    } else {
+      assert.ok(["allow", "disallow"].includes(name), `Unexpected robots.txt directive: ${name}`);
+      assert.ok(groups.length, "Crawler rules require a User-agent group");
+      groups.at(-1).rules.push([name, value]);
+    }
+  }
+
+  assert.equal(groups.length, 2, "Expected one public group and one AI-training group");
+  const publicGroup = only(groups.filter(({ agents }) => agents.includes("*")), "wildcard crawler group");
+  assert.deepEqual(publicGroup.agents, ["*"], "The wildcard crawler group must be separate");
+  assert.deepEqual(publicGroup.rules, [["allow", "/"]], "Public crawling must remain allowed");
+  for (const crawler of searchCrawlers) {
+    assert.ok(
+      groups.every(({ agents, rules }) =>
+        !agents.includes(crawler) || rules.every(([name, value]) => name !== "disallow" || !value),
+      ),
+      `Search crawler must not be disallowed: ${crawler}`,
+    );
+  }
+  const trainingGroup = only(groups.filter((group) => group !== publicGroup), "AI-training crawler group");
+  assert.deepEqual([...trainingGroup.agents].sort(), trainingCrawlers.sort(), "AI-training crawler list differs");
+  assert.deepEqual(trainingGroup.rules, [["disallow", "/"]], "AI-training crawlers must share one Disallow: /");
+  assert.deepEqual(sitemaps, [`${origin}/sitemap.xml`], "Keep the production Sitemap line");
+};
+
 export const validateSeoOutput = async (directory, expectedPages) => {
   const config = JSON.parse(await readFile(join(directory, "staticwebapp.config.json"), "utf8"));
   assert.equal(config.navigationFallback, undefined, "No blanket SPA fallback");
@@ -67,6 +117,10 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     "Retired pages must not remain in the deployed route inventory",
   );
   validateAzureRouteKeys(config.routes);
+  assert.ok(
+    config.routes.every((rule) => azureRouteKey(rule.route) !== "/robots.txt"),
+    "Serve /robots.txt directly from the public file",
+  );
   const cacheRoutes = ["/assets/*", "/fonts/*"];
   assert.deepEqual(
     config.routes.filter((rule) => cacheRoutes.includes(rule.route)),
@@ -294,7 +348,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       assert.deepEqual(await readFile(join(directory, name)), await readFile(join(publicDirectory, name)), `Changed public text: ${name}`);
     }
   }
-  assert.match(await readFile(join(directory, "robots.txt"), "utf8"), /Sitemap: https:\/\/predixlab\.com\/sitemap\.xml/);
+  validateRobotsTxt(await readFile(join(directory, "robots.txt"), "utf8"));
   console.log(`SEO invariants passed for ${publicPaths.length} default-English canonical pages and the 404 document.`);
 };
 
