@@ -57,6 +57,8 @@ Build-time metadata and client navigation use the same SEO definitions. Each ind
 
 The sitemap is generated from the route inventory and contains only the 8 unprefixed canonical URLs. Do not maintain a separate list of URLs or language alternates. The not-found document is excluded from indexing. The Azure configuration serves actual 404 responses rather than rewriting arbitrary URLs to the homepage. Its global error override serves the default-English `/404.html`, which supports the same in-page language choice. Unknown, language-prefixed and retired paths remain 404s.
 
+[`public/robots.txt`](public/robots.txt) is the single source of truth for crawler rules on predixlab.com and is meant to replace Cloudflare's managed robots.txt. Vite copies it unchanged to `dist/robots.txt`; build validation checks that general crawling stays allowed, the listed AI-training crawlers are blocked, search crawlers are not blocked, and the sitemap directive is preserved.
+
 ## Run locally
 
 Use Node.js 22.12+ and npm:
@@ -99,7 +101,7 @@ npm run build
 npm run preview
 ```
 
-`test` runs isolated language-preference, canonical-routing and analytics consent-mode regression checks without contacting Google.
+`test` runs isolated language-preference, canonical-routing, crawler-policy and analytics consent-mode regression checks without contacting Google.
 
 `build` type-checks, bundles, and prerenders the deployable static site into `dist/`. It also verifies full English page bodies, canonical URLs, in-page language buttons, internal links, structured data, sharing images, and routing invariants. Regression checks reject retired article routes, stale article metadata, language-specific sitemap entries, and legacy language redirects. Rerun that artifact check independently with `node scripts/validate-seo.mjs`.
 
