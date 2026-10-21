@@ -149,7 +149,13 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
       "@id": organizationId,
       name: "PredixLab",
       url: absoluteUrl("/"),
-      logo: { "@type": "ImageObject", url: absoluteUrl("/icons/icon.svg") },
+      sameAs: [config.githubUrl, config.xUrl],
+      logo: {
+        "@type": "ImageObject",
+        url: absoluteUrl("/icons/icon-transparent.png"),
+        width: 512,
+        height: 512,
+      },
       email: "contact@predixlab.com",
     },
     {

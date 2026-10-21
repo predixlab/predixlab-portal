@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import { azureRouteKey, createAzureConfig, validateAzureRouteKeys } from "./azure-routes.mjs";
 
@@ -27,6 +28,27 @@ test("canonical pages rewrite once and index aliases redirect without directory 
     });
   }
   assert.equal(config.routes.some(({ route }) => route === "/us-stock-signals"), false);
+});
+
+test("generated deployment config applies immutable caching only to assets and fonts", async () => {
+  const sourceConfig = JSON.parse(
+    await readFile(new URL("../staticwebapp.config.json", import.meta.url), "utf8"),
+  );
+  const config = createAzureConfig(sourceConfig, publicPaths);
+  const cacheRoutes = ["/assets/*", "/fonts/*"];
+  assert.deepEqual(
+    config.routes.filter(({ route }) => cacheRoutes.includes(route)),
+    cacheRoutes.map((route) => ({
+      route,
+      headers: { "Cache-Control": "public, max-age=31536000, immutable" },
+    })),
+  );
+  const otherRoutes = config.routes.filter(({ route }) => !cacheRoutes.includes(route));
+  assert.deepEqual(otherRoutes, createAzureConfig(baseConfig, publicPaths).routes);
+  for (const rule of otherRoutes) {
+    assert.equal(rule.headers?.["Cache-Control"], undefined, `Unexpected caching on ${rule.route}`);
+  }
+  assert.equal(config.globalHeaders?.["Cache-Control"], undefined, "No global caching override");
 });
 
 test("conflicting directory aliases are rejected rather than silently deduplicated", () => {

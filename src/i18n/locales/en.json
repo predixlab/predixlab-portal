@@ -62,6 +62,10 @@
   "footer": {
     "manifesto": "See the bigger picture. Make your own call.",
     "description": "Daily signals, stock screening, and options activity for individual investors following US markets.",
+    "github": "GitHub",
+    "x": "X",
+    "openSource": "Open source (Apache-2.0)",
+    "opensInNewTab": "(opens in a new tab)",
     "tools": "Tools",
     "explore": "Explore",
     "stockSignals": "Daily stock signals",

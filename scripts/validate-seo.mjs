@@ -5,6 +5,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { azureRouteKey, validateAzureRouteKeys } from "./azure-routes.mjs";
 
 const origin = "https://predixlab.com";
+const officialProfiles = [
+  { name: "GitHub", url: "https://github.com/predixlab" },
+  { name: "X", url: "https://x.com/predixlab" },
+];
 const notFoundPaths = ["/404.html"];
 export const retiredPagePaths = [
   "/insights/",
@@ -113,11 +117,25 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     "Retired pages must not remain in the deployed route inventory",
   );
   validateAzureRouteKeys(config.routes);
-  assert.ok(config.routes.every((rule) => !rule.route.includes("*")), "Unknown paths must remain 404s");
   assert.ok(
     config.routes.every((rule) => azureRouteKey(rule.route) !== "/robots.txt"),
     "Serve /robots.txt directly from the public file",
   );
+  const cacheRoutes = ["/assets/*", "/fonts/*"];
+  assert.deepEqual(
+    config.routes.filter((rule) => cacheRoutes.includes(rule.route)),
+    cacheRoutes.map((route) => ({
+      route,
+      headers: { "Cache-Control": "public, max-age=31536000, immutable" },
+    })),
+    "Assets and fonts require header-only immutable cache rules",
+  );
+  const otherRoutes = config.routes.filter((rule) => !cacheRoutes.includes(rule.route));
+  assert.ok(otherRoutes.every((rule) => !rule.route.includes("*")), "Unknown paths must remain 404s");
+  for (const rule of otherRoutes) {
+    assert.equal(rule.headers?.["Cache-Control"], undefined, `Unexpected caching on ${rule.route}`);
+  }
+  assert.equal(config.globalHeaders?.["Cache-Control"], undefined, "No global caching override");
 
   const sitemap = await readFile(join(directory, "sitemap.xml"), "utf8");
   assert.doesNotMatch(sitemap, /xmlns:xhtml|xhtml:link|hreflang|<lastmod>|[?&]lng=|404\.html|\/insights(?:\/|<)|https:\/\/predixlab\.com\/en(?:\/|<)/);
@@ -141,6 +159,12 @@ export const validateSeoOutput = async (directory, expectedPages) => {
   const expectedHtml = [...publicPaths.map((pathname) => `${pathname}index.html`), ...notFoundPaths];
   assert.deepEqual((await listHtmlFiles(directory)).sort(), expectedHtml.sort(), "Unexpected or missing HTML pages");
   const checkedImages = new Set();
+  const logoPath = "/icons/icon-transparent.png";
+  const logoPng = await readFile(fileForPath(directory, logoPath));
+  assert.equal(logoPng.subarray(0, 8).toString("hex"), "89504e470d0a1a0a", "Organization logo must be a PNG");
+  const logoWidth = logoPng.readUInt32BE(16);
+  const logoHeight = logoPng.readUInt32BE(20);
+  assert.ok(logoWidth >= 112 && logoHeight >= 112, "Organization logo must be at least 112x112");
 
   for (const pathname of [...publicPaths, ...notFoundPaths]) {
     const html = await readFile(fileForPath(directory, pathname), "utf8");
@@ -160,6 +184,26 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     assert.equal(languageButton.href, undefined, `Language changes must not navigate: ${pathname}`);
     const head = only([...html.matchAll(/<head>([\s\S]*?)<\/head>/g)], `${pathname} head`)[1];
     const main = only([...html.matchAll(/<main\b[^>]*>([\s\S]*?)<\/main>/g)], `${pathname} main`)[1];
+    const footer = only([...html.matchAll(/<footer\b[^>]*>([\s\S]*?)<\/footer>/g)], `${pathname} footer`)[1];
+    assert.ok(textContent(footer).includes("Open source (Apache-2.0)"), `Missing open-source status: ${pathname}`);
+    const footerLinks = [...footer.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)];
+    for (const profile of officialProfiles) {
+      const link = only(
+        footerLinks.filter(([, attrs]) => attributes(attrs).href === profile.url),
+        `${pathname} ${profile.name} footer link`,
+      );
+      const attrs = attributes(link[1]);
+      assert.equal(attrs.target, "_blank", pathname);
+      assert.deepEqual(attrs.rel?.split(/\s+/).sort(), ["noopener", "noreferrer"], pathname);
+      assert.ok(textContent(link[2]).startsWith(profile.name), `Missing profile label: ${pathname}`);
+      const hint = only(
+        [...link[2].matchAll(/<span\b([^>]*)>([\s\S]*?)<\/span>/g)].filter(
+          ([, spanAttrs]) => attributes(spanAttrs).class?.split(/\s+/).includes("sr-only"),
+        ),
+        `${pathname} ${profile.name} new-tab hint`,
+      );
+      assert.equal(textContent(hint[2]), "(opens in a new tab)", pathname);
+    }
     const h1 = textContent(only([...main.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g)], `${pathname} h1`)[1]);
     assert.ok(h1.length > 0 && textContent(main).length > (isNotFound ? 30 : 200), `Missing page copy: ${pathname}`);
     const title = textContent(only([...head.matchAll(/<title\b[^>]*>([\s\S]*?)<\/title>/g)], `${pathname} title`)[1]);
@@ -246,6 +290,14 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     for (const type of ["Organization", "WebSite", "WebPage"]) {
       only(graph.filter((item) => item["@type"] === type), `${pathname} ${type}`);
     }
+    const organization = graph.find((item) => item["@type"] === "Organization");
+    assert.deepEqual(organization.sameAs, officialProfiles.map(({ url }) => url), `${pathname} official profiles`);
+    assert.deepEqual(organization.logo, {
+      "@type": "ImageObject",
+      url: `${origin}${logoPath}`,
+      width: logoWidth,
+      height: logoHeight,
+    }, `${pathname} PNG organization logo`);
     const webpage = graph.find((item) => item["@type"] === "WebPage");
     assert.equal(webpage.url, canonicalUrl, pathname);
     assert.equal(webpage.inLanguage, language, pathname);
