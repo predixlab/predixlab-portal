@@ -63,7 +63,21 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     "Retired pages must not remain in the deployed route inventory",
   );
   validateAzureRouteKeys(config.routes);
-  assert.ok(config.routes.every((rule) => !rule.route.includes("*")), "Unknown paths must remain 404s");
+  const cacheRoutes = ["/assets/*", "/fonts/*"];
+  assert.deepEqual(
+    config.routes.filter((rule) => cacheRoutes.includes(rule.route)),
+    cacheRoutes.map((route) => ({
+      route,
+      headers: { "Cache-Control": "public, max-age=31536000, immutable" },
+    })),
+    "Assets and fonts require header-only immutable cache rules",
+  );
+  const otherRoutes = config.routes.filter((rule) => !cacheRoutes.includes(rule.route));
+  assert.ok(otherRoutes.every((rule) => !rule.route.includes("*")), "Unknown paths must remain 404s");
+  for (const rule of otherRoutes) {
+    assert.equal(rule.headers?.["Cache-Control"], undefined, `Unexpected caching on ${rule.route}`);
+  }
+  assert.equal(config.globalHeaders?.["Cache-Control"], undefined, "No global caching override");
 
   const sitemap = await readFile(join(directory, "sitemap.xml"), "utf8");
   assert.doesNotMatch(sitemap, /xmlns:xhtml|xhtml:link|hreflang|<lastmod>|[?&]lng=|404\.html|\/insights(?:\/|<)|https:\/\/predixlab\.com\/en(?:\/|<)/);
