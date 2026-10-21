@@ -3,7 +3,7 @@ import { ArrowUpRight, List, Moon, Sun, X } from "@phosphor-icons/react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import Seo from "@/components/Seo";
-import { dashboardLink } from "@/config";
+import { config, dashboardLink } from "@/config";
 import { useSiteLanguage } from "@/hooks/useSiteLanguage";
 import { getPreferredLanguage, LANGUAGE_STORAGE_KEY } from "@/i18n/language";
 import { normalizePath } from "@/routing";
@@ -179,6 +179,15 @@ const Layout = ({ children }: { children: ReactNode }) => {
               <p className="footer-manifesto">{t("footer.manifesto")}</p>
               <p>{t("footer.description")}</p>
               <a className="footer-contact" href="mailto:contact@predixlab.com">contact@predixlab.com<ArrowUpRight aria-hidden="true" /></a>
+              <div className="footer-profiles">
+                <a className="footer-contact" href={config.githubUrl} target="_blank" rel="noopener noreferrer">
+                  {t("footer.github")}<ArrowUpRight aria-hidden="true" /><span className="sr-only"> {t("footer.opensInNewTab")}</span>
+                </a>
+                <a className="footer-contact" href={config.xUrl} target="_blank" rel="noopener noreferrer">
+                  {t("footer.x")}<ArrowUpRight aria-hidden="true" /><span className="sr-only"> {t("footer.opensInNewTab")}</span>
+                </a>
+              </div>
+              <p>{t("footer.openSource")}</p>
             </div>
             <div className="footer-column">
               <h2>{t("footer.tools")}</h2>
