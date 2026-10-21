@@ -180,8 +180,14 @@ for (const language of ["zh", "en"]) {
     );
     const rows = [...table.matchAll(/<tr><th scope="row">(.*?)<\/th>(.*?)<\/tr>/g)];
     assert.equal(rows.length, 6);
+    const productPaths = {
+      2: "/quantitative-stock-screener/",
+      3: "/us-stock-signals/",
+      4: "/unusual-options-activity/",
+    };
     rows.forEach(([, heading, cells], index) => {
-      assert.equal(heading, copy.rows[index]);
+      const path = productPaths[index];
+      assert.equal(heading, path ? `<a href="${path}" data-discover="true">${copy.rows[index]}</a>` : copy.rows[index]);
       assert.deepEqual(
         [...cells.matchAll(/<td>(.*?)<\/td>/g)].map(([, value]) => value),
         [copy.selfHostedAvailability, index < 3 ? copy.included : copy.delayed, index < 3 ? copy.included : copy.latest],

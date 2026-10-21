@@ -6,11 +6,11 @@
     },
     "pricing": {
       "title": "PredixLab Pricing | Compare Free and Premium Plans",
-      "description": "Compare free analysis tools and delayed signals with Premium's latest daily data. Premium costs $20/month or $192/year. See features and subscription terms."
+      "description": "Compare free analysis tools and delayed signals with Premium's latest daily data. Premium is $20/month or $192/year. See features and subscription terms."
     },
     "about": {
       "title": "About PredixLab | US Stock Analysis for Individual Investors",
-      "description": "Learn why PredixLab brings daily market data, stock signals, and historical performance together to help individual investors make their own informed decisions."
+      "description": "Learn why PredixLab brings daily market data, stock signals, and past performance together to help individual investors make their own informed decisions."
     },
     "stockSignals": {
       "title": "Daily US Stock Signals & Historical Performance | PredixLab",
@@ -26,7 +26,7 @@
     },
     "terms": {
       "title": "Terms of Service | PredixLab",
-      "description": "Read the terms that apply to the PredixLab website, dashboard, market data, quantitative signals, and subscriptions, including responsibilities and risk disclosures."
+      "description": "Read the terms for the PredixLab website, dashboard, market data, quantitative signals, and subscriptions, including responsibilities and risk disclosures."
     },
     "privacy": {
       "title": "Privacy Policy | PredixLab",
@@ -40,6 +40,9 @@
   "nav": {
     "home": "Home",
     "tools": "Tools",
+    "stockSignals": "Daily signals",
+    "terms": "Terms",
+    "privacy": "Privacy",
     "pricing": "Pricing",
     "docs": "Docs",
     "blog": "Blog",

@@ -7,7 +7,7 @@ import {
 } from "@/content/products";
 import { faqContent } from "@/content/site";
 import { blogContent, renderBlogRss } from "@/content/blog";
-import { blogPosts, getContentForPath } from "@/content/documents";
+import { blogPosts, docs, getContentForPath } from "@/content/documents";
 import { sourceRepositories } from "@/content/markdown";
 import { DEFAULT_SITE_LANGUAGE } from "@/i18n/language";
 import en from "@/i18n/locales/en.json";
@@ -37,7 +37,9 @@ export interface PageSeo {
   alternates: { hreflang: string; href: string }[];
   imageUrl: string;
   imageAlt: string;
-  openGraphType: "website";
+  openGraphType: "website" | "article";
+  publishedTime?: string;
+  modifiedTime?: string;
   openGraphLocale: string;
   structuredData: JsonLdObject | null;
   rssUrl?: string;
@@ -51,10 +53,35 @@ const languageTags = { zh: "zh-CN", en: "en" } as const;
 const openGraphLocales = { zh: "zh_CN", en: "en_US" };
 const organizationId = `${config.siteUrl}/#organization`;
 const websiteId = `${config.siteUrl}/#website`;
-const socialImages: Partial<Record<PageKey, string>> = {
-  stockSignals: "/social/predixlab-us-stock-signals.png",
-  stockScreener: "/social/quantitative-stock-screener.png",
-  unusualOptions: "/social/unusual-options-activity.png",
+const defaultSocialImage = {
+  path: "/social/predixlab-research.png",
+  alt: {
+    en: "PredixLab overview with a price-chart illustration and a highlighted daily signal",
+    zh: "PredixLab 产品概览，配有价格图表示意图和高亮的每日信号",
+  },
+};
+const socialImages: Partial<Record<PageKey, typeof defaultSocialImage>> = {
+  stockSignals: {
+    path: "/social/predixlab-us-stock-signals.png",
+    alt: {
+      en: "PredixLab daily stock signals illustration with a price chart and a highlighted historical signal marker",
+      zh: "PredixLab 每日美股信号示意图，展示价格图表和高亮的历史信号标记",
+    },
+  },
+  stockScreener: {
+    path: "/social/quantitative-stock-screener.png",
+    alt: {
+      en: "PredixLab stock screener illustration with momentum, trend structure, and risk criteria",
+      zh: "PredixLab 选股器示意图，展示动量、趋势结构和风险筛选条件",
+    },
+  },
+  unusualOptions: {
+    path: "/social/unusual-options-activity.png",
+    alt: {
+      en: "PredixLab options activity diagram linking an underlying stock to call and put contracts, expirations, strikes, and changes in open interest",
+      zh: "PredixLab 期权异动示意图，将标的股票与看涨、看跌合约相连，列出到期日、行权价和持仓量变化",
+    },
+  },
 };
 const softwareProducts: Partial<Record<PageKey, ProductId>> = {
   stockSignals: "signals",
@@ -177,10 +204,23 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
   ];
 
   if (key !== "home") {
+    const names = {
+      stockSignals: copy.nav.stockSignals,
+      stockScreener: copy.footer.stockScreener,
+      unusualOptions: copy.footer.unusualOptions,
+      pricing: copy.nav.pricing,
+      about: copy.nav.about,
+      terms: copy.nav.terms,
+      privacy: copy.nav.privacy,
+      docs: copy.nav.docs,
+      doc: document?.shortTitle ?? seo.title,
+      blog: copy.nav.blog,
+      blogPost: document?.shortTitle ?? seo.title,
+    };
     const items = [{ name: copy.nav.home, item: pageUrl("/") }];
-    if (key === "blogPost") items.push({ name: "Blog", item: pageUrl("/blog/") });
-    if (key === "doc") items.push({ name: "Docs", item: pageUrl("/docs/") });
-    items.push({ name: document?.shortTitle ?? (key === "blog" ? "Blog" : seo.title), item: canonicalUrl });
+    if (key === "blogPost") items.push({ name: copy.nav.blog, item: pageUrl("/blog/") });
+    if (key === "doc") items.push({ name: copy.nav.docs, item: pageUrl("/docs/") });
+    items.push({ name: names[key], item: canonicalUrl });
     const breadcrumbId = `${canonicalUrl}#breadcrumb`;
     webpage.breadcrumb = { "@id": breadcrumbId };
     graph.push({
@@ -203,7 +243,7 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
       "@id": articleId,
       headline: document.title,
       description: document.description,
-      ...(isPost ? { datePublished: document.date } : {}),
+      datePublished: document.date,
       dateModified: document.updated,
       author: { "@id": organizationId },
       publisher: { "@id": organizationId },
@@ -229,6 +269,22 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
         position: index + 1,
         name: post.title,
         url: pageUrl(post.path),
+      })),
+    });
+  }
+
+  if (key === "docs") {
+    const listId = `${canonicalUrl}#docs`;
+    webpage.mainEntity = { "@id": listId };
+    graph.push({
+      "@type": "ItemList",
+      "@id": listId,
+      itemListElement: docs.map((doc, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: doc.title,
+        description: doc.summary,
+        url: pageUrl(doc.path),
       })),
     });
   }
@@ -287,6 +343,9 @@ export const getPageSeo = (pathname: string, language: SiteLanguage = DEFAULT_SI
   } else {
     meta = translations[language].meta[key];
   }
+  const image = (page && socialImages[page.key]) || defaultSocialImage;
+  const post = document?.kind === "post" ? document : undefined;
+  const article = key === "doc" || key === "blogPost" ? document : undefined;
   const seo: PageSeo = {
     pageKey: key,
     language,
@@ -296,13 +355,10 @@ export const getPageSeo = (pathname: string, language: SiteLanguage = DEFAULT_SI
     robots: page ? "index, follow, max-image-preview:large" : "noindex, follow",
     canonicalUrl: page ? pageUrl(page.path) : null,
     alternates: [],
-    imageUrl: absoluteUrl(
-      (document?.kind === "post" && document.image) || (page && socialImages[page.key]) || "/social/predixlab-research.png",
-    ),
-    imageAlt: document?.kind === "post"
-      ? document.imageAlt ?? 'PredixLab stock-analysis workflow illustration with a line chart and highlighted signal, alongside "Spot the signals. See the bigger picture."'
-      : meta.title,
-    openGraphType: "website",
+    imageUrl: absoluteUrl(post?.image ?? image.path),
+    imageAlt: post?.imageAlt ?? (article ? meta.title : image.alt[language]),
+    openGraphType: article ? "article" : "website",
+    ...(article ? { publishedTime: article.date, modifiedTime: article.updated } : {}),
     openGraphLocale: openGraphLocales[language],
     structuredData: null,
     ...(page && "lastmod" in page && page.lastmod ? { lastmod: page.lastmod } : {}),
@@ -338,6 +394,7 @@ export const renderSeoHead = (seo: PageSeo): string => {
     meta("og:image:height", "630", true),
     meta("og:image:alt", seo.imageAlt, true),
     meta("twitter:card", "summary_large_image"),
+    meta("twitter:site", "@predixlab"),
     meta("twitter:title", seo.title),
     meta("twitter:description", seo.description),
     meta("twitter:image", seo.imageUrl),
@@ -348,6 +405,13 @@ export const renderSeoHead = (seo: PageSeo): string => {
     head.push(
       `<link ${SEO_ATTRIBUTE} rel="canonical" href="${escapeHtml(seo.canonicalUrl)}" />`,
       meta("og:url", seo.canonicalUrl, true),
+    );
+  }
+  if (seo.openGraphType === "article") {
+    if (!seo.publishedTime || !seo.modifiedTime) throw new Error("Article metadata requires publication and modification dates.");
+    head.push(
+      meta("article:published_time", seo.publishedTime, true),
+      meta("article:modified_time", seo.modifiedTime, true),
     );
   }
   for (const alternate of seo.alternates) {

@@ -3,11 +3,18 @@ import { ArrowUpRight, Check } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 import Questions from "@/components/Questions";
 import { planTerms, pricingContent } from "@/content/company";
+import { productPaths } from "@/content/products";
 import { config, dashboardLink } from "@/config";
 import { useSiteLanguage } from "@/hooks/useSiteLanguage";
 
+const comparisonProductPaths: Partial<Record<number, string>> = {
+  2: productPaths.screener,
+  3: productPaths.signals,
+  4: productPaths.options,
+};
+
 const PricingPage = () => {
-  const { language } = useSiteLanguage();
+  const { language, localPath } = useSiteLanguage();
   const copy = pricingContent[language];
   const [annual, setAnnual] = useState(false);
 
@@ -95,7 +102,10 @@ const PricingPage = () => {
               <caption className="sr-only">{copy.compareTitle}</caption>
               <thead><tr><th scope="col">{copy.featureColumn}</th><th scope="col">{copy.selfHosted}</th><th scope="col">{copy.free}</th><th scope="col">{copy.premium}</th></tr></thead>
               <tbody>
-                {copy.rows.map((row, index) => <tr key={row}><th scope="row">{row}</th><td>{copy.selfHostedAvailability}</td><td>{index < 3 ? copy.included : copy.delayed}</td><td>{index < 3 ? copy.included : copy.latest}</td></tr>)}
+                {copy.rows.map((row, index) => {
+                  const path = comparisonProductPaths[index];
+                  return <tr key={row}><th scope="row">{path ? <Link to={localPath(path)}>{row}</Link> : row}</th><td>{copy.selfHostedAvailability}</td><td>{index < 3 ? copy.included : copy.delayed}</td><td>{index < 3 ? copy.included : copy.latest}</td></tr>;
+                })}
               </tbody>
             </table>
           </div>

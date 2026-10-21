@@ -9,6 +9,7 @@ interface ProductContent {
   title: string;
   description: string;
   shortDescription: string;
+  linkLabel: string;
   action: string;
   access: string;
   tags: string[];
@@ -42,6 +43,7 @@ export const productContent: Record<SiteLanguage, Record<ProductId, ProductConte
       description:
         "查看 AlphaRank 的股票排序和 Pivot 的转折信号，再结合股价图表、大盘表现和历史记录，判断哪些股票值得继续关注。",
       shortDescription: "先看哪些股票出现了信号，再结合走势和历史表现判断。",
+      linkLabel: "了解每日信号",
       action: "查看每日信号",
       access: "免费版可查看延迟 10 天的信号与信号表现。",
       tags: ["AlphaRank / Pivot", "历史信号", "股价图表"],
@@ -84,6 +86,7 @@ export const productContent: Record<SiteLanguage, Record<ProductId, ProductConte
       description:
         "不用写代码，就能按成交量、趋势、动量和风险指标筛选股票。可以直接使用预设条件，也可以搭配自己的筛选规则。",
       shortDescription: "按成交量、趋势、动量和风险指标筛选股票，保存常用条件，下次直接使用。",
+      linkLabel: "了解选股器",
       action: "打开量化选股器",
       access: "免费版可用。主要覆盖平台已收录的标普 500 和纳斯达克 100 股票。",
       tags: ["无需编程", "自定义条件", "保存筛选"],
@@ -117,6 +120,7 @@ export const productContent: Record<SiteLanguage, Record<ProductId, ProductConte
       description:
         "按股票查看期权异动，再展开合约，比较到期日、行权价和持仓量变化。先看清数据，再判断异动可能意味着什么。",
       shortDescription: "展开异动合约，查看到期日、行权价和持仓量变化，不只看一个异动标签。",
+      linkLabel: "了解期权异动",
       action: "查看期权异动",
       access: "免费版期权异动延迟 10 天。这里展示每日数据，不是实时逐笔成交。",
       tags: ["合约明细", "持仓量变化", "历史查询"],
@@ -152,6 +156,7 @@ export const productContent: Record<SiteLanguage, Record<ProductId, ProductConte
       description:
         "Review AlphaRank stock rankings and Pivot turning-point signals, then compare them with price charts, market conditions, and past outcomes.",
       shortDescription: "See which stocks have signals, then check the charts and past performance before forming a view.",
+      linkLabel: "Explore daily stock signals",
       action: "View daily signals",
       access: "The Free plan includes signals and signal performance with a 10-day delay.",
       tags: ["AlphaRank / Pivot", "Signal history", "Price charts"],
@@ -185,6 +190,7 @@ export const productContent: Record<SiteLanguage, Record<ProductId, ProductConte
       description:
         "Filter stocks by volume, trend, momentum, and risk without writing code. Start with a preset or combine filters to match your own approach.",
       shortDescription: "Filter stocks by volume, trend, momentum, and risk. Save your criteria to use again next time.",
+      linkLabel: "Explore the stock screener",
       action: "Open the stock screener",
       access: "Available on the Free plan. Covers the S&P 500 and NASDAQ-100 stocks tracked by the platform.",
       tags: ["No coding", "Custom filters", "Saved screens"],
@@ -218,6 +224,7 @@ export const productContent: Record<SiteLanguage, Record<ProductId, ProductConte
       description:
         "Browse activity by stock, then open the contracts to compare expirations, strikes, and changes in open interest. Look at the details before deciding what the activity might mean.",
       shortDescription: "Open the flagged contracts to compare expirations, strikes, and changes in open interest, not just an activity label.",
+      linkLabel: "Explore unusual options activity",
       action: "View options activity",
       access: "Free options activity has a 10-day delay. This is daily data, not a live trade feed.",
       tags: ["Contract details", "Open interest", "Historical data"],

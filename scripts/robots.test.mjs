@@ -18,7 +18,7 @@ test("every AI-training crawler must remain in the single blocked group", () => 
   const crawlers = [
     "GPTBot", "CCBot", "Google-Extended", "ClaudeBot", "anthropic-ai", "Bytespider",
     "Applebot-Extended", "meta-externalagent", "Amazonbot", "cohere-training-data-crawler",
-    "PerplexityBot", "Diffbot", "omgili",
+    "Diffbot", "omgili",
   ];
   for (const crawler of crawlers) {
     assert.throws(
@@ -34,7 +34,7 @@ test("every AI-training crawler must remain in the single blocked group", () => 
 
 test("search crawlers cannot be added to a Disallow group", () => {
   for (const crawler of [
-    "Googlebot", "Bingbot", "Baiduspider", "PetalBot", "GoogleOther", "YandexBot", "Sogou", "360Spider",
+    "Googlebot", "Bingbot", "Baiduspider", "PetalBot", "GoogleOther", "YandexBot", "Sogou", "360Spider", "PerplexityBot",
   ]) {
     assert.throws(
       () => validateRobotsTxt(robots.replace("Disallow: /", `User-agent: ${crawler}\nDisallow: /`)),
@@ -42,6 +42,11 @@ test("search crawlers cannot be added to a Disallow group", () => {
       crawler,
     );
   }
+});
+
+test("PerplexityBot uses the allowed wildcard group without an explicit group", () => {
+  assert.doesNotMatch(robots, /User-agent:\s*PerplexityBot/i);
+  validateRobotsTxt(robots);
 });
 
 test("the production sitemap must remain a complete directive", () => {

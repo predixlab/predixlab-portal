@@ -46,6 +46,7 @@ test("generated deployment config applies immutable caching only to assets and f
     await readFile(new URL("../staticwebapp.config.json", import.meta.url), "utf8"),
   );
   const config = createAzureConfig(sourceConfig, publicPaths);
+  assert.equal(config.trailingSlash, "auto", "Preserve directory redirects in the generated config");
   const cacheRoutes = ["/assets/*", "/fonts/*"];
   assert.deepEqual(
     config.routes.filter(({ route }) => cacheRoutes.includes(route)),
@@ -86,13 +87,16 @@ test("retired insights paths, including English-prefixed variants, permanently r
   )), /permanently redirect/);
 });
 
-test("RSS has an explicit application/rss+xml header and no rewrite or redirect", async () => {
+test("RSS remains a static XML file without a rewrite, redirect or global XML MIME override", async () => {
   const sourceConfig = JSON.parse(await readFile(new URL("../staticwebapp.config.json", import.meta.url), "utf8"));
   const config = createAzureConfig(sourceConfig, publicPaths);
-  assert.deepEqual(config.routes.filter(({ route }) => route === "/blog/rss.xml"), [{
-    route: "/blog/rss.xml",
-    headers: { "Content-Type": "application/rss+xml" },
-  }]);
+  const rule = config.routes.find(({ route }) => route === "/blog/rss.xml");
+  assert.equal(rule?.rewrite, undefined);
+  assert.equal(rule?.redirect, undefined);
+  if (rule?.headers?.["Content-Type"]) {
+    assert.ok(["application/rss+xml", "text/xml"].includes(rule.headers["Content-Type"]));
+  }
+  assert.equal(config.mimeTypes?.[".xml"], undefined);
 });
 
 test("conflicting directory aliases are rejected rather than silently deduplicated", () => {

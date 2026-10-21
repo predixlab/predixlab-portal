@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
 import { StaticRouter } from "react-router-dom";
 import { createServer } from "vite";
+import { XMLParser, XMLValidator } from "fast-xml-parser";
 
 const server = await createServer({
   appType: "custom",
@@ -22,7 +23,7 @@ const [
   { render },
   { default: App },
   { createSiteI18n },
-  { homeContent },
+  { homeContent, faqContent },
 ] = await Promise.all([
   server.ssrLoadModule("/src/content/markdown.ts"),
   server.ssrLoadModule("/src/content/documents.ts"),
@@ -34,6 +35,8 @@ const [
   server.ssrLoadModule("/src/i18n/index.ts"),
   server.ssrLoadModule("/src/content/site.ts"),
 ]);
+
+const expectedRiskNote = "For information and independent analysis only — not investment advice. Data can be delayed or wrong, models can fail, and past performance doesn't predict future results.";
 
 const fixture = `---
 title: "An example & its limits"
@@ -49,12 +52,6 @@ translationKey: example
 # Example
 
 An example body.
-
----
-
-*For information only, not investment advice.*
-
-本页内容不构成投资建议。
 `;
 const loadFixture = (source = fixture) => loadBlogPosts({ "./blog/example.md": source })[0];
 
@@ -93,6 +90,10 @@ test("blog frontmatter validates calendar dates, order, language, translation ke
   assert.throws(() => loadBlogPosts({ "./Bad_Slug.md": fixture }), /invalid slug/);
   assert.throws(() => loadBlogPosts({ "./one/example.md": fixture, "./two/example.md": fixture }), /duplicate slug example/);
   assert.equal(loadFixture().path, "/blog/example/");
+  for (const [field, limit] of [["title", 60], ["description", 155]]) {
+    assert.doesNotThrow(() => loadFixture(fixture.replace(new RegExp(`^${field}:.*$`, "m"), `${field}: "${"x".repeat(limit)}"`)));
+    assert.throws(() => loadFixture(fixture.replace(new RegExp(`^${field}:.*$`, "m"), `${field}: "${"x".repeat(limit + 1)}"`)), /exceeds/);
+  }
 });
 
 test("optional sharing images require a local PNG and descriptive alternative text together", () => {
@@ -124,6 +125,8 @@ test("Markdown emits semantic HTML, stable unique heading IDs, safe external lin
 
 - A list item
 
+---
+
 \`\`\`js
 const x = "<not-html>";
 \`\`\`
@@ -133,10 +136,9 @@ const x = "<not-html>";
   assert.match(document.html, /<h2 id="known-limitations-2">/);
   assert.match(document.html, /<table><thead><tr><th>Header<\/th>/);
   assert.match(document.html, /<ul>\n<li>A list item<\/li>/);
+  assert.match(document.html, /<hr>/);
   assert.match(document.html, /<pre><code class="language-js">const x = &quot;&lt;not-html&gt;&quot;;/);
   assert.match(document.html, /href="https:\/\/example.com\/\?a=1&amp;b=2" target="_blank" rel="noopener noreferrer"/);
-  assert.match(document.disclaimerHtml, /not investment advice/);
-  assert.match(document.disclaimerHtml, /不构成投资建议/);
   assert.doesNotMatch(document.html, /not investment advice/);
 });
 
@@ -152,7 +154,72 @@ test("invalid Markdown and noncompliant draft content fail explicitly", () => {
     "# Example\n\n[Legacy](/learn/look-ahead-bias/)",
     "# Example\n\nReal-time data",
   ]) assert.throws(() => loadFixture(fixture.replace("# Example\n\nAn example body.", body)), /example.md:/);
-  assert.throws(() => loadFixture(fixture.replace("本页内容不构成投资建议。", "")), /risk disclaimers/);
+});
+
+for (const { path } of sitePages.filter(({ path }) => /^\/(?:docs|blog)\//.test(path))) {
+  for (const language of ["en", "zh"]) {
+    test(`${path} (${language} navigation): exactly one approved English risk note and no localized footer disclaimer`, () => {
+      const i18n = createSiteI18n(language);
+      const html = renderToStaticMarkup(createElement(
+        I18nextProvider, { i18n },
+        createElement(StaticRouter, { location: path }, createElement(App)),
+      ));
+      const disclaimers = [...html.matchAll(/<div class="content-disclaimer markdown-content"[^>]*>([\s\S]*?)<\/div>/g)];
+      assert.equal(disclaimers.length, 1);
+      const disclaimer = disclaimers[0][1];
+      assert.equal(disclaimer.replace(/<[^>]+>/g, "").trim(), renderToStaticMarkup(expectedRiskNote));
+      assert.doesNotMatch(disclaimer, /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\u3000-\u303f]/u);
+      assert.equal(html.split(renderToStaticMarkup(expectedRiskNote)).length - 1, 1);
+      assert.ok(!html.includes(renderToStaticMarkup(i18n.t("footer.disclaimer"))));
+    });
+  }
+}
+
+test("self-hosting uses the approved H1 and intro while retaining the open source section", () => {
+  const document = docs.find(({ slug }) => slug === "self-hosting");
+  assert.equal(document.h1, "Self-host PredixLab");
+  assert.equal(document.frontmatter.h1, "Self-host PredixLab");
+  assert.equal(document.body.split("\n\n")[0], "# Self-host PredixLab");
+  assert.equal(document.body.split("\n\n")[1], "All code from data collection to daily signals is open source under Apache-2.0. Here's what you need to run it yourself.");
+  assert.ok(document.body.includes("## Why open source"));
+  assert.equal(document.description, "Run PredixLab's Apache-2.0 code for data collection, signals, options analysis, API and dashboard. Market data and model files aren't covered.");
+  assert.equal(document.body.split("\n\n")[2], "We publish the code so you don't have to take our word for the method. Read it, run it, and tell us where it's wrong.");
+  assert.ok(document.body.includes("Most signal tools ask you to trust numbers without showing how they're made. We'd rather show the work."));
+  assert.doesNotMatch(document.body, /numbers you can't see being made|take our description of the method on trust/);
+  assert.match(render(document.path).appHtml, /<h1\b[^>]*>Self-host PredixLab<\/h1>/);
+});
+
+test("limitations covers incomplete membership, missing holdings, all-cash costs and omitted costs", () => {
+  const document = docs.find(({ slug }) => slug === "limitations");
+  const items = [
+    "**Incomplete index membership history.** Membership dates are applied, but many removed constituents are missing from the history, so the universe isn't fully point-in-time.",
+    "**Fill and cost simplifications.** Stops and targets fill at their exact level even through price gaps, Pivot opposite-signal exits fill at the same close that produced the exit signal, an AlphaRank holding that disappears from the data gets a 0% return, and re-entering AlphaRank from all-cash isn't charged a cost. Market impact, capacity, borrow availability, and taxes aren't modeled. All of these make backtests look better than live trading.",
+  ];
+  for (const item of items) assert.ok(document.body.includes(`- ${item}`));
+});
+
+test("the short version qualifies out-of-sample testing, Pivot fills and known limitations, and links membership caveats", () => {
+  const document = docs.find(({ slug }) => slug === "how-it-works");
+  const summary = document.body.split("## The short version")[1].split("## Data sources")[0];
+  assert.ok(summary.includes("- **Out-of-sample testing.** Models are evaluated with walk-forward validation: each test period is predicted by a model that never saw it. Pivot's event rules are a partial exception (see below)."));
+  assert.ok(summary.includes("ambiguous Pivot bars assume the stop was hit first"));
+  assert.ok(summary.includes("- **Known limitations.** Delisted companies are largely missing, most prices exclude dividends, and some fills are optimistic, so historical results likely look better than real trading. See [Known limitations](/docs/limitations/)."));
+  assert.ok(document.body.includes("the history is incomplete (see [Known limitations](/docs/limitations/))"));
+});
+
+test("walk-forward closing copy distinguishes fair testing from data limitations", () => {
+  const post = blogPosts.find(({ slug }) => slug === "walk-forward-validation");
+  assert.ok(post.body.includes("What it does is keep the test fair: each result comes from dates the model didn't see during training. It can't fix problems in the data itself, such as missing delisted stocks."));
+  assert.doesNotMatch(post.body, /make the evidence honest/);
+});
+
+test("daily data summary specifies the update cadence without changing the real-time FAQ", () => {
+  const document = docs.find(({ slug }) => slug === "how-it-works");
+  assert.ok(document.body.includes("- **Daily data only, updated once per trading day after the US close.** Prices are daily bars. Signals and options data are produced by scheduled nightly jobs and labeled with a data date."));
+  assert.deepEqual(faqContent.en.find(({ question }) => question === "Is the data real-time?"), {
+    question: "Is the data real-time?",
+    answer: "No. PredixLab uses daily price data and daily signal updates, not live quotes or intraday trade alerts. Check the date shown in the dashboard to see how current each result is.",
+  });
 });
 
 test("blog index puts Backtesting & validation first and sorts every category newest first", () => {
@@ -183,8 +250,34 @@ test("RSS 2.0 includes channel metadata, self discovery, canonical GUIDs, RFC-82
   assert.match(rss, /<description>Description &amp; &lt;tag&gt; &quot;double&quot; &apos;single&apos;<\/description>/);
   assert.match(rss, /<guid isPermaLink="true">https:\/\/predixlab.com\/blog\/example\/<\/guid>/);
   assert.match(rss, /<pubDate>Tue, 20 Oct 2026 00:00:00 GMT<\/pubDate>/);
+  assert.equal(XMLValidator.validate(rss), true);
+  const channel = new XMLParser({ ignoreAttributes: false }).parse(rss).rss.channel;
+  assert.equal(channel.language, "en");
+  assert.equal(channel.lastBuildDate, "Wed, 21 Oct 2026 00:00:00 GMT");
+  assert.equal(channel.item.title, post.title);
+  assert.equal(channel.item.description, post.description);
+  assert.equal(channel.item.link, "https://predixlab.com/blog/example/");
   assert.equal([...renderBlogRss(blogPosts).matchAll(/<item>/g)].length, blogPosts.length);
   assert.doesNotMatch(renderBlogRss([]), /<item>/);
+  assert.equal(XMLValidator.validate(renderBlogRss([])), true);
+  assert.doesNotMatch(renderBlogRss([]), /<lastBuildDate>/);
+});
+
+test("RSS lastBuildDate derives deterministically from the newest publication or update, not item order", () => {
+  const base = loadFixture();
+  const posts = [
+    { ...base, date: "2026-10-19", updated: "2026-10-24" },
+    { ...base, slug: "newer", date: "2026-10-22", updated: "2026-10-23" },
+  ];
+  const lastBuildDate = (items) => {
+    const rss = renderBlogRss(items);
+    assert.equal(XMLValidator.validate(rss), true);
+    return new XMLParser().parse(rss).rss.channel.lastBuildDate;
+  };
+  assert.equal(lastBuildDate(posts), "Sat, 24 Oct 2026 00:00:00 GMT");
+  assert.equal(lastBuildDate([...posts].reverse()), lastBuildDate(posts));
+  posts.push({ ...base, slug: "latest", date: "2026-10-25", updated: "2026-10-25" });
+  assert.equal(lastBuildDate(posts), "Sun, 25 Oct 2026 00:00:00 GMT");
 });
 
 test("sitemap derives every URL and lastmod from sitePages, with no language or retired URLs", () => {
@@ -219,14 +312,16 @@ test("adding one Markdown file discovers a post without editing a registry", asy
 
 const expectedHomeContent = {
   en: {
+    eyebrow: "Free to start · Self-host or hosted",
     title: ["Open-source US stock analysis:", "daily signals, screener, and options activity"],
-    description: "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and every signal shown next to its history.",
+    description: "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and each signal shown alongside that stock's past signals.",
     metaTitle: "Open-Source US Stock Analysis & Daily Signals | PredixLab",
     metaDescription: "Open-source analysis for S&P 500 and Nasdaq-100 stocks: daily signals, screener, options activity. Hosted or self-hosted. Free signals have a 10-day delay.",
   },
   zh: {
+    eyebrow: "免费开始 · 自己部署或用托管版",
     title: ["美股选股器、每日信号和期权异动，", "代码全部开源"],
-    description: "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，也可以按 Apache-2.0 协议自己部署。方法公开写明，每个信号都附带它过去的表现。",
+    description: "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，也可以按 Apache-2.0 协议自己部署。方法公开写明，每个信号都能对照这只股票过去的信号。",
     metaTitle: "PredixLab | 开源美股选股器、每日信号与期权异动",
     metaDescription: "美股选股器、每日信号和期权异动，代码全部开源。覆盖标普 500 和纳斯达克 100，基于日线数据，可用托管版或自己部署。免费版信号延迟 10 天。",
   },
@@ -235,6 +330,7 @@ const expectedHomeContent = {
 for (const language of ["en", "zh"]) {
   test(`${language}: homepage keeps one two-line H1, exact subhead, metadata and derived schema descriptions`, () => {
     const expected = expectedHomeContent[language];
+    assert.equal(homeContent[language].eyebrow, expected.eyebrow);
     assert.deepEqual(homeContent[language].title, expected.title);
     assert.equal(homeContent[language].description, expected.description);
     const html = language === "en" ? render("/").appHtml : renderToStaticMarkup(createElement(
@@ -242,6 +338,8 @@ for (const language of ["en", "zh"]) {
       createElement(StaticRouter, { location: "/" }, createElement(App)),
     ));
     const headings = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g)];
+    const eyebrow = html.match(/<p class="eyebrow hero-eyebrow">([\s\S]*?)<\/p>/)[1];
+    assert.equal(eyebrow.replace(/<[^>]+>/g, ""), expected.eyebrow);
     assert.equal(headings.length, 1);
     assert.equal(headings[0][1], `${renderToStaticMarkup(expected.title[0])}<br/><span>${renderToStaticMarkup(expected.title[1])}</span>`);
     const subhead = html.match(/<p class="hero-description">([\s\S]*?)<\/p>/)[1];
@@ -269,15 +367,22 @@ for (const language of ["en", "zh"]) {
   });
 
   test(`${language}: flat desktop/mobile navigation and product/footer links point to Docs`, () => {
-    for (const path of ["/us-stock-signals/", "/quantitative-stock-screener/", "/unusual-options-activity/"]) {
+    const labels = language === "en" ? [
+      "How the signals are built and tested",
+      "Where the screener data comes from and when it updates",
+      "How options activity is detected and scored",
+    ] : ["信号如何构建和检验", "选股器数据来源与更新时间", "期权异动如何识别和评分"];
+    for (const [index, path] of ["/us-stock-signals/", "/quantitative-stock-screener/", "/unusual-options-activity/"].entries()) {
       const html = renderToStaticMarkup(createElement(
         I18nextProvider, { i18n: createSiteI18n(language) },
         createElement(StaticRouter, { location: path }, createElement(App)),
       ));
-      const linkText = language === "en" ? "How the signals are built and tested" : "信号如何构建和检验";
+      const linkText = labels[index];
       const main = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)[1];
       assert.match(main, new RegExp(`href="/docs/how-it-works/"[^>]*>${linkText}</a>`));
+      assert.match(main, new RegExp(`href="/docs/limitations/"[^>]*>${language === "en" ? "Known limitations" : "已知局限"}</a>`));
       const footer = html.match(/<footer\b[^>]*>([\s\S]*?)<\/footer>/)[1];
+      assert.ok(footer.includes(renderToStaticMarkup(createSiteI18n(language).t("footer.disclaimer"))));
       const desktop = html.match(/<div class="desktop-nav">([\s\S]*?)<\/div>/)[1];
       const mobile = html.match(/<nav class="mobile-nav"[^>]*>([\s\S]*?)<\/nav>/)[1];
       for (const section of [desktop, mobile, footer]) {
@@ -308,7 +413,6 @@ for (const [path, document] of [
     assert.equal(page.seo.description, document.description);
     assert.equal(page.seo.canonicalUrl, `https://predixlab.com${path}`);
     assert.ok(page.appHtml.includes(document.html));
-    assert.ok(page.appHtml.includes(document.disclaimerHtml));
     assert.equal([...page.appHtml.matchAll(/<h1\b/g)].length, 1);
     const dates = document.kind === "post" ? [document.date, document.updated]
       : [document.updated];
@@ -318,9 +422,10 @@ for (const [path, document] of [
     assert.doesNotMatch(page.appHtml, /real[- ]?time|实时|\/learn\/|\/zh\/|[?&]lng=|<!--\s*Reviewer note|\[待核实\]/i);
     const json = JSON.parse(page.headHtml.match(/type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
     const breadcrumb = json["@graph"].find((node) => node["@type"] === "BreadcrumbList");
-    assert.equal(breadcrumb.itemListElement.at(-1).name, document.shortTitle);
+    assert.deepEqual(breadcrumb.itemListElement.map(({ name }) => name), [
+      "Home", document.kind === "doc" ? "Docs" : "Blog", document.shortTitle,
+    ]);
     if (document.kind === "doc") {
-      assert.deepEqual(breadcrumb.itemListElement.map(({ name }) => name), ["Home", "Docs", document.shortTitle]);
       assert.match(page.appHtml, /class="docs-sidebar"/);
       const sidebar = page.appHtml.match(/<nav class="docs-sidebar"[^>]*>([\s\S]*?)<\/nav>/)[1];
       for (const doc of docs) {
@@ -331,6 +436,7 @@ for (const [path, document] of [
       const article = json["@graph"].find((node) => node["@type"] === "TechArticle");
       assert.equal(article.headline, document.title);
       assert.equal(article.description, document.description);
+      assert.equal(article.datePublished, document.date);
       assert.equal(article.dateModified, document.updated);
       assert.equal(article.mainEntityOfPage, page.seo.canonicalUrl);
       assert.deepEqual(article.author, { "@id": "https://predixlab.com/#organization" });
@@ -343,21 +449,65 @@ for (const [path, document] of [
   });
 }
 
-test("article schemas reference the shared organization and use the existing 1200x630 image with accurate alt text", async () => {
+test("articles use article Open Graph dates, shared organization schemas and page-title alt text with the default image", async () => {
   const png = await readFile(new URL("../public/social/predixlab-research.png", import.meta.url));
   assert.equal(png.readUInt32BE(16), 1200);
   assert.equal(png.readUInt32BE(20), 630);
-  for (const post of blogPosts) {
-    const seo = getPageSeo(post.path);
-    const article = seo.structuredData["@graph"].find((item) => item["@type"] === "BlogPosting");
+  for (const document of [...docs, ...blogPosts]) {
+    const seo = getPageSeo(document.path);
+    const article = seo.structuredData["@graph"].find((item) => item["@type"] === (document.kind === "post" ? "BlogPosting" : "TechArticle"));
     assert.deepEqual(article.author, { "@id": "https://predixlab.com/#organization" });
     assert.deepEqual(article.publisher, article.author);
-    assert.equal(article.datePublished, post.date);
-    assert.equal(article.dateModified, post.updated);
+    assert.equal(article.datePublished, document.date);
+    assert.equal(article.dateModified, document.updated);
     assert.deepEqual(article.image, { "@type": "ImageObject", url: seo.imageUrl, width: 1200, height: 630 });
-    assert.match(seo.imageAlt, /workflow illustration with a line chart and highlighted signal/);
-    assert.equal(seo.rssUrl, "https://predixlab.com/blog/rss.xml");
+    assert.equal(seo.imageUrl, getPageSeo("/").imageUrl);
+    assert.equal(seo.imageAlt, document.title);
+    assert.equal(seo.openGraphType, "article");
+    const head = renderSeoHead(seo);
+    for (const [name, value] of [
+      ["og:type", "article"],
+      ["article:published_time", document.date],
+      ["article:modified_time", document.updated],
+      ["og:image:alt", document.title],
+      ["twitter:image:alt", document.title],
+    ]) assert.ok(head.includes(`${name}" content="${renderToStaticMarkup(value)}"`));
+    if (document.kind === "post") assert.equal(seo.rssUrl, "https://predixlab.com/blog/rss.xml");
   }
+  for (const path of ["/docs/", "/blog/"]) {
+    const seo = getPageSeo(path);
+    assert.equal(seo.openGraphType, "website");
+    assert.doesNotMatch(renderSeoHead(seo), /property="article:/);
+  }
+});
+
+test("posts retain custom sharing images and alt text in English metadata and article schemas", () => {
+  const post = blogPosts[0];
+  const original = { image: post.image, imageAlt: post.imageAlt };
+  try {
+    post.image = "/social/predixlab-us-stock-signals.png";
+    post.imageAlt = 'Custom chart illustration with a "daily signal" marker';
+    const seo = getPageSeo(post.path, "zh");
+    assert.equal(seo.language, "en");
+    assert.equal(seo.title, post.title);
+    assert.equal(seo.description, post.description);
+    assert.equal(seo.imageUrl, `https://predixlab.com${post.image}`);
+    assert.equal(seo.imageAlt, post.imageAlt);
+    const head = renderSeoHead(seo);
+    for (const name of ["og:image:alt", "twitter:image:alt"]) {
+      assert.ok(head.includes(`${name}" content="${renderToStaticMarkup(post.imageAlt)}"`));
+    }
+    assert.equal(seo.structuredData["@graph"].find((node) => node["@type"] === "BlogPosting").image.url, seo.imageUrl);
+  } finally {
+    Object.assign(post, original);
+  }
+});
+
+test("daily-data FAQs remain unchanged in both languages", () => {
+  assert.equal(faqContent.en.find(({ question }) => question === "Is the data real-time?").answer,
+    "No. PredixLab uses daily price data and daily signal updates, not live quotes or intraday trade alerts. Check the date shown in the dashboard to see how current each result is.");
+  assert.equal(faqContent.zh.find(({ question }) => question === "数据是实时的吗？").answer,
+    "不是。PredixLab 以日线行情和每日信号为主，不提供实时行情或盘中交易提醒。数据更新到哪一天，请以工作台显示的日期为准。");
 });
 
 test("self-hosting schema has one Apache-2.0 SoftwareSourceCode per repository table row", () => {
@@ -380,12 +530,32 @@ test("Docs index is Markdown-driven, lists every document in order and has Engli
   assert.ok(page.appHtml.includes(docsIndex.html));
   assert.equal([...page.appHtml.matchAll(/<h1\b/g)].length, 1);
   assert.deepEqual([...page.appHtml.matchAll(/<h2><a href="([^"]+)"/g)].map(([, path]) => path), docs.map(({ path }) => path));
-  for (const doc of docs) assert.ok(page.appHtml.includes(renderToStaticMarkup(doc.description)));
+  assert.equal(docsIndex.h1, "How PredixLab works, where it falls short, and how to run it");
+  const expectedSummaries = [
+    "Data sources, update schedule, the two models, walk-forward validation, and backtest assumptions.",
+    "What the data, signals, and backtests can't tell you, and why historical results can look better than real trading.",
+    "The open-source repositories, how they fit together, and how to run the tests and collect data yourself.",
+  ];
+  assert.deepEqual(docs.map(({ summary }) => summary), expectedSummaries);
+  for (const doc of docs) {
+    assert.ok(page.appHtml.includes(renderToStaticMarkup(doc.summary)));
+    assert.ok(!page.appHtml.includes(renderToStaticMarkup(doc.description)));
+  }
+  assert.doesNotMatch(page.appHtml, /All PredixLab components/);
   assert.equal(page.seo.title, docsIndex.title);
   assert.equal(page.seo.description, docsIndex.description);
   assert.equal(page.seo.canonicalUrl, "https://predixlab.com/docs/");
   assert.ok(docsIndex.title.length <= 60 && docsIndex.description.length <= 155);
   assert.equal(page.seo.structuredData["@graph"].filter((node) => node["@type"] === "CollectionPage").length, 1);
+  const list = page.seo.structuredData["@graph"].find((node) => node["@type"] === "ItemList");
+  assert.deepEqual(list.itemListElement, docs.map((doc, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    name: doc.title,
+    description: doc.summary,
+    url: `https://predixlab.com${doc.path}`,
+  })));
+  assert.deepEqual(page.seo.structuredData["@graph"].find((node) => node["@type"] === "CollectionPage").mainEntity, { "@id": list["@id"] });
   assert.deepEqual(page.seo.structuredData["@graph"].find((node) => node["@type"] === "BreadcrumbList").itemListElement.map(({ name }) => name), ["Home", "Docs"]);
   assert.deepEqual(getPageSeo("/docs/", "zh"), page.seo);
   assert.deepEqual(page.seo.alternates, []);
@@ -403,18 +573,22 @@ test("unpublished draft routes are absent from the inventory and return genuine 
   }
 });
 
-const docsFixture = fixture.replace('date: "2026-10-20"\n', "").replace('category: "Backtesting & validation"', 'order: "1"');
+const docsFixture = fixture.replace('category: "Backtesting & validation"', 'order: "1"\nsummary: "A short example summary."');
 const loadDocFixture = (source = docsFixture) => loadDocs({ "./docs/example.md": source })[0];
 
 test("Docs frontmatter validates required metadata, dates, ordering, language and SEO limits", () => {
   assert.equal(loadDocFixture().path, "/docs/example/");
-  for (const field of ["title", "shortTitle", "description", "lang", "updated", "order", "translationKey"]) {
+  for (const field of ["title", "shortTitle", "description", "summary", "lang", "date", "updated", "order", "translationKey"]) {
     assert.throws(() => loadDocFixture(docsFixture.replace(new RegExp(`^${field}:.*\\n`, "m"), "")), new RegExp(`missing required field ${field}`));
   }
   for (const value of ["-1", "1.5", "invalid", "9007199254740992"]) {
     assert.throws(() => loadDocFixture(docsFixture.replace('order: "1"', `order: "${value}"`)), /order must be/);
   }
   assert.throws(() => loadDocFixture(docsFixture.replace('updated: "2026-10-21"', 'updated: "2026-02-30"')), /invalid updated/);
+  assert.throws(() => loadDocFixture(docsFixture.replace('date: "2026-10-20"', 'date: "2026-02-30"')), /invalid date/);
+  assert.throws(() => loadDocFixture(docsFixture.replace('updated: "2026-10-21"', 'updated: "2026-10-19"')), /updated precedes date/);
+  assert.equal(loadDocFixture().summary, "A short example summary.");
+  assert.equal(loadDocFixture().date, "2026-10-20");
   assert.throws(() => loadDocFixture(docsFixture.replace("lang: en", "lang: zh")), /lang must be en/);
   assert.throws(() => loadDocFixture(docsFixture.replace("translationKey: example", "translationKey: Bad Key")), /invalid translationKey/);
   for (const [field, limit] of [["title", 60], ["description", 155]]) {
@@ -440,12 +614,15 @@ test("blog index renders grouped posts, short breadcrumbs, CollectionPage and an
   assert.match(page.appHtml, /<h2 id="category-backtesting-validation">Backtesting &amp; validation<\/h2>/);
   assert.match(page.appHtml, /<span aria-current="page">Blog<\/span>/);
   assert.equal([...page.appHtml.matchAll(/<h1\b/g)].length, 1);
+  assert.match(page.appHtml, /<h1>Guides to backtesting and validating stock signals<\/h1>/);
+  assert.match(page.appHtml, /<p class="eyebrow">PREDIXLAB \/ BLOG<\/p>/);
   for (const post of blogPosts) {
     assert.ok(page.appHtml.includes(`href="${post.path}"`));
     assert.ok(page.appHtml.includes(post.description));
     assert.ok(page.appHtml.includes(`<time dateTime="${post.date}">`));
   }
   const graph = page.seo.structuredData["@graph"];
+  assert.deepEqual(graph.find((node) => node["@type"] === "BreadcrumbList").itemListElement.map(({ name }) => name), ["Home", "Blog"]);
   assert.equal(graph.filter((node) => node["@type"] === "CollectionPage").length, 1);
   const list = graph.find((node) => node["@type"] === "ItemList");
   assert.deepEqual(list.itemListElement.map(({ url }) => url), blogPosts.map(({ path }) => `https://predixlab.com${path}`));

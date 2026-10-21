@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import ContentDisclaimer from "@/components/ContentDisclaimer";
 import { docs, docsIndex } from "@/content/documents";
 
 const DocsPage = () => (
@@ -12,10 +13,11 @@ const DocsPage = () => (
       {docs.map((doc) => (
         <article key={doc.path}>
           <h2><Link to={doc.path}>{doc.shortTitle}</Link></h2>
-          <p>{doc.description}</p>
+          <p>{doc.summary}</p>
         </article>
       ))}
     </div>
+    <ContentDisclaimer />
   </div>
 );
 

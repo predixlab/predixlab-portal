@@ -3,7 +3,9 @@ lang: en
 title: "How PredixLab works: data, updates, signals and backtests"
 shortTitle: "How it works"
 description: "Data sources, nightly schedule, features, walk-forward validation, backtest assumptions and known limits behind PredixLab signals. Not investment advice."
+summary: "Data sources, update schedule, the two models, walk-forward validation, and backtest assumptions."
 h1: "How PredixLab works: data, updates, signals and backtests"
+date: "2026-10-21"
 updated: "2026-10-21"
 order: "1"
 translationKey: how-it-works
@@ -15,10 +17,11 @@ PredixLab is a set of analysis tools for US stocks. This page explains where the
 
 ## The short version
 
-- **Daily data only.** Prices are daily bars. Signals and options data are produced by scheduled nightly jobs and labeled with a data date.
+- **Daily data only, updated once per trading day after the US close.** Prices are daily bars. Signals and options data are produced by scheduled nightly jobs and labeled with a data date.
 - **Coverage.** The platform tracks S&P 500 and Nasdaq-100 constituents. Some tools may cover a different set; each page shows what it includes.
-- **Out-of-sample testing.** Models are evaluated with walk-forward validation: each test period is predicted by a model that never saw it.
-- **Backtest fills.** Signals are never filled at the close that produced them, ambiguous bars assume the stop was hit first, and 10 bps is charged per side. The backtests also contain optimistic simplifications, listed under [Known limitations](/docs/limitations/).
+- **Out-of-sample testing.** Models are evaluated with walk-forward validation: each test period is predicted by a model that never saw it. Pivot's event rules are a partial exception (see below).
+- **Backtest fills.** Signals are never filled at the close that produced them, ambiguous Pivot bars assume the stop was hit first, and 10 bps is charged per side. The backtests also contain optimistic simplifications, listed under [Known limitations](/docs/limitations/).
+- **Known limitations.** Delisted companies are largely missing, most prices exclude dividends, and some fills are optimistic, so historical results likely look better than real trading. See [Known limitations](/docs/limitations/).
 - **No performance claims here.** This page explains method, not results. A model score is not a probability of profit.
 
 ## Data sources
@@ -26,7 +29,7 @@ PredixLab is a set of analysis tools for US stocks. This page explains where the
 | Data | Source | Notes |
 | --- | --- | --- |
 | Daily US stock prices (OHLCV) | Yahoo Finance, collected by `predixlab-collector` | History is built from 2015-01-01 and updated incrementally |
-| Index membership | Constituent lists and history for the S&P 500 and Nasdaq-100 | Stored as dated membership intervals per symbol; the history is incomplete (see Known limitations) |
+| Index membership | Constituent lists and history for the S&P 500 and Nasdaq-100 | Stored as dated membership intervals per symbol; the history is incomplete (see [Known limitations](/docs/limitations/)) |
 | Trading calendar | Derived from S&P 500 index (`^GSPC`) history | Used to decide which dates are trading sessions |
 | Reference ETFs | SPY, QQQ, IWM, DIA | Kept separately for market context |
 | Options chains | Cboe snapshots, collected by `predixlab-options` | Compared session to session, contract by contract |
@@ -122,9 +125,3 @@ Candidates get a 0–100 activity score. A stock needs at least two qualifying c
 ## Check it yourself
 
 All of this is implemented in open-source repositories under the Apache-2.0 license: [predixlab-collector](https://github.com/predixlab/predixlab-collector), [predixlab-signals](https://github.com/predixlab/predixlab-signals), and [predixlab-options](https://github.com/predixlab/predixlab-options). The signals repository's tests check leakage rules directly: appending future data must not change past features or events, and Pivot backtest entries must occur on the next session, never the signal day. See [Self-hosting](/docs/self-hosting/) for how to run them.
-
----
-
-*For information and independent analysis only — not investment advice. Data can be delayed or wrong, models can fail, and past performance doesn't predict future results.*
-
-本页内容仅用于信息和研究参考，不构成投资建议。投资有风险，过往表现不代表未来结果。

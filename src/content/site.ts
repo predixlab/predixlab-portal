@@ -64,10 +64,10 @@ export const faqContent: Record<SiteLanguage, Question[]> = {
 
 export const homeContent = {
   zh: {
-    eyebrow: "每日美股信号、选股与期权分析",
+    eyebrow: "免费开始 · 自己部署或用托管版",
     title: ["美股选股器、每日信号和期权异动，", "代码全部开源"],
     description:
-      "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，也可以按 Apache-2.0 协议自己部署。方法公开写明，每个信号都附带它过去的表现。",
+      "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，也可以按 Apache-2.0 协议自己部署。方法公开写明，每个信号都能对照这只股票过去的信号。",
     descriptionLink: "方法公开写明",
     primary: "免费开始使用",
     secondary: "了解产品功能",
@@ -77,7 +77,6 @@ export const homeContent = {
     toolsTitle: ["看盘、选股、查异动，", "都在一个工作台。"],
     toolsDescription:
       "先看大盘，再筛选股票，或直接查看某只股票的期权异动。常用信息集中展示，少在多个页面之间来回查找。",
-    toolsLink: "了解详情",
     methodEyebrow: "02 / 如何看待信号",
     methodTitle: ["信号只是参考，", "判断还要结合行情。"],
     methodDescription:
@@ -103,10 +102,10 @@ export const homeContent = {
     faqDescription: "关于功能、数据更新和使用方式，这里有几个常见问题。",
   },
   en: {
-    eyebrow: "Daily US stock signals, screening, and options analysis",
+    eyebrow: "Free to start · Self-host or hosted",
     title: ["Open-source US stock analysis:", "daily signals, screener, and options activity"],
     description:
-      "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and every signal shown next to its history.",
+      "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and each signal shown alongside that stock's past signals.",
     descriptionLink: "the method documented",
     primary: "Get started free",
     secondary: "Explore the tools",
@@ -116,7 +115,6 @@ export const homeContent = {
     toolsTitle: ["Your daily market review.", "All in one place."],
     toolsDescription:
       "Start with the broader market, narrow your stock list, or look into options activity for a particular company. Spend less time switching between sources.",
-    toolsLink: "Learn more",
     methodEyebrow: "02 / USING THE SIGNALS",
     methodTitle: ["A signal is a starting point.", "Put it in context."],
     methodDescription:

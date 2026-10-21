@@ -7,7 +7,6 @@ export interface MarkdownDocument {
   lang: "en";
   h1: string;
   html: string;
-  disclaimerHtml: string;
   frontmatter: Record<string, string>;
   body: string;
 }
@@ -28,6 +27,8 @@ export interface DocPage extends MarkdownDocument {
   kind: "doc";
   slug: string;
   path: string;
+  summary: string;
+  date: string;
   updated: string;
   order: number;
   translationKey: string;
@@ -91,11 +92,12 @@ export const headingId = (text: string) =>
 export const parseMarkdownDocument = (
   source: string,
   filename: string,
-  { requireDisclaimer = true } = {},
 ): MarkdownDocument => {
   const { frontmatter, body } = parseFrontmatter(source, filename);
   requireFields(frontmatter, ["title", "shortTitle", "description", "lang"], filename);
   if (frontmatter.lang !== "en") throw new Error(`${filename}: lang must be en`);
+  if (frontmatter.title.length > 60) throw new Error(`${filename}: title exceeds 60 characters`);
+  if (frontmatter.description.length > 155) throw new Error(`${filename}: description exceeds 155 characters`);
   if (/<!--|\[待核实\]|\[发布日填写\]|\/learn\/(?:walk-forward-validation|look-ahead-bias)\//.test(source)) {
     throw new Error(`${filename}: remove reviewer notes/placeholders and migrate legacy links`);
   }
@@ -140,22 +142,13 @@ export const parseMarkdownDocument = (
   }
   const h1 = headings[0].text;
   if (frontmatter.h1 && frontmatter.h1 !== h1) throw new Error(`${filename}: h1 does not match the document`);
-  const disclaimerIndex = tokens.map((token) => token.type).lastIndexOf("hr");
-  const disclaimers = tokens.slice(disclaimerIndex + 1);
-  if ((requireDisclaimer || disclaimerIndex >= 0) && (disclaimerIndex < 0 || disclaimers.length !== 2
-    || !disclaimers.every((token) => token.type === "paragraph")
-    || !/not investment advice/.test(disclaimers[0].raw)
-    || !/不构成投资建议/.test(disclaimers[1].raw))) {
-    throw new Error(`${filename}: end the document with separated English and Chinese risk disclaimers`);
-  }
   return {
     title: frontmatter.title,
     shortTitle: frontmatter.shortTitle,
     description: frontmatter.description,
     lang: "en",
     h1,
-    html: markdown.parser(disclaimerIndex < 0 ? tokens : tokens.slice(0, disclaimerIndex)),
-    disclaimerHtml: disclaimerIndex < 0 ? "" : markdown.parser(tokens.slice(disclaimerIndex)),
+    html: markdown.parser(tokens),
     frontmatter,
     body,
   };
@@ -201,10 +194,12 @@ export const loadDocs = (sources: Record<string, string>): DocPage[] => {
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error(`${filename}: invalid slug`);
     if (slugs.has(slug)) throw new Error(`${filename}: duplicate slug ${slug}`);
     slugs.add(slug);
-    const document = parseMarkdownDocument(source, filename, { requireDisclaimer: slug !== "index" });
+    const document = parseMarkdownDocument(source, filename);
     const { frontmatter } = document;
-    requireFields(frontmatter, ["updated", "order", "translationKey"], filename);
+    requireFields(frontmatter, ["summary", "date", "updated", "order", "translationKey"], filename);
+    validateDate(frontmatter.date, "date", filename);
     validateDate(frontmatter.updated, "updated", filename);
+    if (frontmatter.updated < frontmatter.date) throw new Error(`${filename}: updated precedes date`);
     if (!/^(?:0|[1-9]\d*)$/.test(frontmatter.order) || !Number.isSafeInteger(Number(frontmatter.order))) {
       throw new Error(`${filename}: order must be a nonnegative integer string`);
     }
@@ -216,10 +211,9 @@ export const loadDocs = (sources: Record<string, string>): DocPage[] => {
     }
     if (translationKeys.has(frontmatter.translationKey)) throw new Error(`${filename}: duplicate translationKey`);
     translationKeys.add(frontmatter.translationKey);
-    if (document.title.length > 60) throw new Error(`${filename}: title exceeds 60 characters`);
-    if (document.description.length > 155) throw new Error(`${filename}: description exceeds 155 characters`);
     return {
       ...document, kind: "doc", slug, path: slug === "index" ? "/docs/" : `/docs/${slug}/`,
+      summary: frontmatter.summary, date: frontmatter.date,
       updated: frontmatter.updated, order, translationKey: frontmatter.translationKey,
     };
   }).sort((a, b) => a.order - b.order);

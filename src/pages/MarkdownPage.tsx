@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import ContentDisclaimer from "@/components/ContentDisclaimer";
 import { formatPostDate, relatedBlogPosts } from "@/content/blog";
 import { blogPosts, docs, getContentForPath } from "@/content/documents";
 import NotFoundPage from "@/pages/NotFoundPage";
@@ -30,7 +31,7 @@ const MarkdownPage = () => {
           <p>See <Link to="/docs/how-it-works/">how PredixLab works</Link> for data sources and validation, and review the <Link to="/docs/limitations/">known limitations</Link>.</p>
         </aside>
       )}
-      <div className="content-disclaimer markdown-content" dangerouslySetInnerHTML={{ __html: document.disclaimerHtml }} />
+      <ContentDisclaimer />
     </article>
   );
   if (post) return article;

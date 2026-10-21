@@ -1,21 +1,25 @@
 ---
 lang: en
-title: "Self-hosting PredixLab: code from data to daily signals"
+title: "Self-host PredixLab: run the open-source signal pipeline"
 shortTitle: "Self-hosting"
-description: "All PredixLab components are Apache-2.0 on GitHub: data collection, signal models, options analysis, API, dashboard. How to run, verify and contribute."
-h1: "PredixLab is open source"
+description: "Run PredixLab's Apache-2.0 code for data collection, signals, options analysis, API and dashboard. Market data and model files aren't covered."
+summary: "The open-source repositories, how they fit together, and how to run the tests and collect data yourself."
+h1: "Self-host PredixLab"
+date: "2026-10-21"
 updated: "2026-10-21"
 order: "3"
 translationKey: self-hosting
 ---
 
-# PredixLab is open source
+# Self-host PredixLab
 
-PredixLab's product, from price collection to the dashboard you sign in to, is built from open-source repositories on GitHub. Each one is licensed under Apache-2.0. We publish the code so you don't have to take our description of the method on trust: you can read it, run it, and tell us where it's wrong.
+All code from data collection to daily signals is open source under Apache-2.0. Here's what you need to run it yourself.
+
+We publish the code so you don't have to take our word for the method. Read it, run it, and tell us where it's wrong.
 
 ## Why open source
 
-Signal tools ask you to rely on numbers you can't see being made. We would rather show the work. The data sources, features, labels, validation splits, and backtest assumptions described in the [How it works](/docs/how-it-works/) doc all live in code. Anyone can reproduce or challenge them.
+Most signal tools ask you to trust numbers without showing how they're made. We'd rather show the work. The data sources, features, labels, validation splits, and backtest assumptions described in the [How it works](/docs/how-it-works/) doc all live in code. Anyone can reproduce or challenge them.
 
 ## The repositories
 
@@ -89,9 +93,3 @@ Contributions are accepted under Apache-2.0.
 - [How it works](/docs/how-it-works/): data, schedule, validation, and backtest assumptions in plain language
 - [Walk-forward validation for stock signals](/blog/walk-forward-validation/)
 - Product pages: [daily signals](/us-stock-signals/), [stock screener](/quantitative-stock-screener/), [unusual options activity](/unusual-options-activity/)
-
----
-
-*For information and independent analysis only — not investment advice. Data can be delayed or wrong, models can fail, and past performance doesn't predict future results.*
-
-本页内容仅用于信息和研究参考，不构成投资建议。投资有风险，过往表现不代表未来结果。

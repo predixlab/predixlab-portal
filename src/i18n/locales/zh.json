@@ -40,6 +40,9 @@
   "nav": {
     "home": "首页",
     "tools": "工具",
+    "stockSignals": "每日信号",
+    "terms": "服务条款",
+    "privacy": "隐私政策",
     "pricing": "价格",
     "docs": "文档",
     "blog": "博客",

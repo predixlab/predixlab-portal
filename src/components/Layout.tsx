@@ -6,7 +6,7 @@ import Seo from "@/components/Seo";
 import { config, dashboardLink } from "@/config";
 import { useSiteLanguage } from "@/hooks/useSiteLanguage";
 import { getPreferredLanguage, LANGUAGE_STORAGE_KEY } from "@/i18n/language";
-import { normalizePath } from "@/routing";
+import { getPageForPath, normalizePath } from "@/routing";
 import {
   ANALYTICS_CONSENT_STORAGE_KEY,
   enableGoogleAnalytics,
@@ -24,6 +24,8 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const { t, i18n } = useTranslation();
   const { language, localPath, changeLanguage } = useSiteLanguage();
   const location = useLocation();
+  const page = getPageForPath(location.pathname);
+  const isEnglishContent = page && ["docs", "doc", "blog", "blogPost"].includes(page.key);
   const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>();
   const [analyticsConsent, setAnalyticsConsentState] = useState<AnalyticsConsent>("declined");
@@ -221,7 +223,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
             </div>
           </div>
           <div className="footer-wordmark" aria-hidden="true">{t("footer.tagline")}</div>
-          <div className="footer-bottom"><span>© {new Date().getFullYear()} PredixLab</span><span>{t("footer.disclaimer")}</span><span className="footer-coordinate">{t("footer.caption")}</span></div>
+          <div className="footer-bottom"><span>© {new Date().getFullYear()} PredixLab</span>{!isEnglishContent && <span>{t("footer.disclaimer")}</span>}<span className="footer-coordinate">{t("footer.caption")}</span></div>
         </div>
       </footer>
 
