@@ -15,6 +15,7 @@ const methodIcons = [CircleHalf, Crosshair, Waveform];
 const HomePage = () => {
   const { language, localPath } = useSiteLanguage();
   const copy = homeContent[language];
+  const [descriptionBefore, descriptionAfter] = copy.description.split(copy.descriptionLink);
 
   return (
     <>
@@ -23,10 +24,10 @@ const HomePage = () => {
           <div className="hero-intro">
             <p className="eyebrow hero-eyebrow"><span className="label-mark" aria-hidden="true" />{copy.eyebrow}</p>
             <h1>{copy.title[0]}<br /><span>{copy.title[1]}</span></h1>
-            <p className="hero-description">{copy.description}</p>
+            <p className="hero-description">{descriptionBefore}<Link to="/docs/how-it-works/">{copy.descriptionLink}</Link>{descriptionAfter}</p>
             <div className="button-row hero-buttons">
               <a href={dashboardLink("/", "hero")} className="button button-primary">{copy.primary}<ArrowUpRight aria-hidden="true" /></a>
-              <a href="#research-tools" className="button button-quiet">{copy.secondary}<ArrowDown aria-hidden="true" /></a>
+              <a href="#tools" className="button button-quiet">{copy.secondary}<ArrowDown aria-hidden="true" /></a>
             </div>
             <p className="hero-note">{copy.note}</p>
           </div>
@@ -37,7 +38,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="section tools-section" id="research-tools">
+      <section className="section tools-section" id="tools">
         <div className="site-container">
           <div className="section-heading split-heading">
             <div><p className="eyebrow">{copy.toolsEyebrow}</p><h2>{copy.toolsTitle[0]}<br /><span>{copy.toolsTitle[1]}</span></h2></div>

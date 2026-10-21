@@ -6,6 +6,9 @@ import {
   type ProductId,
 } from "@/content/products";
 import { faqContent } from "@/content/site";
+import { blogContent, renderBlogRss } from "@/content/blog";
+import { blogPosts, getContentForPath } from "@/content/documents";
+import { sourceRepositories } from "@/content/markdown";
 import { DEFAULT_SITE_LANGUAGE } from "@/i18n/language";
 import en from "@/i18n/locales/en.json";
 import zh from "@/i18n/locales/zh.json";
@@ -37,6 +40,8 @@ export interface PageSeo {
   openGraphType: "website";
   openGraphLocale: string;
   structuredData: JsonLdObject | null;
+  rssUrl?: string;
+  lastmod?: string;
 }
 
 export const SEO_ATTRIBUTE = "data-predixlab-seo";
@@ -58,6 +63,7 @@ const softwareProducts: Partial<Record<PageKey, ProductId>> = {
 };
 
 export const publicPaths = sitePages.map((page) => page.path);
+export const renderRss = () => renderBlogRss(blogPosts);
 
 const absoluteUrl = (path: string) => new URL(path, config.siteUrl).href;
 const pageUrl = (path: string) => absoluteUrl(publicPath(path));
@@ -127,8 +133,9 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
   if (!canonicalUrl) throw new Error("Structured data requires a public page URL.");
   const copy = translations[seo.language];
   const webpageId = `${canonicalUrl}#webpage`;
+  const document = getContentForPath(new URL(canonicalUrl).pathname);
   const webpage: JsonLdObject = {
-    "@type": "WebPage",
+    "@type": key === "blog" || key === "docs" ? "CollectionPage" : "WebPage",
     "@id": webpageId,
     url: canonicalUrl,
     name: seo.title,
@@ -171,7 +178,9 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
 
   if (key !== "home") {
     const items = [{ name: copy.nav.home, item: pageUrl("/") }];
-    items.push({ name: seo.title, item: canonicalUrl });
+    if (key === "blogPost") items.push({ name: "Blog", item: pageUrl("/blog/") });
+    if (key === "doc") items.push({ name: "Docs", item: pageUrl("/docs/") });
+    items.push({ name: document?.shortTitle ?? (key === "blog" ? "Blog" : seo.title), item: canonicalUrl });
     const breadcrumbId = `${canonicalUrl}#breadcrumb`;
     webpage.breadcrumb = { "@id": breadcrumbId };
     graph.push({
@@ -183,6 +192,59 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
         ...item,
       })),
     });
+  }
+
+  if (document && (key === "doc" || document.kind === "post")) {
+    const isPost = document.kind === "post";
+    const articleId = `${canonicalUrl}#article`;
+    webpage.mainEntity = { "@id": articleId };
+    graph.push({
+      "@type": isPost ? "BlogPosting" : "TechArticle",
+      "@id": articleId,
+      headline: document.title,
+      description: document.description,
+      ...(isPost ? { datePublished: document.date } : {}),
+      dateModified: document.updated,
+      author: { "@id": organizationId },
+      publisher: { "@id": organizationId },
+      mainEntityOfPage: canonicalUrl,
+      inLanguage: "en",
+      image: {
+        "@type": "ImageObject",
+        url: seo.imageUrl,
+        width: 1200,
+        height: 630,
+      },
+    });
+  }
+
+  if (key === "blog") {
+    const listId = `${canonicalUrl}#posts`;
+    webpage.mainEntity = { "@id": listId };
+    graph.push({
+      "@type": "ItemList",
+      "@id": listId,
+      itemListElement: blogPosts.map((post, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: post.title,
+        url: pageUrl(post.path),
+      })),
+    });
+  }
+
+  if (document?.kind === "doc" && document.slug === "self-hosting") {
+    const repositories = sourceRepositories(document).map((repository) => ({
+      "@type": "SoftwareSourceCode",
+      "@id": `${repository.codeRepository}#source`,
+      ...repository,
+      license: "https://www.apache.org/licenses/LICENSE-2.0",
+      author: { "@id": organizationId },
+      publisher: { "@id": organizationId },
+      isPartOf: { "@id": webpageId },
+    }));
+    webpage.hasPart = repositories.map((repository) => ({ "@id": repository["@id"] }));
+    graph.push(...repositories);
   }
 
   if (key === "home" || key === "pricing" || softwareProducts[key]) {
@@ -213,7 +275,18 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
 export const getPageSeo = (pathname: string, language: SiteLanguage = DEFAULT_SITE_LANGUAGE): PageSeo => {
   const page = getPageForPath(pathname);
   const key = page?.key ?? "notFound";
-  const meta = translations[language].meta[key];
+  const document = getContentForPath(pathname);
+  let meta: { title: string; description: string };
+  if (key === "docs" || key === "doc" || key === "blogPost") {
+    if (!document) throw new Error(`Missing content for public route ${pathname}`);
+    meta = document;
+    language = "en";
+  } else if (key === "blog") {
+    meta = blogContent;
+    language = "en";
+  } else {
+    meta = translations[language].meta[key];
+  }
   const seo: PageSeo = {
     pageKey: key,
     language,
@@ -224,12 +297,16 @@ export const getPageSeo = (pathname: string, language: SiteLanguage = DEFAULT_SI
     canonicalUrl: page ? pageUrl(page.path) : null,
     alternates: [],
     imageUrl: absoluteUrl(
-      (page && socialImages[page.key]) || "/social/predixlab-research.png",
+      (document?.kind === "post" && document.image) || (page && socialImages[page.key]) || "/social/predixlab-research.png",
     ),
-    imageAlt: meta.title,
+    imageAlt: document?.kind === "post"
+      ? document.imageAlt ?? 'PredixLab stock-analysis workflow illustration with a line chart and highlighted signal, alongside "Spot the signals. See the bigger picture."'
+      : meta.title,
     openGraphType: "website",
     openGraphLocale: openGraphLocales[language],
     structuredData: null,
+    ...(page && "lastmod" in page && page.lastmod ? { lastmod: page.lastmod } : {}),
+    ...(key === "blog" || key === "blogPost" ? { rssUrl: absoluteUrl("/blog/rss.xml") } : {}),
   };
   if (page) seo.structuredData = createStructuredData(page.key, seo);
   return seo;
@@ -278,6 +355,11 @@ export const renderSeoHead = (seo: PageSeo): string => {
       `<link ${SEO_ATTRIBUTE} rel="alternate" hreflang="${alternate.hreflang}" href="${escapeHtml(alternate.href)}" />`,
     );
   }
+  if (seo.rssUrl) {
+    head.push(
+      `<link ${SEO_ATTRIBUTE} rel="alternate" type="application/rss+xml" title="PredixLab Blog RSS" href="${escapeHtml(seo.rssUrl)}" />`,
+    );
+  }
   if (seo.structuredData) {
     const json = JSON.stringify(seo.structuredData).replace(
       /[<>&\u2028\u2029]/g,
@@ -289,7 +371,8 @@ export const renderSeoHead = (seo: PageSeo): string => {
 };
 
 export const renderSitemap = (): string => {
-  const urls = publicPaths.map((pathname) => {
+  const urls = sitePages.map((page) => {
+    const pathname = page.path;
     const seo = getPageSeo(pathname);
     if (!seo.canonicalUrl) throw new Error(`Non-public sitemap route: ${pathname}`);
     const alternates = seo.alternates.map(
@@ -299,6 +382,7 @@ export const renderSitemap = (): string => {
     return [
       "  <url>",
       `    <loc>${escapeHtml(seo.canonicalUrl)}</loc>`,
+      ...("lastmod" in page && page.lastmod ? [`    <lastmod>${page.lastmod}</lastmod>`] : []),
       ...alternates,
       "  </url>",
     ].join("\n");

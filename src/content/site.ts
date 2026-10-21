@@ -65,9 +65,10 @@ export const faqContent: Record<SiteLanguage, Question[]> = {
 export const homeContent = {
   zh: {
     eyebrow: "每日美股信号、选股与期权分析",
-    title: ["看清市场变化，", "选股更有依据。"],
+    title: ["美股选股器、每日信号和期权异动，", "代码全部开源"],
     description:
-      "每日信号、量化选股、期权异动，一站查看。结合股价走势、大盘表现和历史数据，判断哪些股票值得关注。",
+      "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，也可以按 Apache-2.0 协议自己部署。方法公开写明，每个信号都附带它过去的表现。",
+    descriptionLink: "方法公开写明",
     primary: "免费开始使用",
     secondary: "了解产品功能",
     note: "无需信用卡 · 免费版信号延迟 10 天",
@@ -103,9 +104,10 @@ export const homeContent = {
   },
   en: {
     eyebrow: "Daily US stock signals, screening, and options analysis",
-    title: ["Spot the signals.", "See the bigger picture."],
+    title: ["Open-source US stock analysis:", "daily signals, screener, and options activity"],
     description:
-      "Daily signals, a flexible stock screener, and options activity in one dashboard. Compare price action, market trends, and past performance to find stocks worth a closer look.",
+      "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and every signal shown next to its history.",
+    descriptionLink: "the method documented",
     primary: "Get started free",
     secondary: "Explore the tools",
     note: "No credit card required · Free signals have a 10-day delay",

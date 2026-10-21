@@ -32,8 +32,10 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const initialNavigation = useRef(true);
   const isDark = theme === "dark";
   const navItems = [
-    { path: "/#research-tools", label: t("nav.tools") },
+    { path: "/#tools", label: t("nav.tools") },
     { path: "/pricing/", label: t("nav.pricing") },
+    { path: "/docs/", label: t("nav.docs") },
+    { path: "/blog/", label: t("nav.blog") },
     { path: "/about/", label: t("nav.about") },
   ];
 
@@ -80,7 +82,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
     setMenuOpen(false);
     if (initialNavigation.current) {
       initialNavigation.current = false;
-      return;
+      if (!location.hash) return;
     }
     const frame = window.requestAnimationFrame(() => {
       if (location.hash) {
@@ -91,7 +93,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
       }
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [location.pathname, location.hash]);
+  }, [location.pathname, location.hash, location.key]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -138,6 +140,9 @@ const Layout = ({ children }: { children: ReactNode }) => {
               {navItems.map((item) => <Link className="nav-link" key={item.path} to={localPath(item.path)} aria-current={current(item.path) ? "page" : undefined}>{item.label}</Link>)}
             </div>
             <div className="nav-actions">
+              <a className="icon-button nav-github" href={config.githubUrl} target="_blank" rel="noopener noreferrer" aria-label={t("footer.githubLabel")}>
+                <GithubLogo aria-hidden="true" />
+              </a>
               <button className="icon-button theme-button" type="button" onClick={toggleTheme} aria-label={isDark ? t("nav.switchToLight") : t("nav.switchToDark")} title={isDark ? t("nav.switchToLight") : t("nav.switchToDark")}>
                 {isDark ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
               </button>
@@ -164,6 +169,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
         <nav className="mobile-nav" id="mobile-navigation" aria-label={t("nav.mobileLabel")} hidden={!menuOpen}>
           <div className="site-container">
             {navItems.map((item) => <Link className="nav-link" key={item.path} to={localPath(item.path)} onClick={() => setMenuOpen(false)} aria-current={current(item.path) ? "page" : undefined}>{item.label}<ArrowUpRight aria-hidden="true" /></Link>)}
+            <a className="icon-button" href={config.githubUrl} target="_blank" rel="noopener noreferrer" aria-label={t("footer.githubLabel")}><GithubLogo aria-hidden="true" /></a>
             <a href={dashboardLink("/", "mobile-navigation")} className="button button-primary">{t("nav.login")}<ArrowUpRight aria-hidden="true" /></a>
           </div>
         </nav>
@@ -200,6 +206,8 @@ const Layout = ({ children }: { children: ReactNode }) => {
               <h2>{t("footer.explore")}</h2>
               <ul>
                 <li><Link to={localPath("/pricing/")}>{t("nav.pricing")}</Link></li>
+                <li><Link to={localPath("/docs/")}>{t("nav.docs")}</Link></li>
+                <li><Link to={localPath("/blog/")}>{t("nav.blog")}</Link></li>
                 <li><Link to={localPath("/about/")}>{t("nav.about")}</Link></li>
               </ul>
             </div>

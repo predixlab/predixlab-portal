@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import test from "node:test";
+import test, { after } from "node:test";
 import { runInNewContext } from "node:vm";
-import { transformWithEsbuild } from "vite";
+import { createServer, transformWithEsbuild } from "vite";
 
 const source = await readFile(new URL("../src/i18n/language.ts", import.meta.url), "utf8");
 const { code } = await transformWithEsbuild(source, "language.ts", { format: "cjs" });
@@ -82,22 +82,30 @@ test("language initialization defaults to English without a browser window", () 
   assert.equal(language.getPreferredLanguage(), "en");
 });
 
-const routingSource = await readFile(new URL("../src/routing.ts", import.meta.url), "utf8");
-const routingCode = await transformWithEsbuild(routingSource, "routing.ts", { format: "cjs" });
-const routingModule = { exports: {} };
-runInNewContext(routingCode.code, { module: routingModule, exports: routingModule.exports, URL });
-const routing = routingModule.exports;
+const server = await createServer({
+  appType: "custom",
+  server: { middlewareMode: true, watch: null, hmr: false, ws: false },
+  optimizeDeps: { noDiscovery: true, include: [] },
+});
+after(() => server.close());
+const [routing, { blogPosts, docs }] = await Promise.all([
+  server.ssrLoadModule("/src/routing.ts"),
+  server.ssrLoadModule("/src/content/documents.ts"),
+]);
 
 test("public links never add a language prefix and preserve query strings and anchors", () => {
   assert.equal(routing.publicPath("/pricing/?plan=annual#plans"), "/pricing/?plan=annual#plans");
-  assert.equal(routing.publicPath("/#research-tools"), "/#research-tools");
+  assert.equal(routing.publicPath("/#tools"), "/#tools");
   assert.equal(routing.publicPath("/"), "/");
 });
 
 test("the public inventory contains one route per page and unknown paths stay unknown", () => {
-  assert.equal(routing.sitePages.length, 8);
-  assert.equal(new Set(routing.sitePages.map(page => page.path)).size, 8);
-  assert.equal(routing.sitePages.some(page => page.path.startsWith("/en/")), false);
+  assert.equal(routing.sitePages.length, 10 + blogPosts.length + docs.length);
+  assert.equal(new Set(routing.sitePages.map(page => page.path)).size, routing.sitePages.length);
+  assert.equal(routing.sitePages.some(page => /^\/(?:en|zh)\//.test(page.path)), false);
+  for (const post of blogPosts) assert.equal(routing.getPageForPath(post.path).key, "blogPost");
+  for (const doc of docs) assert.equal(routing.getPageForPath(doc.path).key, "doc");
+  assert.equal(routing.getPageForPath("/docs/").key, "docs");
   assert.equal(routing.getPageForPath("/pricing/").key, "pricing");
   assert.equal(routing.getPageForPath("/en/pricing/"), undefined);
   assert.equal(routing.getPageForPath("/en/"), undefined);

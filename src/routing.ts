@@ -1,3 +1,5 @@
+import { blogPosts, blogUpdated, docs, docsUpdated } from "@/content/documents";
+
 export type SiteLanguage = "zh" | "en";
 
 export const siteLanguages: SiteLanguage[] = ["en", "zh"];
@@ -11,6 +13,10 @@ export const sitePages = [
   { key: "about", path: "/about/" },
   { key: "terms", path: "/terms/" },
   { key: "privacy", path: "/privacy/" },
+  { key: "docs", path: "/docs/", lastmod: docsUpdated },
+  ...docs.map((doc) => ({ key: "doc" as const, path: doc.path, lastmod: doc.updated })),
+  { key: "blog", path: "/blog/", lastmod: blogUpdated },
+  ...blogPosts.map((post) => ({ key: "blogPost" as const, path: post.path, lastmod: post.updated })),
 ] as const;
 
 export type PageKey = (typeof sitePages)[number]["key"];

@@ -3,11 +3,13 @@ import test, { after } from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
+import { StaticRouter } from "react-router-dom";
 import { createServer } from "vite";
 
 const server = await createServer({
   appType: "custom",
-  server: { middlewareMode: true, watch: null },
+  server: { middlewareMode: true, watch: null, hmr: false, ws: false },
+  optimizeDeps: { noDiscovery: true, include: [] },
 });
 after(() => server.close());
 
@@ -42,7 +44,8 @@ test("English pricing intro describes free open-source self-hosting", () => {
 for (const language of ["zh", "en"]) {
   const copy = pricingContent[language];
   const html = renderToStaticMarkup(
-    createElement(I18nextProvider, { i18n: createSiteI18n(language) }, createElement(PricingPage)),
+    createElement(I18nextProvider, { i18n: createSiteI18n(language) },
+      createElement(StaticRouter, { location: "/pricing/" }, createElement(PricingPage))),
   );
 
   test(`${language}: rendered pricing page has no real-time data wording`, () => {
@@ -159,6 +162,7 @@ for (const language of ["zh", "en"]) {
     assert.ok(githubLink.includes(copy.selfHostedAction));
     assert.ok(githubLink.includes(`<span class="sr-only">${copy.externalLinkNote}</span>`));
     assert.match(githubLink, /<svg[^>]*aria-hidden="true"/);
+    assert.match(selfHosted, new RegExp(`href="/docs/self-hosting/"[^>]*>${copy.selfHostedGuide}`));
     assert.match(free, /<strong>\$0<\/strong>/);
     assert.ok(free.includes(renderToStaticMarkup(dashboardLink("/", "pricing-free"))));
     assert.match(premium, /class="plan plan-premium"/);

@@ -6,7 +6,7 @@ import App from "@/App";
 import { createSiteI18n } from "@/i18n";
 import { getPageSeo, renderSeoHead } from "@/seo";
 
-export { getPageSeo, publicPaths, renderSeoHead, renderSitemap } from "@/seo";
+export { getPageSeo, publicPaths, renderSeoHead, renderSitemap, renderRss } from "@/seo";
 
 export const render = (pathname: string) => {
   const seo = getPageSeo(pathname);
