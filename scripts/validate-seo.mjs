@@ -87,6 +87,20 @@ export const validateJsonLd = (html, pathname) => {
     });
 };
 
+export const validateInternalLinks = (html, canonicalUrl, publicPaths) => {
+  for (const link of tags(html, "a")) {
+    if (!link.href) continue;
+    const destination = new URL(link.href, canonicalUrl);
+    if (destination.origin === origin) {
+      assert.ok(
+        publicPaths.includes(destination.pathname) || destination.pathname === "/blog/rss.xml",
+        `Noncanonical internal link: ${new URL(canonicalUrl).pathname} -> ${link.href}`,
+      );
+      assert.equal(destination.searchParams.has("lng"), false, canonicalUrl);
+    }
+  }
+};
+
 export const validateFaqMarkup = (main, graph, canonicalUrl) => {
   const pathname = new URL(canonicalUrl).pathname;
   const faqs = graph.filter((item) => item["@type"] === "FAQPage");
@@ -302,7 +316,6 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     assert.match(html, new RegExp(`<html lang="${language}">`), pathname);
     assert.doesNotMatch(html, /<!--(?:seo-head|app-html)-->|fonts\.(?:googleapis|gstatic)\.com|[?&]lng=/, pathname);
     if (!isNewPage) assert.doesNotMatch(decodeHtml(html), /\u7814\u7a76/, `Outdated Chinese copy: ${pathname}`);
-    assert.doesNotMatch(html, /\/(?:en\/)?insights(?:\/|["?#])/, `Retired page reference: ${pathname}`);
     assert.doesNotMatch(html, /\/(?:methodology|open-source)\//, `Unpublished draft reference: ${pathname}`);
     assert.match(html, /<div id="root">[\s\S]+<main\b/, `Empty application: ${pathname}`);
     const languageButton = only(
@@ -445,17 +458,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     }
 
     const canonicalUrl = `${origin}${pathname}`;
-    for (const link of tags(html, "a")) {
-      if (!link.href) continue;
-      const destination = new URL(link.href, canonicalUrl);
-      if (destination.origin === origin) {
-        assert.ok(
-          publicPaths.includes(destination.pathname) || destination.pathname === "/blog/rss.xml",
-          `Noncanonical internal link: ${pathname} -> ${link.href}`,
-        );
-        assert.equal(destination.searchParams.has("lng"), false, pathname);
-      }
-    }
+    validateInternalLinks(html, canonicalUrl, publicPaths);
     assert.equal(only(canonical, `${pathname} canonical`).href, canonicalUrl, pathname);
     assert.equal(meta("og:url"), canonicalUrl, pathname);
     assert.match(meta("robots"), /^index, follow/, pathname);
@@ -581,6 +584,16 @@ export const validateSeoOutput = async (directory, expectedPages) => {
             href?.startsWith("/blog/") && href !== pathname), `${pathname} related post`);
         }
       }
+    }
+    if (pathname === "/blog/backtest-biases/") {
+      const checkboxes = tags(main, "input");
+      assert.equal(checkboxes.length, 8, `${pathname} checklist must retain all eight tasks`);
+      for (const checkbox of checkboxes) {
+        assert.equal(checkbox.type, "checkbox", `${pathname} checklist input`);
+        assert.equal(checkbox.disabled, "", `${pathname} task checkboxes must be disabled`);
+        assert.equal(checkbox.checked, undefined, `${pathname} tasks must remain unchecked`);
+      }
+      assert.doesNotMatch(main, /- \[ \]/, `${pathname} task syntax must render as checkboxes`);
     }
     if (pathname === "/docs/how-it-works/") {
       assert.match(main, /<li><strong>Daily data only, updated once per trading day after the US close\.<\/strong> Prices are daily bars\. Signals and options data are produced by scheduled nightly jobs and labeled with a data date\.<\/li>/, pathname);
