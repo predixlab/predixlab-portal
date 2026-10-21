@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { build } from "vite";
 import { validateSeoOutput } from "./validate-seo.mjs";
 import { createAzureConfig, validateRetiredRedirects } from "./azure-routes.mjs";
+import { checkCspOutput } from "./check-csp.mjs";
 
 const rootDirectory = fileURLToPath(new URL("../", import.meta.url));
 const outputDirectory = join(rootDirectory, "dist");
@@ -77,6 +78,8 @@ try {
   validateRetiredRedirects(azureConfig.routes);
   await writeOutput("/staticwebapp.config.json", `${JSON.stringify(azureConfig, null, 2)}\n`);
   await validateSeoOutput(outputDirectory, expectedPages);
+  const { pages, hashes } = await checkCspOutput(outputDirectory);
+  console.log(`CSP inline-script hashes verified across ${pages} HTML documents: ${hashes.join(", ")}`);
   console.log(`Prerendered ${publicPaths.length} public pages and ${notFoundPaths.length} not-found documents.`);
 } finally {
   await rm(serverDirectory, { recursive: true, force: true });
