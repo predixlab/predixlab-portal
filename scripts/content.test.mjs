@@ -237,6 +237,25 @@ test("blog index puts Backtesting & validation first and sorts every category ne
   assert.deepEqual(groupBlogPosts([]), []);
 });
 
+test("blog index renders the English risk note once with zero, one or multiple categories", () => {
+  const originalPosts = [...blogPosts];
+  const base = loadFixture();
+  try {
+    for (const categories of [[], ["Backtesting & validation"], ["Backtesting & validation", "Other", "Third"]]) {
+      blogPosts.splice(0, blogPosts.length, ...categories.map((category, index) => ({
+        ...base, category, slug: `example-${index}`, path: `/blog/example-${index}/`,
+      })));
+      const { appHtml } = render("/blog/");
+      assert.equal([...appHtml.matchAll(/<section class="blog-category"/g)].length, categories.length);
+      assert.equal([...appHtml.matchAll(/class="content-disclaimer markdown-content"/g)].length, 1);
+      assert.equal(appHtml.split(renderToStaticMarkup(expectedRiskNote)).length - 1, 1);
+      assert.doesNotMatch(appHtml, /class="blog-post-list">(?:(?!<\/section>)[\s\S])*class="content-disclaimer/);
+    }
+  } finally {
+    blogPosts.splice(0, blogPosts.length, ...originalPosts);
+  }
+});
+
 test("RSS 2.0 includes channel metadata, self discovery, canonical GUIDs, RFC-822 dates and XML escaping", () => {
   const post = { ...loadFixture(), title: `Title & <tag> "double" 'single'`, description: `Description & <tag> "double" 'single'` };
   const rss = renderBlogRss([post]);

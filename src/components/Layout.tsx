@@ -196,7 +196,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
               </div>
             </div>
             <div className="footer-column">
-              <h2>{t("footer.tools")}</h2>
+              <p className="footer-column-title">{t("footer.tools")}</p>
               <ul>
                 <li><Link to={localPath("/us-stock-signals/")}>{t("footer.stockSignals")}</Link></li>
                 <li><Link to={localPath("/quantitative-stock-screener/")}>{t("footer.stockScreener")}</Link></li>
@@ -205,7 +205,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
               </ul>
             </div>
             <div className="footer-column">
-              <h2>{t("footer.explore")}</h2>
+              <p className="footer-column-title">{t("footer.explore")}</p>
               <ul>
                 <li><Link to={localPath("/pricing/")}>{t("nav.pricing")}</Link></li>
                 <li><Link to={localPath("/docs/")}>{t("nav.docs")}</Link></li>
@@ -214,7 +214,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
               </ul>
             </div>
             <div className="footer-column">
-              <h2>{t("footer.legal")}</h2>
+              <p className="footer-column-title">{t("footer.legal")}</p>
               <ul>
                 <li><Link to={localPath("/terms/")}>{t("footer.terms")}</Link></li>
                 <li><Link to={localPath("/privacy/")}>{t("footer.privacy")}</Link></li>

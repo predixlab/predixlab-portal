@@ -343,7 +343,7 @@ html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line
 .footer-profiles { display: flex; gap: 0.5rem; margin-top: 1rem; }
 .footer-profile { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; color: #c8d6c1; text-decoration: none; }
 .footer-profile svg { width: 22px; height: 22px; }
-.footer-column h2 { font-size: 0.72rem; font-weight: 500; letter-spacing: 0; color: #b2c0b0; margin: 0.7rem 0 1rem; }
+.footer-column-title { font-size: 0.72rem; font-weight: 500; letter-spacing: 0; line-height: inherit; text-wrap: balance; color: #b2c0b0; margin: 0.7rem 0 1rem; }
 .footer-column ul { list-style: none; padding: 0; margin: 0; }
 .footer-column a, .footer-link-button { display: inline-flex; align-items: center; min-height: 39px; font-size: 0.77rem; text-decoration: none; color: #e5eddf; }
 .footer-column a:hover, .footer-profile:hover, .footer-link-button:hover { color: #b9c6ff; }
@@ -713,7 +713,7 @@ html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line
   .site-footer { padding-top: 3rem; }
   .footer-main { grid-template-columns: repeat(2, 1fr); gap: 1.6rem; }
   .footer-brand { margin-bottom: 1rem; }
-  .footer-column h2 { font-size: 0.66rem; }
+  .footer-column-title { font-size: 0.66rem; }
   .footer-column a, .footer-link-button { font-size: 0.72rem; min-height: 41px; }
   .footer-wordmark { margin: 2.25rem 0 1.3rem; font-size: clamp(1.7rem, 7.5vw, 2.5rem); }
   .footer-bottom { align-items: flex-start; flex-direction: column; gap: 0.5rem; font-size: 0.57rem; }

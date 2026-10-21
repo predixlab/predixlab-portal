@@ -5,7 +5,7 @@ import {
   productDashboardPaths,
   type ProductId,
 } from "@/content/products";
-import { faqContent } from "@/content/site";
+import { faqContent, type Question } from "@/content/site";
 import { blogContent, renderBlogRss } from "@/content/blog";
 import { blogPosts, docs, getContentForPath } from "@/content/documents";
 import { sourceRepositories } from "@/content/markdown";
@@ -15,7 +15,6 @@ import zh from "@/i18n/locales/zh.json";
 import {
   getPageForPath,
   publicPath,
-  siteLanguages,
   sitePages,
   type PageKey,
   type SiteLanguage,
@@ -94,6 +93,22 @@ export const renderRss = () => renderBlogRss(blogPosts);
 
 const absoluteUrl = (path: string) => new URL(path, config.siteUrl).href;
 const pageUrl = (path: string) => absoluteUrl(publicPath(path));
+
+const createFaqSchema = (
+  questions: Question[],
+  seo: PageSeo,
+  canonicalUrl: string,
+): JsonLdObject => ({
+  "@type": "FAQPage",
+  "@id": `${canonicalUrl}#faq`,
+  inLanguage: seo.htmlLanguage,
+  isPartOf: { "@id": `${canonicalUrl}#webpage` },
+  mainEntity: questions.map(({ question, answer }) => ({
+    "@type": "Question",
+    name: question,
+    acceptedAnswer: { "@type": "Answer", text: answer },
+  })),
+});
 
 const createSoftwareSchema = (
   key: PageKey,
@@ -197,7 +212,7 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
       "@id": websiteId,
       name: "PredixLab",
       url: absoluteUrl("/"),
-      inLanguage: siteLanguages.map((language) => languageTags[language]),
+      inLanguage: "en",
       publisher: { "@id": organizationId },
     },
     webpage,
@@ -309,20 +324,18 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
     graph.push(software);
   }
 
-  if (key === "home") {
-    const faqId = `${canonicalUrl}#faq`;
-    webpage.hasPart = { "@id": faqId };
-    graph.push({
-      "@type": "FAQPage",
-      "@id": faqId,
-      inLanguage: seo.htmlLanguage,
-      isPartOf: { "@id": webpageId },
-      mainEntity: faqContent[seo.language].map(({ question, answer }) => ({
-        "@type": "Question",
-        name: question,
-        acceptedAnswer: { "@type": "Answer", text: answer },
-      })),
-    });
+  const productId = softwareProducts[key];
+  const questions = key === "home"
+    ? faqContent[seo.language]
+    : productId ? productContent[seo.language][productId].questions : [];
+  if (questions.length > 0) {
+    const faq = createFaqSchema(questions, seo, canonicalUrl);
+    const existingParts = webpage.hasPart;
+    webpage.hasPart = [
+      ...(existingParts ? Array.isArray(existingParts) ? existingParts : [existingParts] : []),
+      { "@id": faq["@id"] },
+    ];
+    graph.push(faq);
   }
 
   return { "@context": "https://schema.org", "@graph": graph };

@@ -70,6 +70,56 @@ const listHtmlFiles = async (directory, prefix = "") => {
   return files;
 };
 
+export const validateJsonLd = (html, pathname) => {
+  const validateLanguages = (value) => {
+    if (!value || typeof value !== "object") return;
+    if ("inLanguage" in value) {
+      assert.equal(value.inLanguage, "en", `${pathname} JSON-LD inLanguage must be en`);
+    }
+    Object.values(value).forEach(validateLanguages);
+  };
+  return [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+    .filter(([, attrs]) => attributes(attrs).type === "application/ld+json")
+    .map(([, , content]) => {
+      const schema = JSON.parse(content);
+      validateLanguages(schema);
+      return schema;
+    });
+};
+
+export const validateFaqMarkup = (main, graph, canonicalUrl) => {
+  const pathname = new URL(canonicalUrl).pathname;
+  const faqs = graph.filter((item) => item["@type"] === "FAQPage");
+  if (pathname !== "/" && !productLinks.some(({ path }) => path === pathname)) {
+    assert.equal(faqs.length, 0, `${pathname} must not emit FAQPage`);
+    return;
+  }
+  const questions = [...main.matchAll(/<details\b([^>]*)>([\s\S]*?)<\/details>/g)]
+    .filter(([, attrs]) => attributes(attrs).class?.split(/\s+/).includes("question"))
+    .map(([, , content]) => ({
+      "@type": "Question",
+      name: textContent(only(
+        [...content.matchAll(/<summary\b[^>]*>([\s\S]*?)<\/summary>/g)],
+        `${pathname} FAQ summary`,
+      )[1]),
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: textContent(only(
+          [...content.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/g)],
+          `${pathname} FAQ answer`,
+        )[1]),
+      },
+    }));
+  assert.ok(questions.length > 0, `${pathname} requires visible FAQs`);
+  const faq = only(faqs, `${pathname} FAQPage`);
+  const webpage = only(graph.filter((item) => item["@type"] === "WebPage"), `${pathname} WebPage`);
+  assert.equal(faq["@id"], `${canonicalUrl}#faq`, pathname);
+  assert.deepEqual(faq.isPartOf, { "@id": webpage["@id"] }, pathname);
+  const parts = Array.isArray(webpage.hasPart) ? webpage.hasPart : [webpage.hasPart];
+  assert.ok(parts.some((part) => part?.["@id"] === faq["@id"]), `${pathname} WebPage must link to FAQPage`);
+  assert.deepEqual(faq.mainEntity, questions, `${pathname} JSON-LD must exactly match visible FAQ count and text`);
+};
+
 export const validateRobotsTxt = (robots) => {
   const trainingCrawlers = [
     "GPTBot", "CCBot", "Google-Extended", "ClaudeBot", "anthropic-ai", "Bytespider",
@@ -266,6 +316,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     const main = only([...html.matchAll(/<main\b[^>]*>([\s\S]*?)<\/main>/g)], `${pathname} main`)[1];
     const header = only([...html.matchAll(/<header\b[^>]*>([\s\S]*?)<\/header>/g)], `${pathname} header`)[1];
     const footer = only([...html.matchAll(/<footer\b[^>]*>([\s\S]*?)<\/footer>/g)], `${pathname} footer`)[1];
+    assert.doesNotMatch(footer, /<h[1-6]\b/i, `${pathname} footer must not contain headings`);
     const navigation = [...header.matchAll(/<nav\b[^>]*>([\s\S]*?)<\/nav>/g)];
     assert.equal(navigation.length, 2, `${pathname} desktop and mobile navigation`);
     for (const [, nav] of navigation) {
@@ -378,7 +429,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       await access(fileForPath(directory, new URL(resource, origin).pathname));
     }
 
-    const jsonScripts = [...head.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)];
+    const schemas = validateJsonLd(html, pathname);
     const expected = expectedPages?.get(pathname);
     if (expected) {
       assert.equal(title, expected.title, pathname);
@@ -389,7 +440,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       assert.match(meta("robots"), /^noindex\b/, pathname);
       assert.equal(canonical.length, 0, pathname);
       assert.equal(alternates.length, 0, pathname);
-      assert.equal(jsonScripts.length, 0, pathname);
+      assert.equal(schemas.length, 0, pathname);
       continue;
     }
 
@@ -418,11 +469,12 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     assert.deepEqual(entry.alternates, [], pathname);
     if (expected) assert.deepEqual(entry.lastmods, expected.lastmod ? [expected.lastmod] : [], pathname);
 
-    const schema = JSON.parse(only(jsonScripts, `${pathname} JSON-LD`)[1]);
+    const schema = only(schemas, `${pathname} JSON-LD`);
     if (expected) assert.deepEqual(schema, expected.structuredData, pathname);
     assert.equal(schema["@context"], "https://schema.org", pathname);
     assert.doesNotMatch(JSON.stringify(schema), /"(?:aggregateRating|review|reviews|ratingValue|performance|accuracy|returns?)"/, pathname);
     const graph = schema["@graph"];
+    assert.equal(graph.find((item) => item["@type"] === "WebSite")?.inLanguage, "en", pathname);
     assert.ok(graph.every((item) => item["@type"] !== "Article"), `Retired article schema: ${pathname}`);
     const pageType = pathname === "/blog/" || pathname === "/docs/" ? "CollectionPage" : "WebPage";
     for (const type of ["Organization", "WebSite", pageType]) {
@@ -581,13 +633,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
         new URL(url).pathname.startsWith("/blog/") && url !== canonicalUrl,
       ).flatMap(({ lastmods }) => lastmods).sort().at(-1), "Blog lastmod must be the newest post update");
     }
-    for (const faq of graph.filter((item) => item["@type"] === "FAQPage")) {
-      assert.equal(pathname, "/", pathname);
-      for (const question of faq.mainEntity) {
-        assert.ok(textContent(main).includes(question.name), `Invisible FAQ question: ${pathname}`);
-        assert.ok(textContent(main).includes(question.acceptedAnswer.text), `Invisible FAQ answer: ${pathname}`);
-      }
-    }
+    validateFaqMarkup(main, graph, canonicalUrl);
     for (const software of graph.filter((item) => item["@type"] === "SoftwareApplication")) {
       assert.ok(["/", "/pricing/", "/us-stock-signals/", "/quantitative-stock-screener/", "/unusual-options-activity/"].includes(pathname), pathname);
       assert.deepEqual(software.offers.map((offer) => offer.price), pathname === "/pricing/" ? [0, 20, 192] : [0], pathname);
