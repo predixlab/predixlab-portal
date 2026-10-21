@@ -25,7 +25,7 @@ from the same configuration and states that the project is open source under Apa
 | `/us-stock-signals/` | Daily signals, historical context, access, and limitations |
 | `/quantitative-stock-screener/` | No-code screening criteria and workflow |
 | `/unusual-options-activity/` | Contract-level activity and interpretation boundaries |
-| `/pricing/` | Free/Premium comparison and monthly/annual pricing |
+| `/pricing/` | Self-hosted/Free/Premium comparison and hosted monthly/annual pricing |
 | `/about/` | Product purpose, research process, and contact information |
 | `/terms/`, `/privacy/` | Legal documents |
 | `*` | Not-found page |
@@ -35,6 +35,8 @@ The listed routes default to English, for 8 indexable pages in total. The langua
 Language-prefixed routes such as `/en/...` are not supported and return 404. There are no legacy language redirects or query-parameter migrations. New links never contain a language prefix or parameter; language is controlled only by the in-page selection and saved preference.
 
 The former `/insights/` listing and its article, including English variants, are retired. They are not linked or included in the sitemap and return the site's normal 404 response.
+
+The $0 Self-hosted option is Apache-2.0 pipeline source code, not a hosted offer. Users deploy it with their own infrastructure, data licenses, and compute; it does not include PredixLab-hosted data, a dashboard, an account, or an SLA. Hosted Free and Premium prices and structured-data offers remain separate.
 
 The homepage scene is an original workflow illustration, not a live chart or an actual security's history. It progresses through price/volume, technical context, and an example signal. Manual stage selection pauses autoplay. A pause control, reduced-motion preference, offscreen detection, and document visibility limit nonessential animation. All substantive English content remains available without JavaScript; switching to Chinese requires JavaScript.
 
@@ -108,7 +110,7 @@ npm run build
 npm run preview
 ```
 
-`test` runs isolated language-preference, canonical-routing, crawler-policy and analytics consent-mode regression checks without contacting Google.
+`test` runs isolated language-preference, canonical-routing, crawler-policy, bilingual pricing-rendering and analytics consent-mode regression checks without contacting Google.
 
 `build` type-checks, bundles, and prerenders the deployable static site into `dist/`. It also verifies full English page bodies, canonical URLs, in-page language buttons, internal links, structured data, sharing images, and routing invariants. Regression checks reject retired article routes, stale article metadata, language-specific sitemap entries, and legacy language redirects. Rerun that artifact check independently with `node scripts/validate-seo.mjs`.
 

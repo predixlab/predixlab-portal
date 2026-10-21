@@ -409,8 +409,8 @@ html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line
 .billing-switch input:checked + span { color: var(--ink); background: var(--surface); box-shadow: 0 1px 4px rgb(36 55 46 / 8%); }
 .billing-switch input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
 .billing-saving { font-family: var(--mono); font-size: 0.6rem; color: var(--green); }
-.plan-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; max-width: 970px; margin: auto; }
-.plan { display: flex; flex-direction: column; border: 1px solid var(--line-strong); border-radius: 12px; padding: 2.5rem; background: var(--surface); }
+.plan-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; max-width: 1200px; margin: auto; }
+.plan { display: flex; flex-direction: column; border: 1px solid var(--line-strong); border-radius: 12px; padding: 2rem; background: var(--surface); }
 .plan-premium { border-color: var(--blue); background: var(--surface); position: relative; }
 .plan-label { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .plan-label h2 { font-size: 1.65rem; line-height: 1.2; }
@@ -419,7 +419,7 @@ html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line
 .plan-price { display: flex; align-items: baseline; gap: 0.5rem; margin-top: 1.1rem; }
 .plan-price strong { font-size: 4.5rem; line-height: 1.2; font-weight: 500; letter-spacing: -0.07em; }
 .plan-price > span { font-size: 0.8rem; color: var(--secondary); }
-.plan-billing-note { min-height: 25px; color: var(--muted); font-size: 0.72rem; margin-top: 0.5rem; }
+.plan-billing-note { min-height: 42px; color: var(--muted); font-size: 0.72rem; margin-top: 0.5rem; }
 .plan .button { margin-top: 1.75rem; width: 100%; }
 .plan-trial { min-height: 38px; margin-top: 0.65rem; text-align: center; font-size: 0.63rem; color: var(--muted); }
 .plan-features { list-style: none; padding: 1.4rem 0 0; margin: 0.5rem 0 0; border-top: 1px solid var(--line); }
@@ -427,11 +427,12 @@ html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line
 .plan-features svg { width: 17px; height: 17px; margin-top: 0.15rem; flex-shrink: 0; color: var(--green); }
 .pricing-footnote { max-width: 900px; margin: 1.6rem auto 0; font-size: 0.75rem; color: var(--muted); text-align: center; }
 .comparison-section { background: var(--surface-soft); }
-.comparison-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; text-align: left; }
+.comparison-table-scroll { overflow-x: auto; }
+.comparison-table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 0.83rem; text-align: left; }
 .comparison-table th, .comparison-table td { padding: 1.3rem 1rem; border-bottom: 1px solid var(--line-strong); font-weight: 400; line-height: 1.7; }
 .comparison-table thead th { font-size: 0.8rem; font-weight: 600; }
-.comparison-table tbody th { width: 45%; }
-.comparison-table td { color: var(--secondary); width: 27.5%; }
+.comparison-table tbody th { width: 28%; }
+.comparison-table td { color: var(--secondary); width: 24%; }
 .pricing-faq { max-width: 970px; }
 
 .about-intro { padding-bottom: 4rem; }
@@ -512,6 +513,8 @@ html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line
   .split-heading, .method-layout, .faq-layout, .product-story, .workflow-layout, .boundaries-layout { gap: 3rem; }
   .product-hero-grid { gap: 2.5rem; }
   .product-hero-visual { padding: 1.2rem; }
+  .plan-grid { grid-template-columns: 1fr; max-width: 640px; }
+  .plan-description { min-height: 0; }
   .footer-main { gap: 1.8rem; }
 }
 
@@ -570,7 +573,6 @@ html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line
   .plan-price strong { font-size: 3.8rem; }
   .plan-label h2 { font-size: 1.45rem; }
   .plan-badge { font-size: 0.55rem; }
-  .plan-description { min-height: 90px; }
   .about-editorial { grid-template-columns: 1fr; gap: 2rem; }
   .about-principles li { grid-template-columns: 0.1fr 0.7fr 1fr; gap: 1.5rem; }
   .pipeline { grid-template-columns: repeat(2, 1fr); gap: 2.5rem; }
@@ -696,8 +698,6 @@ html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line
   .comparison-table { font-size: 0.68rem; }
   .comparison-table th, .comparison-table td { padding: 1rem 0.45rem; }
   .comparison-table thead th { font-size: 0.72rem; }
-  .comparison-table tbody th { width: 38%; }
-  .comparison-table td { width: 31%; }
   .about-hero-bottom { flex-direction: column; align-items: start; gap: 0.65rem; font-size: 0.6rem; margin-top: 2rem; }
   .about-prose > p { font-size: 1.22rem; }
   .about-prose > p + p { font-size: 0.85rem; }
