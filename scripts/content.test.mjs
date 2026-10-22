@@ -219,8 +219,9 @@ test("self-hosting uses the approved scope and distinguishes hosted features", (
   assert.equal(document.body.split("\n\n")[1], "The signal, backtest, API and dashboard code is open source (Apache-2.0).");
   assert.ok(document.body.includes("## Why open source"));
   assert.equal(document.description, "The signal, backtest, API and dashboard code is open source (Apache-2.0).");
-  assert.equal(document.body.split("\n\n")[2], "We publish the code so you don't have to take our word for the method. Read it, run it, and tell us where it's wrong.");
+  assert.equal(document.body.split("\n\n")[2], "We publish the code so you don't have to take our word for the method. Read it, run the tests, and tell us where it's wrong.");
   assert.ok(document.body.includes("Most signal tools ask you to trust numbers without showing how they're made. We'd rather show the work."));
+  assert.ok(document.body.includes("You can inspect the method and check it with data you supply."));
   assert.doesNotMatch(document.body, /numbers you can't see being made|take our description of the method on trust/);
   assert.match(render(document.path).appHtml, /<h1\b[^>]*>Self-host PredixLab<\/h1>/);
   assert.ok(document.body.includes("Data collection and options analysis run as part of the hosted service and aren't in the public repositories."));
@@ -253,11 +254,11 @@ test("how-it-works retains the data source table and distinguishes hosted featur
   assert.equal(document.body.split("## Data sources\n\n")[1].split("\n\n")[0], [
     "| Data | Source | Notes |",
     "| --- | --- | --- |",
-    "| Daily US stock prices (OHLCV) | Yahoo Finance, collected by `predixlab-collector` | History is built from 2015-01-01 and updated incrementally |",
+    "| Daily US stock prices (OHLCV) | Yahoo Finance, collected by PredixLab's nightly data job | History is built from 2015-01-01 and updated incrementally |",
     "| Index membership | Constituent lists and history for the S&P 500 and Nasdaq-100 | Stored as dated membership intervals per symbol; the history is incomplete (see [Known limitations](/docs/limitations/)) |",
     "| Trading calendar | Derived from S&P 500 index (`^GSPC`) history | Used to decide which dates are trading sessions |",
     "| Reference ETFs | SPY, QQQ, IWM, DIA | Kept separately for market context |",
-    "| Options chains | Cboe snapshots, collected by `predixlab-options` | Compared session to session, contract by contract |",
+    "| Options chains | Cboe snapshots, collected by PredixLab's options job | Compared session to session, contract by contract |",
   ].join("\n"));
   assert.ok(document.body.includes("The signal, backtest, API and dashboard code is open source (Apache-2.0)."));
   assert.ok(document.body.includes("Data collection and options analysis run as part of the hosted service and aren't in the public repositories."));
@@ -645,6 +646,7 @@ test("Docs index is Markdown-driven, lists every document in order and has Engli
   assert.equal([...page.appHtml.matchAll(/<h1\b/g)].length, 1);
   assert.deepEqual([...page.appHtml.matchAll(/<h2><a href="([^"]+)"/g)].map(([, path]) => path), docs.map(({ path }) => path));
   assert.equal(docsIndex.h1, "How PredixLab works, where it falls short, and how to run it");
+  assert.equal(docsIndex.description, "Understand PredixLab's data, signals and backtests, review known limitations, and run the signal tests.");
   const expectedSummaries = [
     "Data sources, update schedule, the two models, walk-forward validation, and backtest assumptions.",
     "What the data, signals, and backtests can't tell you, and why historical results can look better than real trading.",

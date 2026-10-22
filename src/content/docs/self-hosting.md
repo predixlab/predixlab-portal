@@ -15,11 +15,11 @@ translationKey: self-hosting
 
 The signal, backtest, API and dashboard code is open source (Apache-2.0).
 
-We publish the code so you don't have to take our word for the method. Read it, run it, and tell us where it's wrong.
+We publish the code so you don't have to take our word for the method. Read it, run the tests, and tell us where it's wrong.
 
 ## Why open source
 
-Most signal tools ask you to trust numbers without showing how they're made. We'd rather show the work. The signal features, labels, validation splits, and backtest assumptions described in the [How it works](/docs/how-it-works/) doc are in the public signals code. You can inspect the method and check it with your own inputs.
+Most signal tools ask you to trust numbers without showing how they're made. We'd rather show the work. The signal features, labels, validation splits, and backtest assumptions described in the [How it works](/docs/how-it-works/) doc are in the public signals code. You can inspect the method and check it with data you supply.
 
 ## The repositories
 
