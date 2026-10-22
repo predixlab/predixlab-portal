@@ -477,7 +477,7 @@ for (const language of ["en", "zh"]) {
 
   test(`${language}: flat desktop/mobile navigation and product/footer links point to Docs`, () => {
     const labels = language === "en" ? [
-      "How the signals are built and tested",
+      "how the signals are built and tested",
       "Where the screener data comes from and when it updates",
       "How options activity is detected and scored",
     ] : ["信号如何构建和检验", "选股器数据来源与更新时间", "期权异动如何识别和评分"];
@@ -489,7 +489,10 @@ for (const language of ["en", "zh"]) {
       const linkText = labels[index];
       const main = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)[1];
       assert.match(main, new RegExp(`href="/docs/how-it-works/"[^>]*>${linkText}</a>`));
-      assert.match(main, new RegExp(`href="/docs/limitations/"[^>]*>${language === "en" ? "Known limitations" : "已知局限"}</a>`));
+      const limitationsLabel = language === "en"
+        ? index === 0 ? "known limitations" : "Known limitations"
+        : "已知局限";
+      assert.match(main, new RegExp(`href="/docs/limitations/"[^>]*>${limitationsLabel}</a>`));
       const footer = html.match(/<footer\b[^>]*>([\s\S]*?)<\/footer>/)[1];
       assert.ok(footer.includes(renderToStaticMarkup(createSiteI18n(language).t("footer.disclaimer"))));
       const desktop = html.match(/<div class="desktop-nav">([\s\S]*?)<\/div>/)[1];

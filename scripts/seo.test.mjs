@@ -45,7 +45,7 @@ const navigationLabels = {
 };
 const names = {
   en: {
-    stockSignals: "Daily signals", stockScreener: "Stock screener", unusualOptions: "Options activity",
+    stockSignals: "US stock signals", stockScreener: "Stock screener", unusualOptions: "Options activity",
     pricing: "Pricing", about: "About", terms: "Terms", privacy: "Privacy", docs: "Docs", blog: "Blog",
   },
   zh: {
@@ -95,7 +95,7 @@ for (const language of ["en", "zh"]) {
         name: question,
         acceptedAnswer: { "@type": "Answer", text: answer },
       })), path);
-      if (path !== "/") assert.equal(faq.mainEntity.length, 2, path);
+      if (path !== "/") assert.equal(faq.mainEntity.length, language === "en" && path === "/us-stock-signals/" ? 9 : 2, path);
       const html = renderToString(createElement(
         I18nextProvider, { i18n: createSiteI18n(language) },
         createElement(StaticRouter, { location: path }, createElement(App)),
@@ -180,7 +180,7 @@ for (const language of ["en", "zh"]) {
     }
     const cards = [...html.matchAll(/<article class="product-story">([\s\S]*?)<\/article>/g)];
     const labels = language === "en" ? [
-      "Explore daily stock signals", "Explore the stock screener", "Explore unusual options activity",
+      "Explore US stock signals", "Explore the stock screener", "Explore unusual options activity",
     ] : ["了解每日信号", "了解选股器", "了解期权异动"];
     assert.equal(cards.length, 3);
     cards.forEach(([, card], index) => {
@@ -215,6 +215,16 @@ test("FAQ artifact validation decodes entities and rejects missing, extra or mis
   };
   const html = '<details class="question"><summary><span>Is &quot;A &amp; B&quot; &lt;real&gt;?</span></summary><p>No. It&#x27;s &gt; daily.</p></details>';
   assert.doesNotThrow(() => validateFaqMarkup(html, [webpage, faq], canonicalUrl));
+  const linkedFaq = {
+    ...faq,
+    mainEntity: [{
+      "@type": "Question", name: "How?",
+      acceptedAnswer: { "@type": "Answer", text: "Read how the signals are built and tested." },
+    }],
+  };
+  const linkedHtml = '<details class="question"><summary><span>How?</span></summary><p>Read <a href="/docs/how-it-works/">how the signals are built and tested</a>.</p></details>';
+  assert.doesNotThrow(() => validateFaqMarkup(linkedHtml, [webpage, linkedFaq], canonicalUrl));
+  assert.throws(() => validateFaqMarkup(linkedHtml.replace("tested</a>.", "tested</a>!"), [webpage, linkedFaq], canonicalUrl), /FAQ count and text/);
   assert.throws(() => validateFaqMarkup(html, [webpage], canonicalUrl), /Expected one.*FAQPage/);
   assert.throws(() => validateFaqMarkup("", [webpage, faq], canonicalUrl), /requires visible FAQs/);
   assert.throws(() => validateFaqMarkup(html, [webpage, { ...faq, mainEntity: [] }], canonicalUrl), /FAQ count and text/);

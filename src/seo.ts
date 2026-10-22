@@ -9,6 +9,7 @@ import { faqContent, type Question } from "@/content/site";
 import { blogContent, renderBlogRss } from "@/content/blog";
 import { blogPosts, docs, getContentForPath } from "@/content/documents";
 import { sourceRepositories } from "@/content/markdown";
+import { stockSignalsUpdated } from "@/content/stockSignals";
 import { DEFAULT_SITE_LANGUAGE } from "@/i18n/language";
 import en from "@/i18n/locales/en.json";
 import zh from "@/i18n/locales/zh.json";
@@ -118,20 +119,23 @@ const createSoftwareSchema = (
   const copy = pricingContent[seo.language];
   const productId = softwareProducts[key];
   const product = productId ? productContent[seo.language][productId] : undefined;
+  const isEnglishSignals = key === "stockSignals" && seo.language === "en";
   const pricingUrl = pageUrl("/pricing/");
   const offers: JsonLdObject[] = [
     {
       "@type": "Offer",
       name: copy.free,
-      description: product?.access ?? copy.freeFeatures.join("; "),
+      description: isEnglishSignals
+        ? "Signals and signal performance with a 10-day delay."
+        : product?.access ?? copy.freeFeatures.join("; "),
       price: 0,
       priceCurrency: "USD",
       url: pricingUrl,
     },
   ];
 
-  // Paid prices are marked up on the pricing page, where both billing terms are visible.
-  if (key === "pricing") {
+  // Both billing terms must be visible on any page with paid offers.
+  if (key === "pricing" || isEnglishSignals) {
     for (const [label, price, billingDuration] of [
       [copy.monthly, planTerms.monthlyPrice, "P1M"],
       [copy.annual, planTerms.annualPrice, "P1Y"],
@@ -139,7 +143,9 @@ const createSoftwareSchema = (
       offers.push({
         "@type": "Offer",
         name: `${copy.premium} - ${label}`,
-        description: `${copy.premiumDescription} ${copy.footnote}`,
+        description: isEnglishSignals
+          ? "The latest published signals, options activity and signal performance. Same models as Free."
+          : `${copy.premiumDescription} ${copy.footnote}`,
         price,
         priceCurrency: "USD",
         url: pricingUrl,
@@ -174,6 +180,7 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
   const canonicalUrl = seo.canonicalUrl;
   if (!canonicalUrl) throw new Error("Structured data requires a public page URL.");
   const copy = translations[seo.language];
+  const isEnglishSignals = key === "stockSignals" && seo.language === "en";
   const webpageId = `${canonicalUrl}#webpage`;
   const document = getContentForPath(new URL(canonicalUrl).pathname);
   const webpage: JsonLdObject = {
@@ -192,6 +199,21 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
       height: 630,
     },
   };
+  if (isEnglishSignals) {
+    webpage.dateModified = stockSignalsUpdated;
+    webpage.mentions = [
+      {
+        "@type": "Thing",
+        name: "AlphaRank",
+        description: "PredixLab model that ranks S&P 500 and Nasdaq-100 stocks against each other each trading day.",
+      },
+      {
+        "@type": "Thing",
+        name: "Pivot",
+        description: "PredixLab LightGBM model that maps each stock's daily score to a model state and flags sparse turning-point and breakout events.",
+      },
+    ];
+  }
   const graph: JsonLdObject[] = [
     {
       "@type": "Organization",
@@ -220,7 +242,7 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
 
   if (key !== "home") {
     const names = {
-      stockSignals: copy.nav.stockSignals,
+      stockSignals: isEnglishSignals ? productContent.en.signals.name : copy.nav.stockSignals,
       stockScreener: copy.footer.stockScreener,
       unusualOptions: copy.footer.unusualOptions,
       pricing: copy.nav.pricing,
