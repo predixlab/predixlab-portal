@@ -220,7 +220,7 @@ test("self-hosting uses the approved scope and distinguishes hosted features", (
   assert.equal(document.body.split("\n\n")[0], "# Run the open-source signal code");
   assert.equal(document.body.split("\n\n")[1], "The signal, backtest, API and dashboard code is open source (Apache-2.0).");
   assert.ok(document.body.includes("## Why open source"));
-  assert.equal(document.description, "Run PredixLab's open-source signal and backtest code with your own daily price data.");
+  assert.equal(document.description, "Run PredixLab's open-source signal and backtest code with your own input data (daily prices, index membership history and a trading calendar).");
   assert.equal(document.body.split("\n\n")[2], "We publish the code so you don't have to take our word for the method. Read it, run the tests, and tell us where it's wrong.");
   assert.ok(document.body.includes("Most signal tools ask you to trust numbers without showing how they're made. We'd rather show the work."));
   assert.ok(document.body.includes("You can inspect the method and check it with data you supply."));

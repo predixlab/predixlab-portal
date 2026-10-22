@@ -2,7 +2,7 @@
 lang: en
 title: "Run the open-source signal code"
 shortTitle: "Signal code"
-description: "Run PredixLab's open-source signal and backtest code with your own daily price data."
+description: "Run PredixLab's open-source signal and backtest code with your own input data (daily prices, index membership history and a trading calendar)."
 summary: "The signal, backtest, API and dashboard code is open source (Apache-2.0). Learn how it fits together and run the signal tests."
 h1: "Run the open-source signal code"
 date: "2026-10-21"

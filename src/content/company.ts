@@ -78,7 +78,7 @@ export const pricingContent = {
     questions: [
       {
         question: "使用开源代码需要准备什么？",
-        answer: "源码免费，采用 Apache-2.0 协议。请按信号仓库的 README，用自己准备的日线数据，阅读、测试和运行信号与回测代码。不含行情数据、训练好的模型和托管工作台。开源协议不包含任何第三方行情数据的权利，数据商有各自的条款。分析结果仅供参考，不构成投资建议。",
+        answer: "源码免费，采用 Apache-2.0 协议。请按信号仓库的 README，自备日线价格、指数成分历史和交易日历，阅读、测试和运行信号与回测代码。不含行情数据、训练好的模型和托管工作台。开源协议不包含任何第三方行情数据的权利，数据商有各自的条款。分析结果仅供参考，不构成投资建议。",
       },
       {
         question: "月付和年付的功能一样吗？",
@@ -166,7 +166,7 @@ export const pricingContent = {
     questions: [
       {
         question: "What do I need to use the open-source code?",
-        answer: "The source code is free under Apache-2.0. Follow the signals README to read, test and run the signal and backtest code with your own daily price data. Market data, trained models and the hosted dashboard are not included. The license does not grant rights to any third-party market data; data providers keep their own terms. The analysis is for information only, not investment advice.",
+        answer: "The source code is free under Apache-2.0. Follow the signals README to read, test and run the signal and backtest code with your own input data (daily prices, index membership history and a trading calendar). Market data, trained models and the hosted dashboard are not included. The license does not grant rights to any third-party market data; data providers keep their own terms. The analysis is for information only, not investment advice.",
       },
       {
         question: "Do monthly and annual plans have the same features?",
