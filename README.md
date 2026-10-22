@@ -149,6 +149,8 @@ npm run preview
 
 `build` type-checks, bundles, and prerenders the deployable static site into `dist/`. It also verifies full English page bodies, canonical URLs, in-page language buttons, internal links, structured data, sharing images, and routing invariants. Regression checks require the retired insights 301s, forbid links to those URLs, reject language-specific sitemap entries and unapproved language redirects, and check metadata lengths, article dates, short breadcrumbs, risk disclaimers, RSS discovery and parsed channel/item metadata without requiring Azure to override the XML content type. Rerun that artifact check independently with `node scripts/validate-seo.mjs`.
 
+The build also checks every generated HTML document with `scripts/check-csp.mjs`, rejecting executable inline scripts whose exact-byte SHA-256 hash is absent from `script-src` in `staticwebapp.config.json`. Rerun it with `node scripts/check-csp.mjs` after building. `npm test` covers the checker, including changed script bytes and nested output pages, then builds and checks the actual `dist/` output so it works on a clean checkout. If the theme initializer in `index.html` changes, review its built bytes and update its CSP hash before deploying. JSON-LD and other non-executable data blocks do not need hashes.
+
 Build-time rendering must fail if a page cannot render; do not replace failures with an empty SPA shell. The temporary `.prerender/` server bundle is removed in a `finally` block. Inspect both generated HTML and hydrated interactions when changing rendering or routing. `preview` uses multi-page mode so unknown routes return 404 rather than falling back to the homepage.
 
 ## Deployment
@@ -159,6 +161,8 @@ explicit build step. The deployment action uploads prebuilt `dist/` with its
 app build disabled; it does not run a second build with an implicit Node version.
 
 The Azure Static Web Apps workflow builds and deploys `dist/` from the repository root. [`staticwebapp.config.json`](staticwebapp.config.json) holds the base not-found, MIME-type, and asset-caching configuration; the build preserves all top-level settings and existing routes while adding `index.html` alias and retired insights redirects to `dist/staticwebapp.config.json`. Deploy the generated configuration, not just the base file. Deployment needs the Azure token referenced by the workflow. Other hosts must serve generated directory indexes, preserve canonical redirects, and return HTTP 404 for unknown paths; do not add a blanket successful SPA fallback.
+
+Global response headers add CSP, HSTS, framing protection, a referrer policy, MIME sniffing protection, and restricted camera/microphone/geolocation access without replacing route-level RSS, robots, or cache headers. Scripts are limited to self-hosted bundles, the hashed theme initializer, and the optional Google tag; connections and tracking images permit only self and the GA4 endpoints. Styles allow inline declarations because React prerenders chart animation delays and icon styles as `style` attributes. Fonts, images, and the web manifest are otherwise self-hosted; there are no embedded frames, external form targets, or browser-side PredixLab API requests. Dashboard, GitHub, X, and article-reference links are navigation, not CSP resource allowances.
 
 Only `/assets/*` (Vite content-hashed build files) and `/fonts/*` receive
 `Cache-Control: public, max-age=31536000, immutable`: one year of immutable

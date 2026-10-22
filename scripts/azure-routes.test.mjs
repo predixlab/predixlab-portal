@@ -50,8 +50,7 @@ test("Docs indexes permanently redirect without rewrites while unpublished draft
 });
 
 test("all base top-level settings and existing routes survive generation, including the web manifest MIME type", async () => {
-  const sourceConfig = JSON.parse(await readFile(new URL("../staticwebapp.config.json", import.meta.url), "utf8"));
-  const base = { ...sourceConfig, globalHeaders: { "X-Content-Type-Options": "nosniff" } };
+  const base = JSON.parse(await readFile(new URL("../staticwebapp.config.json", import.meta.url), "utf8"));
   const config = createAzureConfig(base, publicPaths);
   const { routes: baseRoutes, ...baseSettings } = base;
   const { routes, ...settings } = config;
