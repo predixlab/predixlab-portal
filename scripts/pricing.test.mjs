@@ -35,6 +35,7 @@ test("pricing translations have matching fields and feature counts", () => {
 });
 
 test("pricing intros distinguish running signal code from the hosted dashboard", () => {
+  assert.equal(pricingContent.zh.eyebrow, "开源代码，或托管工作台。");
   assert.equal(
     pricingContent.en.description,
     "Run the signal and backtest code with your own data, or use the hosted dashboard. Free includes charts, the screener, and past signals. Choose Premium for the latest daily data, with the same features on monthly and annual billing.",
@@ -97,9 +98,8 @@ for (const language of ["zh", "en"]) {
       selfHostedAction: "View on GitHub",
       selfHostedGuide: "Signal code guide",
       selfHostedNote: "Run the signal and backtest code with your own data",
-      selfHostedAvailability: "Code only; bring your own data",
       included: "Signal, backtest, API and dashboard code (Apache-2.0)",
-      excluded: "Market data, trained models and the hosted dashboard are not included.",
+      excluded: "Market data, trained models and the hosted dashboard are not included",
       compareDescription: "Open-source signal and backtest code requires your own daily price data; the hosted dashboard is not included. The hosted Free and Premium plans use the same models. Upgrading doesn't change signal accuracy or reduce investment risk.",
       question: "What do I need to use the open-source code?",
       answer: "The source code is free under Apache-2.0. Follow the signals README to read, test and run the signal and backtest code with your own daily price data. Market data, trained models and the hosted dashboard are not included. The license does not grant rights to any third-party market data; data providers keep their own terms. The analysis is for information only, not investment advice.",
@@ -109,12 +109,11 @@ for (const language of ["zh", "en"]) {
       selfHostedAction: "查看 GitHub",
       selfHostedGuide: "信号代码指南",
       selfHostedNote: "用自己的数据运行信号和回测代码",
-      selfHostedAvailability: "仅提供代码，需自备数据",
       included: "信号、回测、API 和前端代码（Apache-2.0）",
-      excluded: "不含行情数据、训练好的模型和托管版看板。",
-      compareDescription: "开源信号和回测代码需自备日线数据，不含托管版看板。托管的免费版和 Premium 使用相同的模型；升级不会改变信号准确率，也不代表更低的投资风险。",
+      excluded: "不含行情数据、训练好的模型和托管工作台",
+      compareDescription: "开源信号和回测代码需自备日线数据，不含托管工作台。托管的免费版和 Premium 使用相同的模型；升级不会改变信号准确率，也不代表更低的投资风险。",
       question: "使用开源代码需要准备什么？",
-      answer: "源码免费，采用 Apache-2.0 协议。请按信号仓库的 README，用自己准备的日线数据，阅读、测试和运行信号与回测代码。不含行情数据、训练好的模型和托管版看板。开源协议不包含任何第三方行情数据的权利，数据商有各自的条款。分析结果仅供参考，不构成投资建议。",
+      answer: "源码免费，采用 Apache-2.0 协议。请按信号仓库的 README，用自己准备的日线数据，阅读、测试和运行信号与回测代码。不含行情数据、训练好的模型和托管工作台。开源协议不包含任何第三方行情数据的权利，数据商有各自的条款。分析结果仅供参考，不构成投资建议。",
     };
     const { included, excluded, question, answer, ...fields } = expected;
     for (const [key, value] of Object.entries(fields)) {
@@ -171,6 +170,26 @@ for (const language of ["zh", "en"]) {
   });
 
   test(`${language}: comparison distinguishes source code from hosted access`, () => {
+    const expectedAvailability = language === "en" ? {
+      "Market overview": "Dashboard code only; no data",
+      "Price charts": "Code only; bring your own data",
+      "Stock screener": "Dashboard code only; no data",
+      "Daily signals": "Code only; bring your own data",
+      "Options activity": "Hosted only",
+      "Signal performance": "Code only; bring your own data",
+    } : {
+      "市场概览": "仅前端代码，不含数据",
+      "股价图表": "仅提供代码，需自备数据",
+      "量化选股器": "仅前端代码，不含数据",
+      "每日信号": "仅提供代码，需自备数据",
+      "期权异动": "仅托管版提供",
+      "信号表现": "仅提供代码，需自备数据",
+    };
+    assert.equal(copy.selfHostedAvailability.length, copy.rows.length);
+    assert.deepEqual(
+      Object.fromEntries(copy.rows.map((row, index) => [row, copy.selfHostedAvailability[index]])),
+      expectedAvailability,
+    );
     assert.match(html, /class="comparison-table-scroll" role="region" aria-labelledby="plan-comparison-title" tabindex="0"/);
     const table = html.match(/<table\b[^>]*>([\s\S]*?)<\/table>/)[0];
     assert.ok(table.includes(`<caption class="sr-only">${copy.compareTitle}</caption>`));
@@ -190,7 +209,7 @@ for (const language of ["zh", "en"]) {
       assert.equal(heading, path ? `<a href="${path}" data-discover="true">${copy.rows[index]}</a>` : copy.rows[index]);
       assert.deepEqual(
         [...cells.matchAll(/<td>(.*?)<\/td>/g)].map(([, value]) => value),
-        [copy.selfHostedAvailability, index < 3 ? copy.included : copy.delayed, index < 3 ? copy.included : copy.latest],
+        [expectedAvailability[copy.rows[index]], index < 3 ? copy.included : copy.delayed, index < 3 ? copy.included : copy.latest],
       );
     });
   });

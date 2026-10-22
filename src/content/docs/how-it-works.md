@@ -126,4 +126,4 @@ Candidates get a 0–100 activity score. A stock needs at least two qualifying c
 
 ## Check it yourself
 
-The signal features, training, and backtests are implemented in [predixlab-signals](https://github.com/predixlab/predixlab-signals). Its tests check leakage rules directly: appending future data must not change past features or events, and Pivot backtest entries must occur on the next session, never the signal day. See [Self-hosting](/docs/self-hosting/) for the public repositories and how to run the signal tests.
+The signal features, training, and backtests are implemented in [predixlab-signals](https://github.com/predixlab/predixlab-signals). Its tests check leakage rules directly: appending future data must not change past features or events, and Pivot backtest entries must occur on the next session, never the signal day. See [Signal code](/docs/self-hosting/) for the public repositories and how to run the signal tests.

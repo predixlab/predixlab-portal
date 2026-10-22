@@ -265,6 +265,7 @@ test("how-it-works retains the data source table and distinguishes hosted featur
   assert.ok(document.body.includes("The signal, backtest, API and dashboard code is open source (Apache-2.0)."));
   assert.ok(document.body.includes("Data collection and options analysis run as part of the hosted service and aren't in the public repositories."));
   assert.match(document.body, /signal features, training, and backtests are implemented in \[predixlab-signals\]/);
+  assert.ok(document.body.includes("See [Signal code](/docs/self-hosting/) for the public repositories and how to run the signal tests."));
 });
 
 test("limitations covers incomplete membership, missing holdings, all-cash costs and omitted costs", () => {
@@ -429,7 +430,7 @@ const expectedHomeContent = {
   zh: {
     eyebrow: "免费开始 · 信号和回测代码开源",
     title: ["美股选股器、每日信号和期权异动，", "信号和回测代码开源"],
-    description: "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，信号和回测代码按 Apache-2.0 开源，可以用自己的数据研究和测试。方法公开写明，每个信号都能对照这只股票过去的信号。",
+    description: "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台；信号和回测代码以 Apache-2.0 协议开源，可以用自己的数据研究和测试。方法公开写明，每个信号都能对照这只股票过去的信号。",
     metaTitle: "PredixLab | 美股选股器、每日信号与期权异动，信号和回测代码开源",
     metaDescription: "美股选股器、每日信号和期权异动。覆盖标普 500 和纳斯达克 100，基于日线数据，信号和回测代码开源。免费版信号延迟 10 天。",
   },
@@ -656,6 +657,7 @@ test("Docs index is Markdown-driven, lists every document in order and has Engli
   assert.equal([...page.appHtml.matchAll(/<h1\b/g)].length, 1);
   assert.deepEqual([...page.appHtml.matchAll(/<h2><a href="([^"]+)"/g)].map(([, path]) => path), docs.map(({ path }) => path));
   assert.equal(docsIndex.h1, "How PredixLab works, where it falls short, and how to run the signal code");
+  assert.equal(docsIndex.title, "PredixLab docs: how it works, limitations and signal code");
   assert.equal(docsIndex.description, "Understand PredixLab's data, signals and backtests, review known limitations, and run the signal tests.");
   const expectedSummaries = [
     "Data sources, update schedule, the two models, walk-forward validation, and backtest assumptions.",
@@ -669,6 +671,9 @@ test("Docs index is Markdown-driven, lists every document in order and has Engli
   }
   assert.doesNotMatch(page.appHtml, /All PredixLab components/);
   assert.equal(page.seo.title, docsIndex.title);
+  for (const [attribute, name] of [["property", "og:title"], ["name", "twitter:title"]]) {
+    assert.ok(page.headHtml.includes(`${attribute}="${name}" content="${docsIndex.title}"`));
+  }
   assert.equal(page.seo.description, docsIndex.description);
   assert.equal(page.seo.canonicalUrl, "https://predixlab.com/docs/");
   assert.ok(docsIndex.title.length <= 60 && docsIndex.description.length <= 155);

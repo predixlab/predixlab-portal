@@ -1,6 +1,6 @@
 ---
 lang: en
-title: "PredixLab docs: how it works, limitations and self-hosting"
+title: "PredixLab docs: how it works, limitations and signal code"
 shortTitle: "Docs"
 description: "Understand PredixLab's data, signals and backtests, review known limitations, and run the signal tests."
 summary: "Learn how PredixLab works, what its results can't tell you, and how to run the signal tests."
