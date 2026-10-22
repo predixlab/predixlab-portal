@@ -56,7 +56,7 @@ export const stockSignalsPageEn: Section[] = [
       "volume and money flow;",
       "return relative to the S&P 500, and beta.",
     ] },
-    { kind: "p", text: "Features are scaled against each stock's own trailing 252 trading days. Statistics from the full sample are never used, because that would leak later information into earlier rows." },
+    { kind: "p", text: "Features that need normalizing are scaled against each stock's own trailing 252 trading days, using at least 120 observations, and clipped to limit outliers. Statistics from the full sample are never used, because that would leak later information into earlier rows." },
     { kind: "p", text: "**What the models learn.** Training labels look forward from the next trading day over a fixed horizon, 10 trading days by default. The signal day itself is never part of the label." },
     { kind: "p", text: "**How they're tested.** PredixLab uses [walk-forward validation](/blog/walk-forward-validation/): training history, then a purge gap, a validation period, an embargo, and finally the test period. Each test period is predicted by a model that never saw it, and reports read those saved out-of-sample predictions. One partial exception: Pivot's event rules were designed while looking at the walk-forward history, so event results aren't fully independent out-of-sample evidence. The [look-ahead bias](/blog/look-ahead-bias/) guide covers why these steps matter." },
   ] },
@@ -66,7 +66,7 @@ export const stockSignalsPageEn: Section[] = [
     { kind: "table", head: ["", "Pivot", "AlphaRank"], rows: [
       ["Signal timing", "Formed from day t's close", "Formed from day t's close"],
       ["Entry", "Day t+1 open", "Day t+1 close"],
-      ["Costs", "10 bps per side", "10 bps per side, also when exposure changes"],
+      ["Costs", "10 bps per side", "10 bps per side, also when exposure changes; not charged when re-entering from all-cash"],
       ["Same-day target and stop", "Stop assumed hit first", "—"],
       ["Sizing", "Fixed equal-weight slots", "12 holdings, normally one replaced per session"],
     ] },

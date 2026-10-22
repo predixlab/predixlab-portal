@@ -61,8 +61,8 @@ test("English signals preserves the approved Growth product, sections, closing a
     "action", "secondaryAction", "access", "tags", "imageAlt", "questions",
   ];
   assert.equal(hashJson(Object.fromEntries(fields.map((key) => [key, productContent.en.signals[key]]))),
-    "daad76f7a259bfc009c5d477f2fb8163438922f01938842222fbc9b20b765c7e");
-  assert.equal(hashJson(stockSignalsPageEn), "1a7e7dd87fd033b36e49dd4bd71e5cdaede4a7d5ad14e06c9f08fa00ca9eea27");
+    "4093e31f9196f64713a5a3ae2a8aec42b3d93f07815ff44a420500df68e9ff88");
+  assert.equal(hashJson(stockSignalsPageEn), "d284aa7663968a6379c310afebc001f686e4693e6e730ab58c528a5b8782749e");
   assert.equal(hashJson(stockSignalsClosingEn), "9fe257ff59f2119f3e8bde8723b4463a865f8f6dc34c22ce1d2ea745b87a8b02");
   assert.equal(page.seo.title, "US Stock Signals for S&P 500 & Nasdaq-100 | PredixLab");
   assert.equal(page.seo.description, "Daily US stock signals for S&P 500 and Nasdaq-100 stocks: AlphaRank rankings and Pivot turning points, with signal history. Free with a 10-day delay.");
@@ -102,10 +102,24 @@ test("English signals prerenders every section, direct answer, FAQ, related desc
     stockSignalsClosingEn.title, stockSignalsClosingEn.primary,
     stockSignalsClosingEn.secondary.label, stockSignalsClosingEn.note,
   ]) assert.ok(main.includes(renderToStaticMarkup(value)));
-  assert.match(main, /role="img" aria-label="Example of PredixLab US stock signals:/);
-  assert.ok(main.includes(renderToStaticMarkup(copy.imageAlt)));
+  assert.equal(copy.imageAlt, "PredixLab US stock signals illustration: a daily price chart with one highlighted signal marker and the note “Signals are indicators, not instructions.” Example only, not market data.");
+  assert.ok(main.includes(`role="img" aria-label="${renderToStaticMarkup(copy.imageAlt)}"`));
   assert.ok(main.includes("EXAMPLE ONLY · NOT MARKET DATA"));
   assert.doesNotMatch(main, /Common questions\.|Add another perspective\.|Look inside/);
+});
+
+test("English signals preserves the exact normalization paragraph, real-time FAQ and calendar-day delay example", () => {
+  const normalization = stockSignalsPageEn.find(({ id }) => id === "how-generated").blocks[4];
+  assert.deepEqual(normalization, {
+    kind: "p",
+    text: "Features that need normalizing are scaled against each stock's own trailing 252 trading days, using at least 120 observations, and clipped to limit outliers. Statistics from the full sample are never used, because that would leak later information into earlier rows.",
+  });
+  assert.deepEqual(productContent.en.signals.questions[0], {
+    question: "Are PredixLab's stock signals real-time?",
+    answer: "No. PredixLab builds its signals from daily end-of-day prices once per trading day, after the US market closes. The signal job starts at about 10:30 pm ET (9:30 pm in winter). There are no intraday signals or live quotes, and PredixLab doesn't execute trades.",
+  });
+  assert.equal(stockSignalsPageEn.find(({ id }) => id === "free-vs-premium").blocks[0].items[0],
+    "**Free:** signals, signal performance and options activity appear with a 10-day delay. The delay counts calendar days, so a signal dated October 1 appears on the Free plan on October 11.");
 });
 
 test("English signals emits two semantic tables with unchanged cells and code-formatted events", () => {
@@ -122,6 +136,9 @@ test("English signals emits two semantic tables with unchanged cells and code-fo
   for (const code of ["BUY_TURN", "SELL_TURN", "TREND_BUY", "BASE_BREAKOUT"]) {
     assert.ok(tables[0].includes(`<code>${code}</code>`));
   }
+  assert.deepEqual(expected[1].rows.find(([label]) => label === "Costs"), [
+    "Costs", "10 bps per side", "10 bps per side, also when exposure changes; not charged when re-entering from all-cash",
+  ]);
 });
 
 test("all Growth internal links exist and use localized router links; GitHub follows external conventions", () => {
@@ -159,8 +176,18 @@ test("English signals has nine exact visible FAQ answers with a linked method ph
   const method = [...main.matchAll(/<details class="question">([\s\S]*?)<\/details>/g)]
     .find(([, html]) => html.includes("How are the signals generated?"))[1];
   assert.match(method, /<a href="\/docs\/how-it-works\/" data-discover="true">how the signals are built and tested<\/a>\.<\/p>/);
+  assert.equal(productContent.en.signals.questions[2].answer, "The models read daily price, trend, momentum, volatility, volume and relative-strength features, using only data available on or before each date. Features that need normalizing are scaled against the stock's own trailing 252 trading days. LightGBM models are trained and tested with walk-forward validation, so each test period is predicted by a model that never saw it. The details are in how the signals are built and tested.");
   assert.equal(faq.mainEntity[2].acceptedAnswer.text, productContent.en.signals.questions[2].answer);
+  assert.equal(text(method.match(/<p>([\s\S]*?)<\/p>/)[1]), faq.mainEntity[2].acceptedAnswer.text);
   assert.doesNotMatch(faq.mainEntity[2].acceptedAnswer.text, /<a|\/docs\//);
+});
+
+test("English signals keeps its social-image alt separate from the page illustration's accessible name", () => {
+  const alt = "PredixLab daily stock signals illustration with a price chart and a highlighted historical signal marker";
+  assert.equal(page.seo.imageAlt, alt);
+  assert.notEqual(page.seo.imageAlt, productContent.en.signals.imageAlt);
+  assert.ok(page.headHtml.includes(`property="og:image:alt" content="${alt}"`));
+  assert.ok(page.headHtml.includes(`name="twitter:image:alt" content="${alt}"`));
 });
 
 test("English signals software offers match the visible prices and target names, descriptions and billing terms", () => {
