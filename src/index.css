@@ -504,6 +504,22 @@ html[lang^="zh"] .hero-intro h1 { font-size: clamp(2.7rem, 5.3vw, 4.55rem); line
 .markdown-table th, .markdown-table td { padding: 0.9rem 1rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
 .markdown-table th { font-weight: 700; background: var(--surface-soft); }
 .markdown-table tbody tr:last-child td { border-bottom: 0; }
+.signals-page .product-hero-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+.signals-page .product-intro h1 { overflow-wrap: anywhere; }
+.signals-page .button-row > a { white-space: nowrap; }
+.signals-page .button-quiet { padding-inline: 0; gap: 0.5rem; }
+.signals-hero-tags { flex-wrap: wrap; justify-content: flex-start; gap: 1rem; border: 0; }
+.signals-prose { max-width: 800px; }
+.signals-prose > section:first-child h2 { margin-top: 0; }
+.signals-prose .markdown-table tbody th { background: none; }
+.signals-prose .markdown-table tbody tr:last-child th { border-bottom: 0; }
+@media (max-width: 860px) {
+  .signals-page .product-hero-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .signals-page .button-row > a { font-size: 0.78rem; }
+  .signals-page .button-quiet { gap: 0.25rem; }
+}
 .post-dates, .blog-post-list time { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
 .post-dates { margin-bottom: 1.5rem; }
 .post-related { margin-top: 3rem; padding-top: 0.5rem; border-top: 1px solid var(--line); font-size: 0.9rem; line-height: 1.8; }

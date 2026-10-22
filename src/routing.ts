@@ -1,4 +1,5 @@
 import { blogPosts, blogUpdated, docs, docsUpdated } from "@/content/documents";
+import { stockSignalsUpdated } from "@/content/stockSignals";
 
 export type SiteLanguage = "zh" | "en";
 
@@ -6,7 +7,7 @@ export const siteLanguages: SiteLanguage[] = ["en", "zh"];
 
 export const sitePages = [
   { key: "home", path: "/" },
-  { key: "stockSignals", path: "/us-stock-signals/" },
+  { key: "stockSignals", path: "/us-stock-signals/", lastmod: stockSignalsUpdated },
   { key: "stockScreener", path: "/quantitative-stock-screener/" },
   { key: "unusualOptions", path: "/unusual-options-activity/" },
   { key: "pricing", path: "/pricing/" },

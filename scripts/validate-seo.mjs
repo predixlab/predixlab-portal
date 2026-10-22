@@ -10,7 +10,7 @@ import { azureRouteKey, retiredRedirects, validateAzureRouteKeys, validateRetire
 
 const origin = "https://predixlab.com";
 const productLinks = [
-  { path: "/us-stock-signals/", label: "Daily signals", card: "Explore daily stock signals" },
+  { path: "/us-stock-signals/", label: "Daily signals", breadcrumb: "US stock signals", card: "Explore US stock signals" },
   { path: "/quantitative-stock-screener/", label: "Stock screener", card: "Explore the stock screener" },
   { path: "/unusual-options-activity/", label: "Options activity", card: "Explore unusual options activity" },
 ];
@@ -42,7 +42,9 @@ const attributes = (tag) =>
   );
 const textContent = (html) =>
   decodeHtml(
-    html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, "").replace(/<[^>]+>/g, " "),
+    html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
+      .replace(/<\/(?:p|div|li|h[1-6])\s*>|<br\s*\/?>/gi, " ")
+      .replace(/<[^>]+>/g, ""),
   ).replace(/\s+/g, " ").trim();
 const tags = (html, name) =>
   [...html.matchAll(new RegExp(`<${name}\\b[^>]*>`, "g"))].map(([tag]) => attributes(tag));
@@ -505,10 +507,11 @@ export const validateSeoOutput = async (directory, expectedPages) => {
         [...main.matchAll(/<nav\b[^>]*class="breadcrumb"[^>]*>([\s\S]*?)<\/nav>/g)],
         `${pathname} visible breadcrumb`,
       )[1] : null;
+      const productLink = productLinks.find((link) => link.path === pathname);
       const name = isDocument ? textContent(only(
         [...visibleBreadcrumb.matchAll(/<span aria-current="page">([\s\S]*?)<\/span>/g)],
         `${pathname} document short title`,
-      )[1]) : productLinks.find((link) => link.path === pathname)?.label ?? {
+      )[1]) : productLink?.breadcrumb ?? productLink?.label ?? {
         "/pricing/": "Pricing", "/about/": "About", "/terms/": "Terms", "/privacy/": "Privacy",
         "/docs/": "Docs", "/blog/": "Blog",
       }[pathname];
@@ -659,9 +662,10 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     validateFaqMarkup(main, graph, canonicalUrl);
     for (const software of graph.filter((item) => item["@type"] === "SoftwareApplication")) {
       assert.ok(["/", "/pricing/", "/us-stock-signals/", "/quantitative-stock-screener/", "/unusual-options-activity/"].includes(pathname), pathname);
-      assert.deepEqual(software.offers.map((offer) => offer.price), pathname === "/pricing/" ? [0, 20, 192] : [0], pathname);
+      const hasPaidOffers = pathname === "/pricing/" || pathname === "/us-stock-signals/";
+      assert.deepEqual(software.offers.map((offer) => offer.price), hasPaidOffers ? [0, 20, 192] : [0], pathname);
       software.offers.forEach((offer) => assert.equal(offer.priceCurrency, "USD", pathname));
-      if (pathname === "/pricing/") {
+      if (hasPaidOffers) {
         assert.deepEqual(software.offers.slice(1).map((offer) => offer.priceSpecification.billingDuration), ["P1M", "P1Y"], pathname);
       }
     }

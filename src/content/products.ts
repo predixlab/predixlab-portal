@@ -11,8 +11,10 @@ interface ProductContent {
   shortDescription: string;
   linkLabel: string;
   action: string;
+  secondaryAction?: { label: string; path: string };
   access: string;
   tags: string[];
+  imageAlt?: string;
   detailTitle: string;
   details: { title: string; description: string }[];
   workflowTitle: string;
@@ -150,16 +152,18 @@ export const productContent: Record<SiteLanguage, Record<ProductId, ProductConte
   },
   en: {
     signals: {
-      name: "Daily stock signals",
-      eyebrow: "DAILY STOCK SIGNALS",
-      title: "Put daily stock signals in context.",
+      name: "US stock signals",
+      eyebrow: "US STOCK SIGNALS",
+      title: "US stock signals, with the history to check them",
       description:
-        "Review AlphaRank stock rankings and Pivot turning-point signals, then compare them with price charts, market conditions, and past outcomes.",
-      shortDescription: "See which stocks have signals, then check the charts and past performance before forming a view.",
-      linkLabel: "Explore daily stock signals",
+        "PredixLab publishes daily US stock signals for S&P 500 and Nasdaq-100 stocks, built from end-of-day prices once per trading day. There are two kinds: AlphaRank ranks stocks against each other that day, and Pivot flags possible turning points. Every signal sits next to its price chart and its past outcomes, losses included. The Free plan shows signals with a 10-day delay, and Premium shows the latest published data. The signal, backtest, API and dashboard code is open source (Apache-2.0).",
+      shortDescription: "Daily AlphaRank rankings and Pivot turning-point signals for S&P 500 and Nasdaq-100 stocks, shown with price charts and signal history.",
+      linkLabel: "Explore US stock signals",
       action: "View daily signals",
-      access: "The Free plan includes signals and signal performance with a 10-day delay.",
+      secondaryAction: { label: "How the signals are built", path: "/docs/how-it-works/" },
+      access: "Signals are indicators, not instructions. The Free plan includes signals and signal performance with a 10-day delay.",
       tags: ["AlphaRank / Pivot", "Signal history", "Price charts"],
+      imageAlt: "Example of PredixLab US stock signals: a price chart with AlphaRank and Pivot markers, a signal-history panel and the data date. Example only, not market data.",
       detailTitle: "See how each signal fits the price action.",
       details: [
         { title: "Understand the two models", description: "AlphaRank ranks stocks relative to one another. Pivot flags potential turning points. The two models serve different purposes and shouldn't be interpreted in the same way." },
@@ -179,8 +183,15 @@ export const productContent: Record<SiteLanguage, Record<ProductId, ProductConte
         "Premium provides more recent data, not greater model accuracy or lower market risk.",
       ],
       questions: [
-        { question: "Are these real-time signals?", answer: "No. PredixLab uses daily price data and daily signals for market analysis and reviewing past performance. It doesn't provide live quotes or execute trades." },
-        { question: "Can I view past signals?", answer: "Yes. You can review historical signals, chart markers, and subsequent performance within the available data. Free signal and performance data have a 10-day delay; check the dates in the dashboard." },
+        { question: "Are PredixLab's stock signals real-time?", answer: "No. PredixLab builds its signals from daily end-of-day prices once per trading day, after the US market closes. The signal job starts at about 10:30 pm ET (9:30 pm in winter). There are no intraday signals or live quotes, and PredixLab doesn't execute trades." },
+        { question: "Do stock signals actually work?", answer: "Sometimes, and not reliably. The evidence on technical trading signals is mixed, and results tend to fade after costs and on data a model hasn't seen. That's why PredixLab shows each signal's history, losses included, tests its models out of sample, and documents its cost assumptions and known limitations. Past performance doesn't predict future results." },
+        { question: "How are the signals generated?", answer: "The models read daily price, trend, momentum, volatility, volume and relative-strength features, each scaled against the stock's own trailing year. LightGBM models are trained and tested with walk-forward validation, so each test period is predicted by a model that never saw it. The details are in how the signals are built and tested." },
+        { question: "Are the signals free?", answer: "Yes, with a 10-day delay. The Free plan includes AlphaRank and Pivot signals and signal performance from 10 calendar days back. Premium costs $20 a month or $192 a year and shows the latest published data. Both plans use the same models, so upgrading changes how recent the data is, not how accurate it is." },
+        { question: "Can I see past signals and how they performed?", answer: "Yes. You can review historical signals, chart markers and what happened afterwards, within the data the platform has. On the Free plan, signals and signal performance are delayed 10 days. Historical signal performance is not a portfolio return, and past performance doesn't predict future results." },
+        { question: "Which stocks are covered?", answer: "The signals cover S&P 500 and Nasdaq-100 constituents, using daily prices with history from January 1, 2015, updated once per trading day. Index membership history is incomplete, so some former constituents are missing from the history. Each dashboard page shows which stocks it includes." },
+        { question: "Are stock signals a buy or sell recommendation?", answer: "No. A model score isn't a probability of profit, and states such as Strong Buy or Strong Sell are model states, not personalized recommendations. PredixLab doesn't know your goals, holdings or risk tolerance. Use the signals as one input to your own analysis. For informational purposes only. Not investment advice." },
+        { question: "Are trading signals legit or a scam? How do I judge a signal provider?", answer: "Look for timestamped history that includes losing signals, stated costs and fill assumptions, out-of-sample testing and disclosed limitations. Be wary of cherry-picked wins, deleted calls and return claims you can't check. PredixLab publishes its signal history, its testing method, its known limitations and the signal code, so you can check the work yourself." },
+        { question: "Do you have a Telegram or Discord signal group?", answer: "No. PredixLab doesn't run a Telegram, Discord or other chat group. Signals live in the dashboard, next to their charts and history. Premium subscribers can also opt in to a daily signals email digest, and you can unsubscribe at any time." },
       ],
     },
     screener: {
