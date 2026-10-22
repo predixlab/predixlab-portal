@@ -298,7 +298,8 @@ test("all existing Chinese product, company, legal and docs HTML remains byte-id
     ["/terms/", "dbc194ecefbf829a4a968d04ce0929f53f5b90d024ab51767ada1ba43de25c47"],
     ["/privacy/", "019e29f372debcedcf2d98b02a98f39883cdb20941b5e4988fb218492cad3077"],
     ["/docs/", "104289f5c4d33911bd56a9754fa09babf4e422a589986960dd9d3955416e6fbf"],
-    ["/docs/how-it-works/", "f32cc02a95d964b601807bee0731330da4e39ba89c838f1f8f2693704b845c42"],
+    // The docs options-method section was intentionally updated.
+    ["/docs/how-it-works/", "683b7678cf6d8c65ba2d6407d9d56d9bd0fe1e91337b92d94c2ffcddf89e900b"],
     ["/docs/limitations/", "729e86841830c1c7114de90b987872476613abbb065c0ed64b8dee92839d146a"],
     ["/docs/self-hosting/", "9edc4c7f4fbe9f204061b823c35f8bf06a6fc97626b396920c1400a560068dfe"],
   ]) assert.equal(hash(localizedHtml(path, "zh")), expected, path);
