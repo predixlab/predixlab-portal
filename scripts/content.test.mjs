@@ -268,6 +268,20 @@ test("how-it-works retains the data source table and distinguishes hosted featur
   assert.ok(document.body.includes("See [Signal code](/docs/self-hosting/) for the public repositories and how to run the signal tests."));
 });
 
+test("options activity method specifies bidirectional changes, score thresholds and list limits", () => {
+  const document = docs.find(({ slug }) => slug === "how-it-works");
+  assert.equal(document.body.split("## Options activity method\n\n")[1].split("\n\n## ")[0], `For each stock, the options job compares today's chain with the previous session's, contract by contract. A contract becomes a candidate only if it passes all of these default gates:
+
+- at least 5,000 contracts traded;
+- open interest changed by at least 3,500 contracts;
+- open interest changed by more than 30%;
+- the change in open interest is worth more than $500,000 in notional value.
+
+Open-interest changes count in either direction, so large drops from closing positions can qualify too.
+
+Candidates get a 0–100 activity score. A contract counts only if its activity score is above 50 (70 for SPY, QQQ, IWM, and DIA). A stock needs at least two qualifying contracts to appear. Each day's list shows up to 20 stocks, with up to 6 contracts per stock. The score describes how unusual the change is. It is not a probability, and it doesn't reveal whether a trade was bullish, bearish, a hedge, or part of a spread. Gamma exposure figures are estimates built on a simplifying assumption about who holds calls and puts, not observed dealer positions.`);
+});
+
 test("limitations covers incomplete membership, missing holdings, all-cash costs and omitted costs", () => {
   const document = docs.find(({ slug }) => slug === "limitations");
   const items = [

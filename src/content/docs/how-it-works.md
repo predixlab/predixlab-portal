@@ -122,7 +122,9 @@ For each stock, the options job compares today's chain with the previous session
 - open interest changed by more than 30%;
 - the change in open interest is worth more than $500,000 in notional value.
 
-Candidates get a 0–100 activity score. A stock needs at least two qualifying contracts to appear. SPY, QQQ, IWM, and DIA use a higher threshold. The score describes how unusual the change is. It is not a probability, and it doesn't reveal whether a trade was bullish, bearish, a hedge, or part of a spread. Gamma exposure figures are estimates built on a simplifying assumption about who holds calls and puts, not observed dealer positions.
+Open-interest changes count in either direction, so large drops from closing positions can qualify too.
+
+Candidates get a 0–100 activity score. A contract counts only if its activity score is above 50 (70 for SPY, QQQ, IWM, and DIA). A stock needs at least two qualifying contracts to appear. Each day's list shows up to 20 stocks, with up to 6 contracts per stock. The score describes how unusual the change is. It is not a probability, and it doesn't reveal whether a trade was bullish, bearish, a hedge, or part of a spread. Gamma exposure figures are estimates built on a simplifying assumption about who holds calls and puts, not observed dealer positions.
 
 ## Check it yourself
 
