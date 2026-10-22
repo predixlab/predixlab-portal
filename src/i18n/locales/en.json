@@ -1,8 +1,8 @@
 {
   "meta": {
     "home": {
-      "title": "Open-Source US Stock Analysis & Daily Signals | PredixLab",
-      "description": "Open-source analysis for S&P 500 and Nasdaq-100 stocks: daily signals, screener, options activity. Hosted or self-hosted. Free signals have a 10-day delay."
+      "title": "US Stock Analysis with an Open-Source Core | PredixLab",
+      "description": "US stock analysis with an Apache-2.0 core. Data collection and options analysis are not publicly available at this time. Free signals: 10-day delay."
     },
     "pricing": {
       "title": "PredixLab Pricing | Compare Free and Premium Plans",

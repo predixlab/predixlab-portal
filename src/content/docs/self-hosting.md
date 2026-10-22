@@ -1,38 +1,40 @@
 ---
 lang: en
-title: "Self-host PredixLab: run the open-source signal pipeline"
+title: "Self-host PredixLab: run the open-source core"
 shortTitle: "Self-hosting"
-description: "Run PredixLab's Apache-2.0 code for data collection, signals, options analysis, API and dashboard. Market data and model files aren't covered."
-summary: "The open-source repositories, how they fit together, and how to run the tests and collect data yourself."
+description: "Self-host PredixLab's Apache-2.0 core components. Data collection and options analysis are not publicly available at this time."
+summary: "The six public repositories, how the components fit together, and how to run the signal tests with the available code."
 h1: "Self-host PredixLab"
 date: "2026-10-21"
-updated: "2026-10-21"
+updated: "2026-10-22"
 order: "3"
 translationKey: self-hosting
 ---
 
 # Self-host PredixLab
 
-All code from data collection to daily signals is open source under Apache-2.0. Here's what you need to run it yourself.
+The core components (signals, API, dashboard, campaign, infrastructure, and website) are open source under Apache-2.0. Data collection and options analysis are not publicly available at this time.
 
-We publish the code so you don't have to take our word for the method. Read it, run it, and tell us where it's wrong.
+We publish the core code so you don't have to take our word for the method. Read it, run it, and tell us where it's wrong.
 
 ## Why open source
 
-Most signal tools ask you to trust numbers without showing how they're made. We'd rather show the work. The data sources, features, labels, validation splits, and backtest assumptions described in the [How it works](/docs/how-it-works/) doc all live in code. Anyone can reproduce or challenge them.
+Most signal tools ask you to trust numbers without showing how they're made. We'd rather show the work. The signal features, labels, validation splits, and backtest assumptions described in the [How it works](/docs/how-it-works/) doc are in the public signals code. You can inspect the method and check it with your own inputs.
 
 ## The repositories
 
+These 6 repositories are public and licensed under Apache-2.0:
+
 | Repository | What it does | Stack |
 | --- | --- | --- |
-| [predixlab-collector](https://github.com/predixlab/predixlab-collector) | Maintains index membership, trading calendars, and daily OHLCV for S&P 500 and Nasdaq-100 stocks; builds the market overview and screener snapshots | Python 3.12+ |
 | [predixlab-signals](https://github.com/predixlab/predixlab-signals) | Builds datasets, runs walk-forward training of LightGBM models, evaluates and backtests them, and publishes daily Pivot events and AlphaRank rankings | Python 3.11+ |
-| [predixlab-options](https://github.com/predixlab/predixlab-options) | Compares options chains session to session, flags unusual open-interest changes, and estimates gamma exposure and volatility structure | Python 3.10+ |
 | [predixlab-api](https://github.com/predixlab/predixlab-api) | FastAPI backend for accounts, market data, signals, screeners, watchlists, and subscriptions | Python 3.12+ |
 | [predixlab-webapp](https://github.com/predixlab/predixlab-webapp) | The signed-in dashboard: signals with charts, market overview, screener, signal performance, options activity | React, TypeScript |
 | [predixlab-portal](https://github.com/predixlab/predixlab-portal) | This website: bilingual product pages, pricing, and legal pages, pre-rendered to static HTML | React, TypeScript |
 | [predixlab-campaign](https://github.com/predixlab/predixlab-campaign) | Opt-in email delivery, currently the Premium daily-signals digest, with unsubscribe handling | Python, Azure Functions |
 | [predixlab-infra](https://github.com/predixlab/predixlab-infra) | Shared job schedules and workload definitions, Azure Bicep templates, and a local staging environment | Bicep, shell |
+
+**Data collection** (`predixlab-collector`) maintains index membership, trading calendars, and daily OHLCV for S&P 500 and Nasdaq-100 stocks, and builds market overview and screener snapshots. **Options analysis** (`predixlab-options`) compares options chains session to session, flags unusual open-interest changes, and estimates gamma exposure and volatility structure. These two components are not publicly available at this time.
 
 ### How the pieces connect
 
@@ -46,7 +48,7 @@ portal → public pages → links into the dashboard
 
 ## Run it or check it
 
-You don't need an account to inspect the method. Each repository's README has a quick start. Here are three useful entry points.
+You don't need an account to inspect the public code. The public repositories' READMEs describe their setup. Start with the signal tests.
 
 **Run the signal tests** (Python 3.11+ and [uv](https://docs.astral.sh/uv/)):
 
@@ -59,25 +61,11 @@ uv run pytest -q
 
 The tests cover leakage rules directly. Appending future data must not change past features or events. Forward labels must exclude the signal day. The purge gap must cover the label horizon. Pivot backtest entries must occur on the next session, never the signal day, and same-day target/stop touches are resolved stop-first. The tests don't remove the data limitations listed in the [Known limitations](/docs/limitations/) doc, such as missing delisted companies.
 
-**Collect a small sample of prices:**
-
-```bash
-git clone https://github.com/predixlab/predixlab-collector.git
-cd predixlab-collector
-cp .env.example .env
-uv sync --frozen
-uv run predixlab-collector collect_index --market=us
-uv run predixlab-collector collect_calendar --market=us --start_date=2024-01-01
-uv run predixlab-collector collect_data --market=us --provider=yahoo --symbols=AAPL,MSFT --start_date=2024-01-01
-```
-
-**Read the options gates:** the thresholds and scoring are documented in [`docs/anomaly-detection.md`](https://github.com/predixlab/predixlab-options/blob/main/docs/anomaly-detection.md) and implemented in `options_monitor/analyzer.py` and `options_monitor/config.py`.
-
-Full research runs (dataset → train → evaluate → backtest → report) need the complete historical data tree. The signals README lists the exact commands.
+Full research runs (dataset → train → evaluate → backtest → report) need the complete historical data tree: daily OHLCV, dated index membership intervals, and a trading calendar, as described in [How it works](/docs/how-it-works/#data-sources). Data collection is not publicly available at this time; this guide does not provide a data-preparation workflow. The signals README lists the research commands.
 
 ## What the license does and doesn't cover
 
-The source code is Apache-2.0. The license does not grant rights to third-party market data. Yahoo Finance, Cboe, and other providers keep their own terms, and the code shouldn't be used to bypass their access limits. Trained model files and the hosted service are also outside the license. Model bundles are Python pickles: only load ones from a source you trust.
+The public source code is Apache-2.0. The license does not grant rights to third-party market data. Yahoo Finance, Cboe, and other providers keep their own terms, and the code shouldn't be used to bypass their access limits. Trained model files and the hosted service are also outside the license. Model bundles are Python pickles: only load ones from a source you trust.
 
 ## Contribute
 

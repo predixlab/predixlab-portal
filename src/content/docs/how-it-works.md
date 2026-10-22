@@ -6,14 +6,14 @@ description: "Data sources, nightly schedule, features, walk-forward validation,
 summary: "Data sources, update schedule, the two models, walk-forward validation, and backtest assumptions."
 h1: "How PredixLab works: data, updates, signals and backtests"
 date: "2026-10-21"
-updated: "2026-10-21"
+updated: "2026-10-22"
 order: "1"
 translationKey: how-it-works
 ---
 
 # How PredixLab works: data, updates, signals and backtests
 
-PredixLab is a set of analysis tools for US stocks. This page explains where the data comes from, when it updates, how the models are trained and tested, and what the results can't tell you. The full code is open source, so every step described here can be checked in the repositories linked below.
+PredixLab is a set of analysis tools for US stocks. This page explains where the data comes from, when it updates, how the models are trained and tested, and what the results can't tell you. The core components (signals, API, dashboard, campaign, infrastructure, and website) are open source under Apache-2.0. Data collection and options analysis are not publicly available at this time.
 
 ## The short version
 
@@ -33,6 +33,8 @@ PredixLab is a set of analysis tools for US stocks. This page explains where the
 | Trading calendar | Derived from S&P 500 index (`^GSPC`) history | Used to decide which dates are trading sessions |
 | Reference ETFs | SPY, QQQ, IWM, DIA | Kept separately for market context |
 | Options chains | Cboe snapshots, collected by `predixlab-options` | Compared session to session, contract by contract |
+
+The table names the data collection and options analysis components. These two components are not publicly available at this time.
 
 Prices are cleaned before use: rows with missing dates or closes, or non-positive prices, are dropped, and duplicate dates keep the last row. Where the provider supplies adjustment factors they are applied; currently most symbols use split-only or unadjusted prices without dividends, so returns are price returns. On a scheduled run, if the target session's data is missing or widely repeated, the job stops before writing new results instead of silently reusing old numbers. Individual symbols with bad data are left out of that day's run.
 
@@ -124,4 +126,4 @@ Candidates get a 0–100 activity score. A stock needs at least two qualifying c
 
 ## Check it yourself
 
-All of this is implemented in open-source repositories under the Apache-2.0 license: [predixlab-collector](https://github.com/predixlab/predixlab-collector), [predixlab-signals](https://github.com/predixlab/predixlab-signals), and [predixlab-options](https://github.com/predixlab/predixlab-options). The signals repository's tests check leakage rules directly: appending future data must not change past features or events, and Pivot backtest entries must occur on the next session, never the signal day. See [Self-hosting](/docs/self-hosting/) for how to run them.
+The signal features, training, and backtests are implemented in [predixlab-signals](https://github.com/predixlab/predixlab-signals), which is open source under Apache-2.0. Its tests check leakage rules directly: appending future data must not change past features or events, and Pivot backtest entries must occur on the next session, never the signal day. Data collection and options analysis are not publicly available at this time. See [Self-hosting](/docs/self-hosting/) for the public repositories and how to run the signal tests.

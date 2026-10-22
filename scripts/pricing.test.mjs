@@ -34,10 +34,10 @@ test("pricing translations have matching fields and feature counts", () => {
   assert.equal(pricingContent.zh.questions.length, pricingContent.en.questions.length);
 });
 
-test("English pricing intro describes free open-source self-hosting", () => {
+test("English pricing intro scopes self-hosting to the public core components", () => {
   assert.equal(
     pricingContent.en.description,
-    "Run the open-source pipeline yourself for free (Apache-2.0) with your own data sources, or use the hosted dashboard. Free includes charts, the screener, and past signals. Choose Premium for the latest daily data, with the same features on monthly and annual billing.",
+    "Run the open-source core components yourself for free (Apache-2.0) with your own data, or use the hosted dashboard. Data collection and options analysis are not publicly available at this time. Free includes charts, the screener, and past signals. Choose Premium for the latest daily data, with the same features on monthly and annual billing.",
   );
 });
 
@@ -84,6 +84,20 @@ for (const language of ["zh", "en"]) {
     assert.match(strings.join("\n"), /Apache-2\.0/);
     assert.match(copy.selfHostedBilling, /Apache-2\.0/);
     assert.match(copy.questions[0].answer, /Apache-2\.0/);
+  });
+
+  test(`${language}: self-hosting sections state component availability without promising the full pipeline`, () => {
+    const availability = language === "en"
+      ? "Data collection and options analysis are not publicly available at this time."
+      : "数据采集和期权分析这两个组件暂不公开。";
+    for (const text of [copy.description, copy.selfHostedDescription, copy.compareDescription, copy.questions[0].answer]) {
+      assert.ok(text.includes(availability), text);
+      assert.ok(html.includes(renderToStaticMarkup(text)), text);
+    }
+    assert.equal(copy.selfHostedAvailability, language === "en"
+      ? "Public core components only; see self-hosting guide"
+      : "仅公开的核心组件，详见自托管指南");
+    assert.doesNotMatch(html, /run the open-source pipeline yourself|代码全部开源|全部开源/i);
   });
 
   test(`${language}: self-hosted copy explains setup, licensing, and service boundaries`, () => {
@@ -144,7 +158,7 @@ for (const language of ["zh", "en"]) {
     );
     const [selfHosted, free, premium] = cards.map(([card]) => card);
     assert.equal(copy.selfHosted, language === "en" ? "Self-hosted" : "自托管版");
-    assert.equal(copy.selfHostedBadge, language === "en" ? "Open source" : "开源");
+    assert.equal(copy.selfHostedBadge, language === "en" ? "Open-source core" : "核心开源");
     assert.match(selfHosted, /<strong>\$0<\/strong>/);
     assert.ok(selfHosted.includes(`<span class="plan-badge">${copy.selfHostedBadge}</span>`));
     for (const text of [

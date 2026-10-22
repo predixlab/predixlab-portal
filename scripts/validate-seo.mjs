@@ -317,6 +317,8 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     assert.doesNotMatch(html, /<!--(?:seo-head|app-html)-->|fonts\.(?:googleapis|gstatic)\.com|[?&]lng=/, pathname);
     if (!isNewPage) assert.doesNotMatch(decodeHtml(html), /\u7814\u7a76/, `Outdated Chinese copy: ${pathname}`);
     assert.doesNotMatch(html, /\/(?:methodology|open-source)\//, `Unpublished draft reference: ${pathname}`);
+    assert.doesNotMatch(html, /https?:\/\/github\.com\/predixlab\/predixlab-(?:collector|options)(?:[/"#?.\s]|$)/i, `Unavailable repository reference: ${pathname}`);
+    assert.doesNotMatch(textContent(html), /fully open[ -]source|all code from data collection|the full code is open source|代码全部开源|全部开源/i, `Open-source overclaim: ${pathname}`);
     assert.match(html, /<div id="root">[\s\S]+<main\b/, `Empty application: ${pathname}`);
     const languageButton = only(
       tags(html, "button").filter((button) => button.class?.split(" ").includes("language-button")),
@@ -392,14 +394,14 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     assert.ok(title.length <= 60, `${pathname} title exceeds 60 characters (${title.length})`);
     assert.ok(description.length <= 155, `${pathname} description exceeds 155 characters (${description.length})`);
     if (pathname === "/") {
-      assert.equal(h1, "Open-source US stock analysis: daily signals, screener, and options activity");
+      assert.equal(h1, "US stock analysis with an open-source core: daily signals, screener, and options activity");
       const subhead = only(
         [...main.matchAll(/<p class="hero-description">([\s\S]*?)<\/p>/g)],
         "homepage hero subhead",
       )[1];
-      assert.equal(textContent(subhead), "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and each signal shown alongside that stock's past signals.");
-      assert.equal(title, "Open-Source US Stock Analysis & Daily Signals | PredixLab");
-      assert.equal(description, "Open-source analysis for S&P 500 and Nasdaq-100 stocks: daily signals, screener, options activity. Hosted or self-hosted. Free signals have a 10-day delay.");
+      assert.equal(textContent(subhead), "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 core code yourself. Data collection and options analysis are not publicly available at this time. Built on daily data, with the method documented and each signal shown alongside that stock's past signals.");
+      assert.equal(title, "US Stock Analysis with an Open-Source Core | PredixLab");
+      assert.equal(description, "US stock analysis with an Apache-2.0 core. Data collection and options analysis are not publicly available at this time. Free signals: 10-day delay.");
       only(tags(main, "section").filter(({ id }) => id === "tools"), "homepage Tools target");
       assert.match(subhead, /href="\/docs\/how-it-works\/"/, "Documented method link");
     }
@@ -606,9 +608,13 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       assert.equal(textContent(only(
         [...main.matchAll(/<h1\b[^>]*>[\s\S]*?<\/h1>\s*<p>([\s\S]*?)<\/p>/g)],
         `${pathname} intro`,
-      )[1]), "All code from data collection to daily signals is open source under Apache-2.0. Here's what you need to run it yourself.", pathname);
+      )[1]), "The core components (signals, API, dashboard, campaign, infrastructure, and website) are open source under Apache-2.0. Data collection and options analysis are not publicly available at this time.", pathname);
       const repositories = graph.filter((item) => item["@type"] === "SoftwareSourceCode");
-      assert.equal(repositories.length, 8, pathname);
+      assert.equal(repositories.length, 6, pathname);
+      assert.deepEqual(repositories.map(({ name }) => name).sort(), [
+        "predixlab-api", "predixlab-campaign", "predixlab-infra",
+        "predixlab-portal", "predixlab-signals", "predixlab-webapp",
+      ], pathname);
       for (const repository of repositories) {
         assert.equal(repository.license, "https://www.apache.org/licenses/LICENSE-2.0", pathname);
         assert.match(repository.codeRepository, /^https:\/\/github.com\/predixlab\/predixlab-[a-z]+$/, pathname);
