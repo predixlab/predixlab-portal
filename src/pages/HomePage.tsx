@@ -55,6 +55,7 @@ const HomePage = () => {
                     <p>{item.shortDescription}</p>
                     <ul className="tag-list">{item.tags.map((tag) => <li key={tag}>{tag}</li>)}</ul>
                     <Link to={localPath(productPaths[product])} className="text-link">{item.linkLabel}<ArrowUpRight aria-hidden="true" /></Link>
+                    {product === "options" && language === "en" && <p><Link to="/blog/what-is-unusual-options-activity/" className="text-link">What is unusual options activity?</Link></p>}
                   </div>
                   <div className="product-story-visual">
                     <ProductIllustration product={product} />

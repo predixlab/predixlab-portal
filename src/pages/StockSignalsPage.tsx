@@ -102,6 +102,7 @@ const EnglishStockSignalsPage = () => {
           <div className="related-products">
             {stockSignalsRelatedEn.map(({ product, description }) => <Link key={product} to={localPath(productPaths[product])}><h3>{productContent.en[product].name}</h3><p>{description}</p><ArrowRight aria-hidden="true" /></Link>)}
           </div>
+          <p><Link className="text-link" to="/blog/what-is-unusual-options-activity/">What is unusual options activity?</Link></p>
         </div>
       </section>
       <section className="closing-section">

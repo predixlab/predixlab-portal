@@ -19,11 +19,13 @@ export const groupBlogPosts = (posts: BlogPost[]) => {
   }));
 };
 
-export const relatedBlogPosts = (posts: BlogPost[], current: BlogPost) =>
-  posts.filter((post) => post.slug !== current.slug).sort((a, b) =>
-    Number(b.category === current.category) - Number(a.category === current.category)
-    || b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug),
+export const relatedBlogPosts = (posts: BlogPost[], current: BlogPost) => {
+  const others = posts.filter((post) => post.slug !== current.slug);
+  const sameCategory = others.filter((post) => post.category === current.category);
+  return (sameCategory.length ? sameCategory : others).sort((a, b) =>
+    b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug),
   );
+};
 
 export const formatPostDate = (date: string) => new Intl.DateTimeFormat("en", {
   dateStyle: "long", timeZone: "UTC",

@@ -85,6 +85,7 @@ const ProductPage = ({ product }: { product: ProductId }) => {
           <div>
             <ul className="boundary-list">{copy.boundaries.map((item) => <li key={item}><span aria-hidden="true">↗</span>{item}</li>)}</ul>
             <p><Link className="text-link" to={localPath("/docs/how-it-works/")}>{methodLinkLabels[language][product]}</Link></p>
+            {product === "options" && isEnglish && <p><Link className="text-link" to="/blog/what-is-unusual-options-activity/">What is unusual options activity?</Link></p>}
             <p><Link className="text-link" to={localPath("/docs/limitations/")}>{isEnglish ? "Known limitations" : "已知局限"}</Link></p>
           </div>
         </div>

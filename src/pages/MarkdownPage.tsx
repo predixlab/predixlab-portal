@@ -17,7 +17,7 @@ const MarkdownPage = () => {
       <nav className="breadcrumb" aria-label="Breadcrumb">
         <Link to="/">Home</Link><span aria-hidden="true">&gt;</span>
         <Link to={post ? "/blog/" : "/docs/"}>{post ? "Blog" : "Docs"}</Link><span aria-hidden="true">&gt;</span>
-        <span aria-current="page">{document.shortTitle}</span>
+        <span aria-current="page">{document.breadcrumbTitle ?? document.shortTitle}</span>
       </nav>
       <p className="post-dates">
         {post && <>Published <time dateTime={post.date}>{formatPostDate(post.date)}</time><span aria-hidden="true"> / </span></>}

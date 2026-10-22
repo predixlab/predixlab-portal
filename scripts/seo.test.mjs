@@ -73,7 +73,7 @@ for (const language of ["en", "zh"]) {
           assert.equal(node.inLanguage, seo.htmlLanguage, `${path} ${node["@type"]}`);
         }
         if (language === "en") validateJsonLd(renderSeoHead(seo), path);
-        if (!["/", ...productPaths].includes(path)) {
+        if (!["/", ...productPaths].includes(path) && !getContentForPath(path)?.questions?.length) {
           assert.ok(graph.every((item) => item["@type"] !== "FAQPage"), path);
         }
       }
@@ -120,7 +120,7 @@ for (const language of ["en", "zh"]) {
       const englishOnly = ["docs", "doc", "blog", "blogPost"].includes(page.key);
       const isDocument = page.key === "doc" || page.key === "blogPost";
       const document = getContentForPath(page.path);
-      const name = isDocument ? document.shortTitle : names[language][page.key];
+      const name = isDocument ? document.breadcrumbTitle ?? document.shortTitle : names[language][page.key];
       const expectedNames = [
         englishOnly || language === "en" ? "Home" : "首页",
         ...(isDocument ? [page.key === "doc" ? "Docs" : "Blog"] : []),
