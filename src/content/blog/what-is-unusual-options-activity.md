@@ -31,7 +31,7 @@ PredixLab is daily session data compared end of day, not a live options-flow ter
 
 ### Volume vs open interest
 
-**Volume** is how many contracts traded during the session. **Open interest** is how many contracts remain open after the prior settlement. A jump in open interest alongside volume is more consistent with new positions opening. Volume with flat or falling open interest can mean positions closed or risk transferred. Neither number, alone, tells you whether the trade was a hedge, a directional bet, a roll, or one leg of a spread. For a fuller walk-through, see what a change in open interest means.
+**Volume** is how many contracts traded during the session. **Open interest** is how many contracts remain open after the prior settlement. A jump in open interest alongside volume is more consistent with new positions opening. Volume with flat or falling open interest can mean positions closed or risk transferred. Neither number, alone, tells you whether the trade was a hedge, a directional bet, a roll, or one leg of a spread.
 
 ## Does unusual options activity actually predict stock moves?
 
@@ -72,7 +72,9 @@ A contract becomes a candidate only if it passes **all** of these default gates:
 | Relative change in open interest | more than 30% |
 | Δ OI notional | worth more than $500,000 |
 
-Candidates receive a **0–100 activity score**. A stock needs at least two qualifying contracts to appear. SPY, QQQ, IWM and DIA use a higher threshold.
+Open-interest changes count in either direction, so large drops (closing positions) can qualify too.
+
+Candidates receive a **0–100 activity score**. A stock needs at least two qualifying contracts to appear. A stock appears only if its activity score is at least 50 (70 for SPY, QQQ, IWM and DIA). Each day's list shows up to 20 stocks, with up to 6 contracts per stock.
 
 The score measures how unusual the change is. It is **not** a probability of profit, and it is **not** bullish or bearish proof. Estimated gamma exposure on the tool is a model estimate built from public open interest and simplifying assumptions about who holds calls and puts — not observed dealer holdings.
 
@@ -120,7 +122,6 @@ PredixLab's options activity view focuses on S&P 500 and Nasdaq-100 constituents
 ## Related reading and tools
 
 - **[Unusual options activity tool](https://predixlab.com/unusual-options-activity/)** — Browse flagged stocks, then open the contracts to compare expirations, strikes and changes in open interest.
-- **What a change in open interest means** — Volume vs open interest, and why daily OI changes are ambiguous.
 - **[How PredixLab detects and scores options activity](https://predixlab.com/docs/how-it-works/#options-activity-method)** — Default gates, scoring and update schedule.
 - **[Daily US stock signals](https://predixlab.com/us-stock-signals/)** — A separate end-of-day product (AlphaRank and Pivot). Don't conflate activity flags with those signals.
 - **[Free vs Premium](https://predixlab.com/pricing/)** — Same models; Free is delayed 10 days, Premium shows the latest published daily data.

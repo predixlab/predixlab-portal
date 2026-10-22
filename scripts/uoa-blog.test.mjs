@@ -63,7 +63,7 @@ const questions = [
 ];
 
 test("UOA explainer pins approved copy independently of untracked Growth drafts", () => {
-  assert.equal(hash(post.body), "8b877edc02dd59e70fadf22094a99a0678926550035fd8ab5dd98811a0fd79f1");
+  assert.equal(hash(post.body), "9c0d290520734167b91969316ff056bc30815ea696add8de84b5508fe6321fa9");
   assert.equal(post.shortTitle, "Unusual options activity");
   assert.equal(post.category, "Options basics");
   assert.equal(post.date, "2026-10-22");
@@ -200,7 +200,17 @@ test("blog discovery adds the Options basics category and updates post and index
   assert.ok(index.includes(`href="${path}"`));
 });
 
-test("all authored internal destinations exist, including the rendered method heading; missing OI links stay plain", () => {
+test("UOA explainer pins Growth-approved detection and scoring copy directly after the gates table", () => {
+  const openInterest = "Open-interest changes count in either direction, so large drops (closing positions) can qualify too.";
+  const scoring = "Candidates receive a **0–100 activity score**. A stock needs at least two qualifying contracts to appear. A stock appears only if its activity score is at least 50 (70 for SPY, QQQ, IWM and DIA). Each day's list shows up to 20 stocks, with up to 6 contracts per stock.";
+  assert.ok(source.includes(`| Δ OI notional | worth more than $500,000 |\n\n${openInterest}\n\n${scoring}\n\n`));
+  assert.ok(post.html.includes(`<p>${openInterest}</p>`));
+  assert.ok(textContent(page.appHtml).includes(scoring.replaceAll("**", "")));
+  assert.doesNotMatch(source, /use a higher threshold/);
+  assert.match(source, /or one leg of a spread\.\n\n## Does unusual options activity actually predict stock moves\?/);
+});
+
+test("all authored internal destinations exist, including the rendered method heading; OI pointers are removed", () => {
   const paths = sitePages.map(({ path }) => path);
   validateInternalLinks(page.appHtml, canonical, paths);
   for (const target of ["/unusual-options-activity/", "/docs/how-it-works/", "/us-stock-signals/", "/pricing/"]) {
@@ -221,8 +231,8 @@ test("all authored internal destinations exist, including the rendered method he
   assert.equal(getPageForPath("/blog/open-interest-change/"), undefined);
   assert.throws(() => validateInternalLinks('<a href="/blog/open-interest-change/">OI</a>', canonical, paths), /Noncanonical internal link/);
   assert.doesNotMatch(post.html, /href="[^"]*open-interest-change/);
-  assert.ok(post.html.includes("see what a change in open interest means."));
-  assert.ok(post.html.includes("<strong>What a change in open interest means</strong>"));
+  assert.doesNotMatch(source, /For a fuller walk-through|what a change in open interest means/i);
+  assert.doesNotMatch(textContent(page.appHtml), /For a fuller walk-through|what a change in open interest means/i);
 });
 
 test("tool, homepage options blurb and signals related tools link to the explainer only in English", () => {

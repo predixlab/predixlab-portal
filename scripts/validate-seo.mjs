@@ -557,6 +557,10 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       assert.equal(textContent(html).split(expectedRiskNote).length - 1, 1, `${pathname} risk note must appear exactly once`);
       assert.doesNotMatch(textContent(footer), /investment advice|投资建议/, `${pathname} duplicate footer disclaimer`);
     }
+    if (pathname === "/blog/what-is-unusual-options-activity/") {
+      assert.ok(textContent(main).includes("For information and independent analysis only — not investment advice."), `${pathname} disclaimer must be present in static HTML without JavaScript`);
+      assert.doesNotMatch(textContent(main), /For informational purposes only\. Not investment advice\./, `${pathname} must not repeat the closing disclaimer`);
+    }
     if (isDocument) {
       for (const link of tags(main, "a").filter(({ href }) => href?.startsWith("https://"))) {
         if (new URL(link.href).origin === origin) continue;
