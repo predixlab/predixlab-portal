@@ -51,6 +51,7 @@ const localizedHtml = (path, language) => renderToStaticMarkup(createElement(
   createElement(StaticRouter, { location: path }, createElement(App)),
 ));
 const answer = "Unusual options activity is a spike in volume or open interest on a contract relative to its recent baseline — a statistical flag, not proof of bullish or bearish intent. Research finds that some options-flow measures can predict short-horizon stock returns, especially around information events, but results vary by filter, fade after costs and crowding, and a call or put alone does not reveal purpose. PredixLab lists daily activity for S&P 500 and Nasdaq-100 names; Free data has a 10-day delay.";
+const description = "Unusual options activity is a spike in volume or open interest vs its baseline. Research finds some predictive power—with limits. See how to read it, free.";
 const questions = [
   "What is unusual options activity?",
   "Does unusual option activity work / predict stock moves?",
@@ -63,7 +64,7 @@ const questions = [
 ];
 
 test("UOA explainer pins approved copy independently of untracked Growth drafts", () => {
-  assert.equal(hash(post.body), "9c0d290520734167b91969316ff056bc30815ea696add8de84b5508fe6321fa9");
+  assert.equal(hash(post.body), "7f445299fe3ddf5e23b583187f3e058e991dc54408c5f9dcf6b59279f054a3ce");
   assert.equal(post.shortTitle, "Unusual options activity");
   assert.equal(post.category, "Options basics");
   assert.equal(post.date, "2026-10-22");
@@ -78,6 +79,9 @@ test("UOA explainer pins approved copy independently of untracked Growth drafts"
     "Activity scores describe how unusual a change is — not a trade recommendation.",
     "For information and independent analysis only — not investment advice. Data can be delayed or wrong, models can fail, and past performance doesn't predict future results.",
   ]) assert.equal(page.appHtml.split(renderToStaticMarkup(line)).length - 1, 1);
+  for (const content of [post.body, textContent(page.appHtml)]) {
+    assert.equal(content.split("Past research results don't predict future results.").length - 1, 1);
+  }
   assert.doesNotMatch(post.body, /For informational purposes only\. Not investment advice\./);
   for (const href of [
     "https://www.nber.org/papers/w10925",
@@ -91,7 +95,16 @@ test("UOA explainer pins approved copy independently of untracked Growth drafts"
 test("UOA explainer has exact metadata, one H1, apex canonical and no language alternates", () => {
   assert.equal(page.statusCode, 200);
   assert.equal(page.seo.title, "What Is Unusual Options Activity? Evidence & Limits");
-  assert.equal(page.seo.description, "Unusual options activity is a spike in volume or open interest vs a recent baseline. Research finds predictive power—with limits. See how to read it, free.");
+  assert.equal(post.description, description);
+  assert.equal(post.description.length, 155);
+  assert.equal(page.seo.description, description);
+  for (const [attribute, name] of [
+    ["name", "description"],
+    ["property", "og:description"],
+    ["name", "twitter:description"],
+  ]) {
+    assert.ok(page.headHtml.includes(`${attribute}="${name}" content="${renderToStaticMarkup(description)}"`));
+  }
   assert.equal(post.h1, "What is unusual options activity, and does it predict stock moves?");
   assert.equal([...page.appHtml.matchAll(/<h1\b/g)].length, 1);
   assert.ok(page.appHtml.includes(`>${post.h1}</h1>`));
@@ -202,11 +215,11 @@ test("blog discovery adds the Options basics category and updates post and index
 
 test("UOA explainer pins Growth-approved detection and scoring copy directly after the gates table", () => {
   const openInterest = "Open-interest changes count in either direction, so large drops (closing positions) can qualify too.";
-  const scoring = "Candidates receive a **0–100 activity score**. A stock needs at least two qualifying contracts to appear. A stock appears only if its activity score is at least 50 (70 for SPY, QQQ, IWM and DIA). Each day's list shows up to 20 stocks, with up to 6 contracts per stock.";
+  const scoring = "Candidates receive a **0–100 activity score**. A contract counts only if its activity score is above 50 (70 for SPY, QQQ, IWM and DIA). A stock needs at least two qualifying contracts to appear. Each day's list shows up to 20 stocks, with up to 6 contracts per stock.";
   assert.ok(source.includes(`| Δ OI notional | worth more than $500,000 |\n\n${openInterest}\n\n${scoring}\n\n`));
   assert.ok(post.html.includes(`<p>${openInterest}</p>`));
   assert.ok(textContent(page.appHtml).includes(scoring.replaceAll("**", "")));
-  assert.doesNotMatch(source, /use a higher threshold/);
+  assert.doesNotMatch(source, /use a higher threshold|A stock appears only if/);
   assert.match(source, /or one leg of a spread\.\n\n## Does unusual options activity actually predict stock moves\?/);
 });
 

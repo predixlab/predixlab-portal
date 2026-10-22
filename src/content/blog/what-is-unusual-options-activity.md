@@ -1,7 +1,7 @@
 ---
 title: "What Is Unusual Options Activity? Evidence & Limits"
 shortTitle: "Unusual options activity"
-description: "Unusual options activity is a spike in volume or open interest vs a recent baseline. Research finds predictive power—with limits. See how to read it, free."
+description: "Unusual options activity is a spike in volume or open interest vs its baseline. Research finds some predictive power—with limits. See how to read it, free."
 date: "2026-10-22"
 updated: "2026-10-22"
 lang: en
@@ -74,7 +74,7 @@ A contract becomes a candidate only if it passes **all** of these default gates:
 
 Open-interest changes count in either direction, so large drops (closing positions) can qualify too.
 
-Candidates receive a **0–100 activity score**. A stock needs at least two qualifying contracts to appear. A stock appears only if its activity score is at least 50 (70 for SPY, QQQ, IWM and DIA). Each day's list shows up to 20 stocks, with up to 6 contracts per stock.
+Candidates receive a **0–100 activity score**. A contract counts only if its activity score is above 50 (70 for SPY, QQQ, IWM and DIA). A stock needs at least two qualifying contracts to appear. Each day's list shows up to 20 stocks, with up to 6 contracts per stock.
 
 The score measures how unusual the change is. It is **not** a probability of profit, and it is **not** bullish or bearish proof. Estimated gamma exposure on the tool is a model estimate built from public open interest and simplifying assumptions about who holds calls and puts — not observed dealer holdings.
 
