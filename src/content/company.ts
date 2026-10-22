@@ -7,7 +7,7 @@ export const planTerms = {
 
 export const pricingContent = {
   zh: {
-    eyebrow: "开源代码，或使用托管工作台。",
+    eyebrow: "开源代码，或托管工作台。",
     title: ["先免费使用，", "再按需要升级。"],
     description:
       "用自己的数据运行信号和回测代码，也可直接使用托管工作台。免费版可查看图表、选股器和历史信号；Premium 提供最新每日数据，月付和年付功能相同。",
@@ -17,7 +17,7 @@ export const pricingContent = {
     saving: "省 20%",
     selfHosted: "开源代码",
     selfHostedBadge: "开源",
-    selfHostedDescription: "用自己准备的日线数据，阅读、测试和运行信号与回测代码。",
+    selfHostedDescription: "自备日线价格、指数成分历史和交易日历，阅读、测试和运行信号与回测代码。",
     selfHostedPeriod: "源码免费",
     selfHostedBilling: "Apache-2.0 仅适用于源码",
     selfHostedAction: "查看 GitHub",
@@ -29,7 +29,7 @@ export const pricingContent = {
       "Apache-2.0 不涵盖行情数据和模型文件",
       "数据授权和相关费用由你负责",
       "GitHub Issues 社区支持，无托管支持或 SLA",
-      "不含行情数据、训练好的模型和托管版看板。",
+      "不含行情数据、训练好的模型和托管工作台",
     ],
     free: "免费版",
     freeDescription: "先熟悉图表、选股器和历史信号，不必急着订阅。",
@@ -60,9 +60,16 @@ export const pricingContent = {
     footnote: "价格以美元计。你可以在工作台中管理或取消订阅，具体条款以结账页面为准。",
     compareEyebrow: "功能对比",
     compareTitle: "升级 Premium，跟进最新信号。",
-    compareDescription: "开源信号和回测代码需自备日线数据，不含托管版看板。托管的免费版和 Premium 使用相同的模型；升级不会改变信号准确率，也不代表更低的投资风险。",
+    compareDescription: "开源信号和回测代码需自备日线价格、指数成分历史和交易日历，不含托管工作台。托管的免费版和 Premium 使用相同的模型；升级不会改变信号准确率，也不代表更低的投资风险。",
     featureColumn: "功能",
-    selfHostedAvailability: "仅提供代码，需自备数据",
+    selfHostedAvailability: [
+      "仅前端代码，不含数据",
+      "仅提供代码，需自备数据",
+      "仅前端代码，不含数据",
+      "仅提供代码，需自备数据",
+      "仅托管版提供",
+      "仅提供代码，需自备数据",
+    ],
     included: "包含",
     delayed: "延迟 10 天",
     latest: "最新已发布数据",
@@ -71,7 +78,7 @@ export const pricingContent = {
     questions: [
       {
         question: "使用开源代码需要准备什么？",
-        answer: "源码免费，采用 Apache-2.0 协议。请按信号仓库的 README，用自己准备的日线数据，阅读、测试和运行信号与回测代码。不含行情数据、训练好的模型和托管版看板。开源协议不包含任何第三方行情数据的权利，数据商有各自的条款。分析结果仅供参考，不构成投资建议。",
+        answer: "源码免费，采用 Apache-2.0 协议。请按信号仓库的 README，自备日线价格、指数成分历史和交易日历，阅读、测试和运行信号与回测代码。不含行情数据、训练好的模型和托管工作台。开源协议不包含任何第三方行情数据的权利，数据商有各自的条款。分析结果仅供参考，不构成投资建议。",
       },
       {
         question: "月付和年付的功能一样吗？",
@@ -98,7 +105,7 @@ export const pricingContent = {
     saving: "Save 20%",
     selfHosted: "Open-source code",
     selfHostedBadge: "Open source",
-    selfHostedDescription: "Read, test and run the signal and backtest code with your own daily price data.",
+    selfHostedDescription: "Read, test and run the signal and backtest code with your own input data (daily prices, index membership history and a trading calendar).",
     selfHostedPeriod: "free source code",
     selfHostedBilling: "Apache-2.0 covers source code only",
     selfHostedAction: "View on GitHub",
@@ -110,7 +117,7 @@ export const pricingContent = {
       "Apache-2.0 excludes market data and model files",
       "You handle data licensing and related costs",
       "GitHub Issues community support; no hosted support or SLA",
-      "Market data, trained models and the hosted dashboard are not included.",
+      "Market data, trained models and the hosted dashboard are not included",
     ],
     free: "Free",
     freeDescription: "Get to know the charts, screener, and historical signals before subscribing.",
@@ -141,9 +148,16 @@ export const pricingContent = {
     footnote: "Prices are in USD. Manage or cancel your subscription in the dashboard. The terms shown at checkout apply.",
     compareEyebrow: "COMPARE FEATURES",
     compareTitle: "Same tools. More recent signal data.",
-    compareDescription: "Open-source signal and backtest code requires your own daily price data; the hosted dashboard is not included. The hosted Free and Premium plans use the same models. Upgrading doesn't change signal accuracy or reduce investment risk.",
+    compareDescription: "Open-source signal and backtest code requires your own input data (daily prices, index membership history and a trading calendar); the hosted dashboard is not included. The hosted Free and Premium plans use the same models. Upgrading doesn't change signal accuracy or reduce investment risk.",
     featureColumn: "Feature",
-    selfHostedAvailability: "Code only; bring your own data",
+    selfHostedAvailability: [
+      "Dashboard code only; no data",
+      "Code only; bring your own data",
+      "Dashboard code only; no data",
+      "Code only; bring your own data",
+      "Hosted only",
+      "Code only; bring your own data",
+    ],
     included: "Included",
     delayed: "10-day delay",
     latest: "Latest published data",
@@ -152,7 +166,7 @@ export const pricingContent = {
     questions: [
       {
         question: "What do I need to use the open-source code?",
-        answer: "The source code is free under Apache-2.0. Follow the signals README to read, test and run the signal and backtest code with your own daily price data. Market data, trained models and the hosted dashboard are not included. The license does not grant rights to any third-party market data; data providers keep their own terms. The analysis is for information only, not investment advice.",
+        answer: "The source code is free under Apache-2.0. Follow the signals README to read, test and run the signal and backtest code with your own input data (daily prices, index membership history and a trading calendar). Market data, trained models and the hosted dashboard are not included. The license does not grant rights to any third-party market data; data providers keep their own terms. The analysis is for information only, not investment advice.",
       },
       {
         question: "Do monthly and annual plans have the same features?",

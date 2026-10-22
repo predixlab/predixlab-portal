@@ -610,7 +610,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
         [...main.matchAll(/<h1\b[^>]*>[\s\S]*?<\/h1>\s*<p>([\s\S]*?)<\/p>/g)],
         `${pathname} intro`,
       )[1]), "The signal, backtest, API and dashboard code is open source (Apache-2.0).", pathname);
-      assert.equal(description, "Run PredixLab's open-source signal and backtest code with your own daily price data.", pathname);
+      assert.equal(description, "Run PredixLab's open-source signal and backtest code with your own input data (daily prices, index membership history and a trading calendar).", pathname);
       assert.ok(textContent(main).includes("Data collection and options analysis run as part of the hosted service and aren't in the public repositories."), pathname);
       assert.ok(textContent(main).includes("The license does not grant rights to any third-party market data; data providers keep their own terms."), pathname);
       assert.doesNotMatch(textContent(html), /yahoo|cboe|bypass/i, pathname);

@@ -104,7 +104,7 @@ const PricingPage = () => {
               <tbody>
                 {copy.rows.map((row, index) => {
                   const path = comparisonProductPaths[index];
-                  return <tr key={row}><th scope="row">{path ? <Link to={localPath(path)}>{row}</Link> : row}</th><td>{copy.selfHostedAvailability}</td><td>{index < 3 ? copy.included : copy.delayed}</td><td>{index < 3 ? copy.included : copy.latest}</td></tr>;
+                  return <tr key={row}><th scope="row">{path ? <Link to={localPath(path)}>{row}</Link> : row}</th><td>{copy.selfHostedAvailability[index]}</td><td>{index < 3 ? copy.included : copy.delayed}</td><td>{index < 3 ? copy.included : copy.latest}</td></tr>;
                 })}
               </tbody>
             </table>
