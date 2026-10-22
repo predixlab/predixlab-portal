@@ -105,15 +105,15 @@ for (const language of ["zh", "en"]) {
       answer: "The source code is free under Apache-2.0. Follow the signals README to read, test and run the signal and backtest code with your own input data (daily prices, index membership history and a trading calendar, plus the ^GSPC benchmark). Market data, trained models and the hosted dashboard are not included. The license does not grant rights to any third-party market data; data providers keep their own terms. The analysis is for information only, not investment advice.",
     } : {
       selfHosted: "开源代码",
-      selfHostedDescription: "自备日线价格、指数成分历史和交易日历（含 ^GSPC 基准），阅读、测试和运行信号与回测代码。",
+      selfHostedDescription: "自备日线价格（含 ^GSPC 基准）、指数成分历史和交易日历，阅读、测试和运行信号与回测代码。",
       selfHostedAction: "查看 GitHub",
       selfHostedGuide: "信号代码指南",
       selfHostedNote: "用自己的数据运行信号和回测代码",
       included: "信号、回测、API 和前端代码（Apache-2.0）",
       excluded: "不含行情数据、训练好的模型和托管工作台",
-      compareDescription: "开源信号和回测代码需自备日线价格、指数成分历史和交易日历（含 ^GSPC 基准），不含托管工作台。托管的免费版和 Premium 使用相同的模型；升级不会改变信号准确率，也不代表更低的投资风险。",
+      compareDescription: "开源信号和回测代码需自备日线价格（含 ^GSPC 基准）、指数成分历史和交易日历，不含托管工作台。托管的免费版和 Premium 使用相同的模型；升级不会改变信号准确率，也不代表更低的投资风险。",
       question: "使用开源代码需要准备什么？",
-      answer: "源码免费，采用 Apache-2.0 协议。请按信号仓库的 README，自备日线价格、指数成分历史和交易日历（含 ^GSPC 基准），阅读、测试和运行信号与回测代码。不含行情数据、训练好的模型和托管工作台。开源协议不包含任何第三方行情数据的权利，数据商有各自的条款。分析结果仅供参考，不构成投资建议。",
+      answer: "源码免费，采用 Apache-2.0 协议。请按信号仓库的 README，自备日线价格（含 ^GSPC 基准）、指数成分历史和交易日历，阅读、测试和运行信号与回测代码。不含行情数据、训练好的模型和托管工作台。开源协议不包含任何第三方行情数据的权利，数据商有各自的条款。分析结果仅供参考，不构成投资建议。",
     };
     const { included, excluded, question, answer, ...fields } = expected;
     for (const [key, value] of Object.entries(fields)) {
