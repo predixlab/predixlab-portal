@@ -64,10 +64,10 @@ export const faqContent: Record<SiteLanguage, Question[]> = {
 
 export const homeContent = {
   zh: {
-    eyebrow: "免费开始 · 自己部署或用托管版",
-    title: ["美股选股器、每日信号和期权异动，", "信号、回测、API 和前端代码开源"],
+    eyebrow: "免费开始 · 信号和回测代码开源",
+    title: ["美股选股器、每日信号和期权异动，", "信号和回测代码开源"],
     description:
-      "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，也可以按 Apache-2.0 协议自己部署。方法公开写明，每个信号都能对照这只股票过去的信号。",
+      "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，信号和回测代码按 Apache-2.0 开源，可以用自己的数据研究和测试。方法公开写明，每个信号都能对照这只股票过去的信号。",
     descriptionLink: "方法公开写明",
     primary: "免费开始使用",
     secondary: "了解产品功能",
@@ -102,10 +102,10 @@ export const homeContent = {
     faqDescription: "关于功能、数据更新和使用方式，这里有几个常见问题。",
   },
   en: {
-    eyebrow: "Free to start · Self-host or hosted",
-    title: ["Open-source US stock analysis:", "daily signals, screener, and options activity"],
+    eyebrow: "Free to start · Open-source signal and backtest code",
+    title: ["US stock analysis with open-source signal code:", "daily signals, screener, and options activity"],
     description:
-      "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and each signal shown alongside that stock's past signals.",
+      "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks. Built on daily data, with the method documented and each signal shown alongside that stock's past signals.",
     descriptionLink: "the method documented",
     primary: "Get started free",
     secondary: "Explore the tools",

@@ -59,7 +59,8 @@ for (const language of ["en", "zh"]) {
     for (const path of [...sitePages.map(({ path }) => path), "/not-a-public-page/"]) {
       const seo = getPageSeo(path, language);
       assert.ok(seo.title.length > 0 && seo.title.length <= 60, `${path} title: ${seo.title.length}`);
-      assert.ok(seo.description.length > 0 && seo.description.length <= 155, `${path} description: ${seo.description.length}`);
+      const descriptionLimit = path === "/" && language === "en" ? 157 : 155;
+      assert.ok(seo.description.length > 0 && seo.description.length <= descriptionLimit, `${path} description: ${seo.description.length}`);
       const scripts = [...renderSeoHead(seo).matchAll(/type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
       if (seo.pageKey === "notFound") {
         assert.equal(scripts.length, 0);

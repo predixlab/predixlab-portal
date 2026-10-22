@@ -28,11 +28,11 @@ PredixLab is a set of analysis tools for US stocks. This page explains where the
 
 | Data | Source | Notes |
 | --- | --- | --- |
-| Daily US stock prices (OHLCV) | Yahoo Finance, collected by `predixlab-collector` | History is built from 2015-01-01 and updated incrementally |
+| Daily US stock prices (OHLCV) | Yahoo Finance, collected by PredixLab's nightly data job | History is built from 2015-01-01 and updated incrementally |
 | Index membership | Constituent lists and history for the S&P 500 and Nasdaq-100 | Stored as dated membership intervals per symbol; the history is incomplete (see [Known limitations](/docs/limitations/)) |
 | Trading calendar | Derived from S&P 500 index (`^GSPC`) history | Used to decide which dates are trading sessions |
 | Reference ETFs | SPY, QQQ, IWM, DIA | Kept separately for market context |
-| Options chains | Cboe snapshots, collected by `predixlab-options` | Compared session to session, contract by contract |
+| Options chains | Cboe snapshots, collected by PredixLab's options job | Compared session to session, contract by contract |
 
 Data collection and options analysis run as part of the hosted service and aren't in the public repositories.
 

@@ -34,10 +34,14 @@ test("pricing translations have matching fields and feature counts", () => {
   assert.equal(pricingContent.zh.questions.length, pricingContent.en.questions.length);
 });
 
-test("English pricing intro describes free open-source self-hosting", () => {
+test("pricing intros distinguish running signal code from the hosted dashboard", () => {
   assert.equal(
     pricingContent.en.description,
-    "Run the open-source pipeline yourself for free (Apache-2.0) with your own data sources, or use the hosted dashboard. Free includes charts, the screener, and past signals. Choose Premium for the latest daily data, with the same features on monthly and annual billing.",
+    "Run the signal and backtest code with your own data, or use the hosted dashboard. Free includes charts, the screener, and past signals. Choose Premium for the latest daily data, with the same features on monthly and annual billing.",
+  );
+  assert.equal(
+    pricingContent.zh.description,
+    "用自己的数据运行信号和回测代码，也可直接使用托管工作台。免费版可查看图表、选股器和历史信号；Premium 提供最新每日数据，月付和年付功能相同。",
   );
 });
 
@@ -86,56 +90,52 @@ for (const language of ["zh", "en"]) {
     assert.match(copy.questions[0].answer, /Apache-2\.0/);
   });
 
-  test(`${language}: self-hosted copy explains setup, licensing, and service boundaries`, () => {
-    const faq = copy.questions[0].answer;
-    const features = copy.selfHostedFeatures.join("\n");
-    const boundaries = language === "en" ? {
-      free: /free source code/,
-      ownMachine: /your own computer or servers/,
-      ownData: /your own data sources/,
-      technical: /[Tt]echnical/,
-      readme: /README.*deploy and run/,
-      sourceOnly: /Apache-2\.0 covers (?:the )?source code only/,
-      excludedFiles: /not market data or model files/,
-      dataCosts: /responsible for data licensing and related costs/,
-      noHosted: /does not include PredixLab's hosted dashboard, account, or hosted data/,
-      noSupport: /PredixLab provides no hosted support or SLA/,
-      community: /community support is available through GitHub Issues/,
-      dailyData: /daily signals from daily data/,
-      disclaimer: /for information only, not investment advice/,
+  test(`${language}: open-source tier is signal and backtest code with user-supplied data`, () => {
+    const expected = language === "en" ? {
+      selfHosted: "Open-source code",
+      selfHostedDescription: "Read, test and run the signal and backtest code with your own daily price data.",
+      selfHostedAction: "View on GitHub",
+      selfHostedGuide: "Signal code guide",
+      selfHostedNote: "Run the signal and backtest code with your own data",
+      selfHostedAvailability: "Code only; bring your own data",
+      included: "Signal, backtest, API and dashboard code (Apache-2.0)",
+      excluded: "Market data, trained models and the hosted dashboard are not included.",
+      compareDescription: "Open-source signal and backtest code requires your own daily price data; the hosted dashboard is not included. The hosted Free and Premium plans use the same models. Upgrading doesn't change signal accuracy or reduce investment risk.",
+      question: "What do I need to use the open-source code?",
+      answer: "The source code is free under Apache-2.0. Follow the signals README to read, test and run the signal and backtest code with your own daily price data. Market data, trained models and the hosted dashboard are not included. The license does not grant rights to any third-party market data; data providers keep their own terms. The analysis is for information only, not investment advice.",
     } : {
-      free: /源码免费/,
-      ownMachine: /自己的电脑或服务器/,
-      ownData: /数据源由你准备/,
-      technical: /技术基础/,
-      readme: /README.*部署和运行/,
-      sourceOnly: /Apache-2\.0 仅适用于源码/,
-      excludedFiles: /不涵盖行情数据和模型文件/,
-      dataCosts: /数据授权及相关费用由你负责/,
-      noHosted: /不包含 PredixLab 的托管工作台、账户或托管数据/,
-      noSupport: /PredixLab 也不提供托管支持或 SLA/,
-      community: /GitHub Issues 寻求社区帮助/,
-      dailyData: /日线数据生成每日信号/,
-      disclaimer: /仅供参考，不构成投资建议/,
+      selfHosted: "开源代码",
+      selfHostedDescription: "用自己准备的日线数据，阅读、测试和运行信号与回测代码。",
+      selfHostedAction: "查看 GitHub",
+      selfHostedGuide: "信号代码指南",
+      selfHostedNote: "用自己的数据运行信号和回测代码",
+      selfHostedAvailability: "仅提供代码，需自备数据",
+      included: "信号、回测、API 和前端代码（Apache-2.0）",
+      excluded: "不含行情数据、训练好的模型和托管版看板。",
+      compareDescription: "开源信号和回测代码需自备日线数据，不含托管版看板。托管的免费版和 Premium 使用相同的模型；升级不会改变信号准确率，也不代表更低的投资风险。",
+      question: "使用开源代码需要准备什么？",
+      answer: "源码免费，采用 Apache-2.0 协议。请按信号仓库的 README，用自己准备的日线数据，阅读、测试和运行信号与回测代码。不含行情数据、训练好的模型和托管版看板。开源协议不包含任何第三方行情数据的权利，数据商有各自的条款。分析结果仅供参考，不构成投资建议。",
     };
-    assert.match(copy.selfHostedPeriod, boundaries.free);
-    assert.match(copy.selfHostedDescription, boundaries.ownMachine);
-    assert.match(copy.selfHostedDescription, boundaries.ownData);
-    assert.match(copy.selfHostedNote, boundaries.technical);
-    assert.match(copy.selfHostedNote, boundaries.readme);
-    assert.match(copy.selfHostedBilling, boundaries.sourceOnly);
-    for (const key of [
-      "ownMachine", "technical", "sourceOnly", "excludedFiles", "dataCosts",
-      "noHosted", "noSupport", "community", "dailyData", "disclaimer",
-    ]) {
-      assert.match(faq, boundaries[key], key);
+    const { included, excluded, question, answer, ...fields } = expected;
+    for (const [key, value] of Object.entries(fields)) {
+      assert.equal(copy[key], value, key);
     }
+    assert.equal(copy.selfHostedFeatures[0], included);
+    assert.equal(copy.selfHostedFeatures[4], excluded);
+    assert.deepEqual(copy.questions[0], { question, answer });
+    const features = copy.selfHostedFeatures.join("\n");
     for (const term of ["Apache-2.0", "GitHub Issues", "SLA"]) {
       assert.ok(features.includes(term), term);
     }
+    const tierCopy = [
+      ...Object.entries(copy).filter(([key]) => key.startsWith("selfHosted")).flatMap(([, value]) => value),
+      copy.eyebrow, copy.description, copy.compareDescription,
+      ...copy.questions.flatMap(({ question, answer }) => [question, answer]),
+    ].join("\n");
+    assert.doesNotMatch(tierCopy, /deploy|maintain|pipeline|自行部署|自己部署|自托管|自己的电脑|服务器|运行流程/i);
   });
 
-  test(`${language}: self-hosting comes first without changing the hosted cards`, () => {
+  test(`${language}: open-source code comes first without changing the hosted cards`, () => {
     const cards = [...html.matchAll(/<article\b[^>]*>([\s\S]*?)<\/article>/g)];
     assert.equal(cards.length, 3);
     assert.deepEqual(
@@ -143,7 +143,7 @@ for (const language of ["zh", "en"]) {
       [copy.selfHosted, copy.free, copy.premium],
     );
     const [selfHosted, free, premium] = cards.map(([card]) => card);
-    assert.equal(copy.selfHosted, language === "en" ? "Self-hosted" : "自托管版");
+    assert.equal(copy.selfHosted, language === "en" ? "Open-source code" : "开源代码");
     assert.equal(copy.selfHostedBadge, language === "en" ? "Open source" : "开源");
     assert.match(selfHosted, /<strong>\$0<\/strong>/);
     assert.ok(selfHosted.includes(`<span class="plan-badge">${copy.selfHostedBadge}</span>`));
@@ -170,7 +170,7 @@ for (const language of ["zh", "en"]) {
     assert.ok(premium.includes(renderToStaticMarkup(dashboardLink("/profile", "pricing-monthly"))));
   });
 
-  test(`${language}: comparison distinguishes source deployment from hosted access`, () => {
+  test(`${language}: comparison distinguishes source code from hosted access`, () => {
     assert.match(html, /class="comparison-table-scroll" role="region" aria-labelledby="plan-comparison-title" tabindex="0"/);
     const table = html.match(/<table\b[^>]*>([\s\S]*?)<\/table>/)[0];
     assert.ok(table.includes(`<caption class="sr-only">${copy.compareTitle}</caption>`));
@@ -195,7 +195,7 @@ for (const language of ["zh", "en"]) {
     });
   });
 
-  test(`${language}: self-hosting FAQ is rendered and is not a hosted structured-data offer`, () => {
+  test(`${language}: open-source code FAQ is rendered and is not a hosted structured-data offer`, () => {
     const faq = copy.questions[0];
     const firstFaq = html.match(/<details\b[^>]*>([\s\S]*?)<\/details>/)[0];
     assert.ok(firstFaq.includes(renderToStaticMarkup(faq.question)));
