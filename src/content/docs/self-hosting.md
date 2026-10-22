@@ -1,17 +1,17 @@
 ---
 lang: en
-title: "Self-host PredixLab: run the open-source signal pipeline"
-shortTitle: "Self-hosting"
-description: "The signal, backtest, API and dashboard code is open source (Apache-2.0)."
+title: "Run the open-source signal code"
+shortTitle: "Signal code"
+description: "Run PredixLab's open-source signal and backtest code with your own daily price data."
 summary: "The signal, backtest, API and dashboard code is open source (Apache-2.0). Learn how it fits together and run the signal tests."
-h1: "Self-host PredixLab"
+h1: "Run the open-source signal code"
 date: "2026-10-21"
 updated: "2026-10-22"
 order: "3"
 translationKey: self-hosting
 ---
 
-# Self-host PredixLab
+# Run the open-source signal code
 
 The signal, backtest, API and dashboard code is open source (Apache-2.0).
 

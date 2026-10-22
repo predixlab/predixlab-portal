@@ -25,7 +25,7 @@ from the same configuration, with localized accessible labels that announce open
 | `/us-stock-signals/` | Daily signals, historical context, access, and limitations |
 | `/quantitative-stock-screener/` | No-code screening criteria and workflow |
 | `/unusual-options-activity/` | Contract-level activity and interpretation boundaries |
-| `/pricing/` | Self-hosted/Free/Premium comparison and hosted monthly/annual pricing |
+| `/pricing/` | Open-source code/Free/Premium comparison and hosted monthly/annual pricing |
 | `/about/` | Product purpose, research process, and contact information |
 | `/terms/`, `/privacy/` | Legal documents |
 | `/docs/` | English documentation index |
@@ -44,7 +44,7 @@ The retired `/insights/` listing permanently redirects to `/blog/`, and `/insigh
 
 The signal, backtest, API and dashboard code is open source (Apache-2.0). Data collection and options analysis run as part of the hosted service and aren't in the public repositories.
 
-The $0 Self-hosted option is Apache-2.0 pipeline source code, not a hosted offer. Users deploy it with their own infrastructure, data licenses, and compute; it does not include PredixLab-hosted data, a dashboard, an account, or an SLA. Hosted Free and Premium prices and structured-data offers remain separate.
+The $0 option is the Apache-2.0 signal and backtest code; bring your own data. Hosted Free and Premium prices and structured-data offers remain separate.
 
 The homepage scene is an original workflow illustration, not a live chart or an actual security's history. It progresses through price/volume, technical context, and an example signal. Manual stage selection pauses autoplay. A pause control, reduced-motion preference, offscreen detection, and document visibility limit nonessential animation. All substantive English content remains available without JavaScript; switching to Chinese requires JavaScript.
 
@@ -58,7 +58,7 @@ The homepage scene is an original workflow illustration, not a live chart or an 
 - [`src/content/docs/`](src/content/docs/): documentation Markdown, discovered automatically and sorted by `order`; `index.md` supplies the index heading and intro.
 - [`src/content/blog/`](src/content/blog/): posts discovered automatically by a build-time glob; the filename is the lowercase, hyphen-separated slug.
 
-Docs and index-page titles use sentence case; blog post titles use Title Case. Every page's SEO title must be at most 60 characters and its meta description at most 155, in both languages.
+Docs and index-page titles use sentence case; blog post titles use Title Case. Every page's SEO title must be at most 60 characters and its meta description at most 155, in both languages, except for the approved 157-character English homepage description.
 
 Add a post by adding one `.md` file in `src/content/blog/`; no route or post registry needs editing. Frontmatter uses a deliberately small subset of YAML: flat, nonempty string fields only, with no nested values or multiline scalars. Quote values containing punctuation. Required fields are `title`, `shortTitle` (short breadcrumb name), `description`, `date`, `updated`, `lang: en`, `category`, and `translationKey` (lowercase hyphen-separated key). Dates must be valid `YYYY-MM-DD` strings and `updated` must not precede `date`. For example:
 

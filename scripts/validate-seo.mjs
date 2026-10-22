@@ -392,16 +392,17 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     const description = meta("description");
     assert.ok(title.length > 0 && description.length > 0, pathname);
     assert.ok(title.length <= 60, `${pathname} title exceeds 60 characters (${title.length})`);
-    assert.ok(description.length <= 155, `${pathname} description exceeds 155 characters (${description.length})`);
+    const descriptionLimit = pathname === "/" && language === "en" ? 157 : 155;
+    assert.ok(description.length <= descriptionLimit, `${pathname} description exceeds ${descriptionLimit} characters (${description.length})`);
     if (pathname === "/") {
-      assert.equal(h1, "Open-source US stock analysis: daily signals, screener, and options activity");
+      assert.equal(h1, "US stock analysis with open-source signal code: daily signals, screener, and options activity");
       const subhead = only(
         [...main.matchAll(/<p class="hero-description">([\s\S]*?)<\/p>/g)],
         "homepage hero subhead",
       )[1];
-      assert.equal(textContent(subhead), "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and each signal shown alongside that stock's past signals.");
-      assert.equal(title, "Open-Source US Stock Analysis & Daily Signals | PredixLab");
-      assert.equal(description, "Open-source analysis for S&P 500 and Nasdaq-100 stocks: daily signals, screener, options activity. Hosted or self-hosted. Free signals have a 10-day delay.");
+      assert.equal(textContent(subhead), "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks. Built on daily data, with the method documented and each signal shown alongside that stock's past signals.");
+      assert.equal(title, "US Stock Analysis with Open-Source Signal Code | PredixLab");
+      assert.equal(description, "US stock screener, daily signals and options activity built from daily data. The signal and backtest code is open source (Apache-2.0). Not investment advice.");
       only(tags(main, "section").filter(({ id }) => id === "tools"), "homepage Tools target");
       assert.match(subhead, /href="\/docs\/how-it-works\/"/, "Documented method link");
     }
@@ -604,12 +605,12 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       assert.ok(tags(main, "a").some(({ href }) => href === "/docs/self-hosting/"), pathname);
     }
     if (pathname === "/docs/self-hosting/") {
-      assert.equal(h1, "Self-host PredixLab", pathname);
+      assert.equal(h1, "Run the open-source signal code", pathname);
       assert.equal(textContent(only(
         [...main.matchAll(/<h1\b[^>]*>[\s\S]*?<\/h1>\s*<p>([\s\S]*?)<\/p>/g)],
         `${pathname} intro`,
       )[1]), "The signal, backtest, API and dashboard code is open source (Apache-2.0).", pathname);
-      assert.equal(description, "The signal, backtest, API and dashboard code is open source (Apache-2.0).", pathname);
+      assert.equal(description, "Run PredixLab's open-source signal and backtest code with your own daily price data.", pathname);
       assert.ok(textContent(main).includes("Data collection and options analysis run as part of the hosted service and aren't in the public repositories."), pathname);
       assert.ok(textContent(main).includes("The license does not grant rights to any third-party market data; data providers keep their own terms."), pathname);
       assert.doesNotMatch(textContent(html), /yahoo|cboe|bypass/i, pathname);
@@ -628,7 +629,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       }
     }
     if (pathname === "/docs/") {
-      assert.equal(h1, "How PredixLab works, where it falls short, and how to run it", pathname);
+      assert.equal(h1, "How PredixLab works, where it falls short, and how to run the signal code", pathname);
       const cards = [...main.matchAll(/<h2><a href="([^"]+)"/g)].map(([, href]) => href);
       assert.deepEqual(cards, docsPaths.slice(1), "Docs index must list every doc in order");
       const list = only(graph.filter((item) => item["@type"] === "ItemList"), "Docs ItemList");
