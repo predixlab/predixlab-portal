@@ -210,23 +210,25 @@ for (const { path } of sitePages.filter(({ path }) => /^\/(?:docs|blog)\//.test(
   }
 }
 
-test("self-hosting scopes open source to the core components and documents unavailable components", () => {
+test("self-hosting uses the approved scope and distinguishes hosted features", () => {
   const document = docs.find(({ slug }) => slug === "self-hosting");
+  assert.equal(document.title, "Self-host PredixLab: run the open-source signal pipeline");
   assert.equal(document.h1, "Self-host PredixLab");
   assert.equal(document.frontmatter.h1, "Self-host PredixLab");
   assert.equal(document.body.split("\n\n")[0], "# Self-host PredixLab");
-  assert.equal(document.body.split("\n\n")[1], "The core components (signals, API, dashboard, campaign, infrastructure, and website) are open source under Apache-2.0. Data collection and options analysis are not publicly available at this time.");
+  assert.equal(document.body.split("\n\n")[1], "The signal, backtest, API and dashboard code is open source (Apache-2.0).");
   assert.ok(document.body.includes("## Why open source"));
-  assert.equal(document.description, "Self-host PredixLab's Apache-2.0 core components. Data collection and options analysis are not publicly available at this time.");
-  assert.equal(document.body.split("\n\n")[2], "We publish the core code so you don't have to take our word for the method. Read it, run it, and tell us where it's wrong.");
+  assert.equal(document.description, "The signal, backtest, API and dashboard code is open source (Apache-2.0).");
+  assert.equal(document.body.split("\n\n")[2], "We publish the code so you don't have to take our word for the method. Read it, run it, and tell us where it's wrong.");
   assert.ok(document.body.includes("Most signal tools ask you to trust numbers without showing how they're made. We'd rather show the work."));
   assert.doesNotMatch(document.body, /numbers you can't see being made|take our description of the method on trust/);
   assert.match(render(document.path).appHtml, /<h1\b[^>]*>Self-host PredixLab<\/h1>/);
-  assert.match(document.body, /\*\*Data collection\*\* \(`predixlab-collector`\) maintains index membership, trading calendars, and daily OHLCV/);
-  assert.match(document.body, /\*\*Options analysis\*\* \(`predixlab-options`\) compares options chains session to session/);
-  assert.ok(document.body.includes("These two components are not publicly available at this time."));
+  assert.ok(document.body.includes("Data collection and options analysis run as part of the hosted service and aren't in the public repositories."));
+  assert.match(document.body, /\nhosted data jobs → daily prices, membership, calendar, snapshots/);
   assert.ok(document.body.includes("daily OHLCV, dated index membership intervals, and a trading calendar"));
-  assert.ok(document.body.includes("this guide does not provide a data-preparation workflow"));
+  assert.ok(document.body.includes("This guide does not provide a data-preparation workflow"));
+  assert.ok(document.body.includes("The license does not grant rights to any third-party market data; data providers keep their own terms."));
+  assert.doesNotMatch(`${document.body}\n${document.description}\n${document.summary}`, /yahoo|cboe|bypass/i);
   assert.match(document.body, /git clone https:\/\/github\.com\/predixlab\/predixlab-signals\.git/);
   assert.match(document.body, /uv run pytest -q/);
   assert.doesNotMatch(document.body, /(?:git clone|uv run|cd) [^\n]*(?:predixlab-collector|predixlab-options)|options_monitor\/|anomaly-detection\.md/);
@@ -246,11 +248,19 @@ test("public pages and metadata do not link unavailable repositories or claim al
   }
 });
 
-test("how-it-works retains neutral component names without promising public source for their methods", () => {
+test("how-it-works retains the data source table and distinguishes hosted features", () => {
   const document = docs.find(({ slug }) => slug === "how-it-works");
-  assert.ok(document.body.includes("collected by `predixlab-collector`"));
-  assert.ok(document.body.includes("collected by `predixlab-options`"));
-  assert.ok(document.body.includes("These two components are not publicly available at this time."));
+  assert.equal(document.body.split("## Data sources\n\n")[1].split("\n\n")[0], [
+    "| Data | Source | Notes |",
+    "| --- | --- | --- |",
+    "| Daily US stock prices (OHLCV) | Yahoo Finance, collected by `predixlab-collector` | History is built from 2015-01-01 and updated incrementally |",
+    "| Index membership | Constituent lists and history for the S&P 500 and Nasdaq-100 | Stored as dated membership intervals per symbol; the history is incomplete (see [Known limitations](/docs/limitations/)) |",
+    "| Trading calendar | Derived from S&P 500 index (`^GSPC`) history | Used to decide which dates are trading sessions |",
+    "| Reference ETFs | SPY, QQQ, IWM, DIA | Kept separately for market context |",
+    "| Options chains | Cboe snapshots, collected by `predixlab-options` | Compared session to session, contract by contract |",
+  ].join("\n"));
+  assert.ok(document.body.includes("The signal, backtest, API and dashboard code is open source (Apache-2.0)."));
+  assert.ok(document.body.includes("Data collection and options analysis run as part of the hosted service and aren't in the public repositories."));
   assert.match(document.body, /signal features, training, and backtests are implemented in \[predixlab-signals\]/);
 });
 
@@ -408,17 +418,17 @@ test("adding one Markdown file discovers a post without editing a registry", asy
 const expectedHomeContent = {
   en: {
     eyebrow: "Free to start · Self-host or hosted",
-    title: ["US stock analysis with an open-source core:", "daily signals, screener, and options activity"],
-    description: "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 core code yourself. Data collection and options analysis are not publicly available at this time. Built on daily data, with the method documented and each signal shown alongside that stock's past signals.",
-    metaTitle: "US Stock Analysis with an Open-Source Core | PredixLab",
-    metaDescription: "US stock analysis with an Apache-2.0 core. Data collection and options analysis are not publicly available at this time. Free signals: 10-day delay.",
+    title: ["Open-source US stock analysis:", "daily signals, screener, and options activity"],
+    description: "Use the hosted dashboard for S&P 500 and Nasdaq-100 stocks, or run the Apache-2.0 code yourself. Built on daily data, with the method documented and each signal shown alongside that stock's past signals.",
+    metaTitle: "Open-Source US Stock Analysis & Daily Signals | PredixLab",
+    metaDescription: "Open-source analysis for S&P 500 and Nasdaq-100 stocks: daily signals, screener, options activity. Hosted or self-hosted. Free signals have a 10-day delay.",
   },
   zh: {
     eyebrow: "免费开始 · 自己部署或用托管版",
-    title: ["美股选股器、每日信号和期权异动，", "核心代码开源"],
-    description: "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，也可以按 Apache-2.0 协议自己部署核心组件。数据采集和期权分析这两个组件暂不公开。方法公开写明，每个信号都能对照这只股票过去的信号。",
-    metaTitle: "PredixLab | 美股选股器、每日信号与期权异动，核心代码开源",
-    metaDescription: "美股选股器、每日信号和期权异动，核心代码按 Apache-2.0 开源。数据采集和期权分析这两个组件暂不公开。覆盖标普 500 和纳斯达克 100，基于日线数据。免费版信号延迟 10 天。",
+    title: ["美股选股器、每日信号和期权异动，", "信号、回测、API 和前端代码开源"],
+    description: "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，也可以按 Apache-2.0 协议自己部署。方法公开写明，每个信号都能对照这只股票过去的信号。",
+    metaTitle: "PredixLab | 开源美股选股器、每日信号与期权异动",
+    metaDescription: "美股选股器、每日信号和期权异动，信号、回测、API 和前端代码开源。覆盖标普 500 和纳斯达克 100，基于日线数据，可用托管版或自己部署。免费版信号延迟 10 天。",
   },
 };
 
@@ -611,7 +621,7 @@ test("daily-data FAQs remain unchanged in both languages", () => {
     "不是。PredixLab 以日线行情和每日信号为主，不提供实时行情或盘中交易提醒。数据更新到哪一天，请以工作台显示的日期为准。");
 });
 
-test("self-hosting table and schema list exactly the six public Apache-2.0 repositories", () => {
+test("self-hosting table and schema list only public Apache-2.0 repositories", () => {
   const repositories = sourceRepositories(docs.find(({ slug }) => slug === "self-hosting"));
   assert.deepEqual(repositories.map(({ name }) => name).sort(), [
     "predixlab-api", "predixlab-campaign", "predixlab-infra",
@@ -619,7 +629,6 @@ test("self-hosting table and schema list exactly the six public Apache-2.0 repos
   ]);
   const schemas = getPageSeo("/docs/self-hosting/").structuredData["@graph"].filter((node) => node["@type"] === "SoftwareSourceCode");
   assert.equal(schemas.length, repositories.length);
-  assert.equal(schemas.length, 6);
   schemas.forEach((schema, index) => {
     assert.equal(schema.codeRepository, repositories[index].codeRepository);
     assert.deepEqual(schema.programmingLanguage, repositories[index].programmingLanguage);
@@ -627,13 +636,6 @@ test("self-hosting table and schema list exactly the six public Apache-2.0 repos
     assert.deepEqual(schema.author, { "@id": "https://predixlab.com/#organization" });
     assert.deepEqual(schema.publisher, schema.author);
   });
-});
-
-test("default social artwork scopes its open-source claim to the core", async () => {
-  const svg = await readFile(new URL("../public/social/predixlab-research.svg", import.meta.url), "utf8");
-  assert.match(svg, />OPEN-SOURCE CORE<\/text>/);
-  assert.match(svg, />with an open-source core<\/text>/);
-  assert.doesNotMatch(svg, />OPEN SOURCE<\/text>|>Open-source US stock<\/text>/);
 });
 
 test("Docs index is Markdown-driven, lists every document in order and has English-only collection metadata", () => {
@@ -646,12 +648,12 @@ test("Docs index is Markdown-driven, lists every document in order and has Engli
   const expectedSummaries = [
     "Data sources, update schedule, the two models, walk-forward validation, and backtest assumptions.",
     "What the data, signals, and backtests can't tell you, and why historical results can look better than real trading.",
-    "The six public repositories, how the components fit together, and how to run the signal tests with the available code.",
+    "The signal, backtest, API and dashboard code is open source (Apache-2.0). Learn how it fits together and run the signal tests.",
   ];
   assert.deepEqual(docs.map(({ summary }) => summary), expectedSummaries);
   for (const doc of docs) {
-    assert.ok(page.appHtml.includes(renderToStaticMarkup(doc.summary)));
-    assert.ok(!page.appHtml.includes(renderToStaticMarkup(doc.description)));
+    assert.ok(page.appHtml.includes(`<p>${renderToStaticMarkup(doc.summary)}</p>`));
+    assert.ok(!page.appHtml.includes(`<p>${renderToStaticMarkup(doc.description)}</p>`));
   }
   assert.doesNotMatch(page.appHtml, /All PredixLab components/);
   assert.equal(page.seo.title, docsIndex.title);

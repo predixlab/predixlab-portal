@@ -13,7 +13,7 @@ translationKey: how-it-works
 
 # How PredixLab works: data, updates, signals and backtests
 
-PredixLab is a set of analysis tools for US stocks. This page explains where the data comes from, when it updates, how the models are trained and tested, and what the results can't tell you. The core components (signals, API, dashboard, campaign, infrastructure, and website) are open source under Apache-2.0. Data collection and options analysis are not publicly available at this time.
+PredixLab is a set of analysis tools for US stocks. This page explains where the data comes from, when it updates, how the models are trained and tested, and what the results can't tell you. The signal, backtest, API and dashboard code is open source (Apache-2.0).
 
 ## The short version
 
@@ -34,7 +34,7 @@ PredixLab is a set of analysis tools for US stocks. This page explains where the
 | Reference ETFs | SPY, QQQ, IWM, DIA | Kept separately for market context |
 | Options chains | Cboe snapshots, collected by `predixlab-options` | Compared session to session, contract by contract |
 
-The table names the data collection and options analysis components. These two components are not publicly available at this time.
+Data collection and options analysis run as part of the hosted service and aren't in the public repositories.
 
 Prices are cleaned before use: rows with missing dates or closes, or non-positive prices, are dropped, and duplicate dates keep the last row. Where the provider supplies adjustment factors they are applied; currently most symbols use split-only or unadjusted prices without dividends, so returns are price returns. On a scheduled run, if the target session's data is missing or widely repeated, the job stops before writing new results instead of silently reusing old numbers. Individual symbols with bad data are left out of that day's run.
 
@@ -126,4 +126,4 @@ Candidates get a 0–100 activity score. A stock needs at least two qualifying c
 
 ## Check it yourself
 
-The signal features, training, and backtests are implemented in [predixlab-signals](https://github.com/predixlab/predixlab-signals), which is open source under Apache-2.0. Its tests check leakage rules directly: appending future data must not change past features or events, and Pivot backtest entries must occur on the next session, never the signal day. Data collection and options analysis are not publicly available at this time. See [Self-hosting](/docs/self-hosting/) for the public repositories and how to run the signal tests.
+The signal features, training, and backtests are implemented in [predixlab-signals](https://github.com/predixlab/predixlab-signals). Its tests check leakage rules directly: appending future data must not change past features or events, and Pivot backtest entries must occur on the next session, never the signal day. See [Self-hosting](/docs/self-hosting/) for the public repositories and how to run the signal tests.

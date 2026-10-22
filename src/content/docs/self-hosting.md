@@ -1,9 +1,9 @@
 ---
 lang: en
-title: "Self-host PredixLab: run the open-source core"
+title: "Self-host PredixLab: run the open-source signal pipeline"
 shortTitle: "Self-hosting"
-description: "Self-host PredixLab's Apache-2.0 core components. Data collection and options analysis are not publicly available at this time."
-summary: "The six public repositories, how the components fit together, and how to run the signal tests with the available code."
+description: "The signal, backtest, API and dashboard code is open source (Apache-2.0)."
+summary: "The signal, backtest, API and dashboard code is open source (Apache-2.0). Learn how it fits together and run the signal tests."
 h1: "Self-host PredixLab"
 date: "2026-10-21"
 updated: "2026-10-22"
@@ -13,9 +13,9 @@ translationKey: self-hosting
 
 # Self-host PredixLab
 
-The core components (signals, API, dashboard, campaign, infrastructure, and website) are open source under Apache-2.0. Data collection and options analysis are not publicly available at this time.
+The signal, backtest, API and dashboard code is open source (Apache-2.0).
 
-We publish the core code so you don't have to take our word for the method. Read it, run it, and tell us where it's wrong.
+We publish the code so you don't have to take our word for the method. Read it, run it, and tell us where it's wrong.
 
 ## Why open source
 
@@ -23,7 +23,7 @@ Most signal tools ask you to trust numbers without showing how they're made. We'
 
 ## The repositories
 
-These 6 repositories are public and licensed under Apache-2.0:
+These repositories are public and licensed under Apache-2.0:
 
 | Repository | What it does | Stack |
 | --- | --- | --- |
@@ -34,14 +34,14 @@ These 6 repositories are public and licensed under Apache-2.0:
 | [predixlab-campaign](https://github.com/predixlab/predixlab-campaign) | Opt-in email delivery, currently the Premium daily-signals digest, with unsubscribe handling | Python, Azure Functions |
 | [predixlab-infra](https://github.com/predixlab/predixlab-infra) | Shared job schedules and workload definitions, Azure Bicep templates, and a local staging environment | Bicep, shell |
 
-**Data collection** (`predixlab-collector`) maintains index membership, trading calendars, and daily OHLCV for S&P 500 and Nasdaq-100 stocks, and builds market overview and screener snapshots. **Options analysis** (`predixlab-options`) compares options chains session to session, flags unusual open-interest changes, and estimates gamma exposure and volatility structure. These two components are not publicly available at this time.
+Data collection and options analysis run as part of the hosted service and aren't in the public repositories.
 
 ### How the pieces connect
 
 ```
-collector → daily prices, membership, calendar, snapshots
+hosted data jobs → daily prices, membership, calendar, snapshots
    ├─ signals → walk-forward research → approved model → daily Pivot events + AlphaRank
-   └─ options → session-to-session chain comparison → unusual activity, GEX, structure
+   └─ hosted options analysis → session-to-session chain comparison → unusual activity, GEX, structure
 api → reads the published results → dashboard (webapp)
 portal → public pages → links into the dashboard
 ```
@@ -61,11 +61,11 @@ uv run pytest -q
 
 The tests cover leakage rules directly. Appending future data must not change past features or events. Forward labels must exclude the signal day. The purge gap must cover the label horizon. Pivot backtest entries must occur on the next session, never the signal day, and same-day target/stop touches are resolved stop-first. The tests don't remove the data limitations listed in the [Known limitations](/docs/limitations/) doc, such as missing delisted companies.
 
-Full research runs (dataset → train → evaluate → backtest → report) need the complete historical data tree: daily OHLCV, dated index membership intervals, and a trading calendar, as described in [How it works](/docs/how-it-works/#data-sources). Data collection is not publicly available at this time; this guide does not provide a data-preparation workflow. The signals README lists the research commands.
+Full research runs (dataset → train → evaluate → backtest → report) need the complete historical data tree: daily OHLCV, dated index membership intervals, and a trading calendar, as described in [How it works](/docs/how-it-works/#data-sources). Data collection runs as part of the hosted service and isn't in the public repositories. This guide does not provide a data-preparation workflow. The signals README lists the research commands.
 
 ## What the license does and doesn't cover
 
-The public source code is Apache-2.0. The license does not grant rights to third-party market data. Yahoo Finance, Cboe, and other providers keep their own terms, and the code shouldn't be used to bypass their access limits. Trained model files and the hosted service are also outside the license. Model bundles are Python pickles: only load ones from a source you trust.
+The public source code is Apache-2.0. The license does not grant rights to any third-party market data; data providers keep their own terms. Trained model files and the hosted service are also outside the license. Model bundles are Python pickles: only load ones from a source you trust.
 
 ## Contribute
 
