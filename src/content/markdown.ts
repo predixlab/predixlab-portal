@@ -1,8 +1,10 @@
 import { Marked, type Tokens } from "marked";
+import type { Question } from "@/content/site";
 
 export interface MarkdownDocument {
   title: string;
   shortTitle: string;
+  breadcrumbTitle?: string;
   description: string;
   lang: "en";
   h1: string;
@@ -19,6 +21,9 @@ export interface BlogPost extends MarkdownDocument {
   updated: string;
   category: string;
   translationKey: string;
+  schemaType: "Article" | "BlogPosting";
+  about: string[];
+  questions: Question[];
   image?: string;
   imageAlt?: string;
 }
@@ -145,6 +150,7 @@ export const parseMarkdownDocument = (
   return {
     title: frontmatter.title,
     shortTitle: frontmatter.shortTitle,
+    breadcrumbTitle: frontmatter.breadcrumbTitle,
     description: frontmatter.description,
     lang: "en",
     h1,
@@ -152,6 +158,30 @@ export const parseMarkdownDocument = (
     frontmatter,
     body,
   };
+};
+
+const parseBlogFaq = (body: string, filename: string): Question[] => {
+  const tokens = new Marked().lexer(body).filter((token) => token.type !== "space");
+  const sections = tokens.flatMap((token, index) =>
+    token.type === "heading" && token.depth === 2 && token.text === "FAQ" ? [index] : [],
+  );
+  if (!sections.length) return [];
+  if (sections.length !== 1) throw new Error(`${filename}: duplicate FAQ section`);
+  const start = sections[0] + 1;
+  const end = tokens.findIndex((token, index) => index >= start && token.type === "heading" && token.depth <= 2);
+  const entries = tokens.slice(start, end === -1 ? undefined : end);
+  if (!entries.length) throw new Error(`${filename}: FAQ requires question/answer pairs`);
+  return entries.map((token) => {
+    const inline = token.type === "paragraph" ? token.tokens ?? [] : [];
+    const [question, answer] = inline;
+    if (inline.length !== 2 || question?.type !== "strong" || !question.tokens
+      || question.tokens.some((part) => part.type !== "text" || part.tokens)
+      || answer?.type !== "text" || answer.tokens || !answer.text.startsWith("\n")
+      || !question.text.trim() || !answer.text.trim()) {
+      throw new Error(`${filename}: FAQ entries must be **Question** followed by a plain-text answer on the next line`);
+    }
+    return { question: question.text, answer: answer.text.trim().replace(/\s+/g, " ") };
+  });
 };
 
 export const loadBlogPosts = (sources: Record<string, string>): BlogPost[] => {
@@ -176,11 +206,20 @@ export const loadBlogPosts = (sources: Record<string, string>): BlogPost[] => {
     if (frontmatter.image && !/^\/(?:[\w-]+\/)*[\w-]+\.png$/.test(frontmatter.image)) {
       throw new Error(`${filename}: image must be a local PNG path (1200x630)`);
     }
+    const schemaType = frontmatter.schemaType ?? "BlogPosting";
+    if (schemaType !== "BlogPosting" && schemaType !== "Article") {
+      throw new Error(`${filename}: schemaType must be BlogPosting or Article`);
+    }
+    const about = frontmatter.about ? frontmatter.about.split("|").map((topic) => topic.trim()) : [];
+    if (about.some((topic) => !topic) || new Set(about).size !== about.length) {
+      throw new Error(`${filename}: about must contain unique nonempty topics separated by |`);
+    }
     return {
       ...document, kind: "post", slug, path: `/blog/${slug}/`,
       date: frontmatter.date, updated: frontmatter.updated,
       category: frontmatter.category, translationKey: frontmatter.translationKey,
       image: frontmatter.image, imageAlt: frontmatter.imageAlt,
+      schemaType, about, questions: parseBlogFaq(document.body, filename),
     };
   }).sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
 };

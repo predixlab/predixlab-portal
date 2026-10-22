@@ -252,7 +252,7 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
       docs: copy.nav.docs,
       doc: document?.shortTitle ?? seo.title,
       blog: copy.nav.blog,
-      blogPost: document?.shortTitle ?? seo.title,
+      blogPost: document?.breadcrumbTitle ?? document?.shortTitle ?? seo.title,
     };
     const items = [{ name: copy.nav.home, item: pageUrl("/") }];
     if (key === "blogPost") items.push({ name: copy.nav.blog, item: pageUrl("/blog/") });
@@ -273,12 +273,21 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
 
   if (document && (key === "doc" || document.kind === "post")) {
     const isPost = document.kind === "post";
+    const isArticle = isPost && document.schemaType === "Article";
     const articleId = `${canonicalUrl}#article`;
     webpage.mainEntity = { "@id": articleId };
     graph.push({
-      "@type": isPost ? "BlogPosting" : "TechArticle",
+      "@type": isPost ? document.schemaType : "TechArticle",
       "@id": articleId,
-      headline: document.title,
+      headline: isArticle ? document.h1 : document.title,
+      ...(isArticle ? {
+        name: document.title,
+        url: canonicalUrl,
+        isPartOf: { "@id": websiteId },
+      } : {}),
+      ...(isPost && document.about.length ? {
+        about: document.about.map((name) => ({ "@type": "Thing", name })),
+      } : {}),
       description: document.description,
       datePublished: document.date,
       dateModified: document.updated,
@@ -349,7 +358,8 @@ const createStructuredData = (key: PageKey, seo: PageSeo): JsonLdObject => {
   const productId = softwareProducts[key];
   const questions = key === "home"
     ? faqContent[seo.language]
-    : productId ? productContent[seo.language][productId].questions : [];
+    : productId ? productContent[seo.language][productId].questions
+      : document?.kind === "post" ? document.questions : [];
   if (questions.length > 0) {
     const faq = createFaqSchema(questions, seo, canonicalUrl);
     const existingParts = webpage.hasPart;

@@ -312,7 +312,8 @@ test("blog index puts Backtesting & validation first and sorts every category ne
   const groups = groupBlogPosts(posts);
   assert.deepEqual(groups.map(({ category }) => category), ["Backtesting & validation", "A different category", "Z category"]);
   assert.deepEqual(groups[0].posts.map(({ slug }) => slug), ["newer", "older"]);
-  assert.deepEqual(relatedBlogPosts(posts, posts[0]).map(({ slug }) => slug), ["newer", "other", "last"]);
+  assert.deepEqual(relatedBlogPosts(posts, posts[0]).map(({ slug }) => slug), ["newer"]);
+  assert.deepEqual(relatedBlogPosts(posts, posts[1]).map(({ slug }) => slug), ["newer", "last", "older"]);
   assert.deepEqual(groupBlogPosts([]), []);
 });
 
@@ -534,19 +535,19 @@ for (const [path, document] of [
       : [document.updated];
     assert.deepEqual([...page.appHtml.matchAll(/<time dateTime="([^"]+)"/g)].map(([, date]) => date), dates);
     assert.match(page.appHtml, /href="\/docs\/how-it-works\/"/);
-    assert.ok(page.appHtml.includes(`<span aria-current="page">${document.shortTitle}</span>`));
+    assert.ok(page.appHtml.includes(`<span aria-current="page">${document.breadcrumbTitle ?? document.shortTitle}</span>`));
     assert.doesNotMatch(page.appHtml, /real[- ]?time|实时|\/learn\/|\/zh\/|[?&]lng=|<!--\s*Reviewer note|\[待核实\]/i);
     const json = JSON.parse(page.headHtml.match(/type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
     const breadcrumb = json["@graph"].find((node) => node["@type"] === "BreadcrumbList");
     assert.deepEqual(breadcrumb.itemListElement.map(({ name }) => name), [
-      "Home", document.kind === "doc" ? "Docs" : "Blog", document.shortTitle,
+      "Home", document.kind === "doc" ? "Docs" : "Blog", document.breadcrumbTitle ?? document.shortTitle,
     ]);
     const articles = json["@graph"].filter((node) => node["@type"] === (
-      document.kind === "post" ? "BlogPosting" : "TechArticle"
+      document.kind === "post" ? document.schemaType : "TechArticle"
     ));
     assert.equal(articles.length, 1);
     const article = articles[0];
-    assert.equal(article.headline, document.title);
+    assert.equal(article.headline, article["@type"] === "Article" ? document.h1 : document.title);
     assert.equal(article.description, document.description);
     assert.equal(article.datePublished, document.date);
     assert.equal(article.dateModified, document.updated);
@@ -581,7 +582,7 @@ test("articles use article Open Graph dates, shared organization schemas and pag
   assert.equal(png.readUInt32BE(20), 630);
   for (const document of [...docs, ...blogPosts]) {
     const seo = getPageSeo(document.path);
-    const article = seo.structuredData["@graph"].find((item) => item["@type"] === (document.kind === "post" ? "BlogPosting" : "TechArticle"));
+    const article = seo.structuredData["@graph"].find((item) => item["@type"] === (document.kind === "post" ? document.schemaType : "TechArticle"));
     assert.deepEqual(article.author, { "@id": "https://predixlab.com/#organization" });
     assert.deepEqual(article.publisher, article.author);
     assert.equal(article.datePublished, document.date);
@@ -623,7 +624,7 @@ test("posts retain custom sharing images and alt text in English metadata and ar
     for (const name of ["og:image:alt", "twitter:image:alt"]) {
       assert.ok(head.includes(`${name}" content="${renderToStaticMarkup(post.imageAlt)}"`));
     }
-    assert.equal(seo.structuredData["@graph"].find((node) => node["@type"] === "BlogPosting").image.url, seo.imageUrl);
+    assert.equal(seo.structuredData["@graph"].find((node) => node["@type"] === post.schemaType).image.url, seo.imageUrl);
   } finally {
     Object.assign(post, original);
   }

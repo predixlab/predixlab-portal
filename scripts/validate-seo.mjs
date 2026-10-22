@@ -106,11 +106,20 @@ export const validateInternalLinks = (html, canonicalUrl, publicPaths) => {
 export const validateFaqMarkup = (main, graph, canonicalUrl) => {
   const pathname = new URL(canonicalUrl).pathname;
   const faqs = graph.filter((item) => item["@type"] === "FAQPage");
-  if (pathname !== "/" && !productLinks.some(({ path }) => path === pathname)) {
+  const isPost = pathname.startsWith("/blog/") && pathname !== "/blog/";
+  const blogSections = isPost ? [...main.matchAll(/<h2 id="faq">FAQ<\/h2>([\s\S]*?)(?=<h2\b|<\/div>|$)/g)] : [];
+  if (pathname !== "/" && !productLinks.some(({ path }) => path === pathname) && !blogSections.length) {
     assert.equal(faqs.length, 0, `${pathname} must not emit FAQPage`);
     return;
   }
-  const questions = [...main.matchAll(/<details\b([^>]*)>([\s\S]*?)<\/details>/g)]
+  const questions = isPost
+    ? [...only(blogSections, `${pathname} FAQ section`)[1].matchAll(/<p><strong>([\s\S]*?)<\/strong>\s*([\s\S]*?)<\/p>/g)]
+      .map(([, question, answer]) => ({
+        "@type": "Question",
+        name: textContent(question),
+        acceptedAnswer: { "@type": "Answer", text: textContent(answer) },
+      }))
+    : [...main.matchAll(/<details\b([^>]*)>([\s\S]*?)<\/details>/g)]
     .filter(([, attrs]) => attributes(attrs).class?.split(/\s+/).includes("question"))
     .map(([, , content]) => ({
       "@type": "Question",
@@ -483,7 +492,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     assert.doesNotMatch(JSON.stringify(schema), /"(?:aggregateRating|review|reviews|ratingValue|performance|accuracy|returns?)"/, pathname);
     const graph = schema["@graph"];
     assert.equal(graph.find((item) => item["@type"] === "WebSite")?.inLanguage, "en", pathname);
-    assert.ok(graph.every((item) => item["@type"] !== "Article"), `Retired article schema: ${pathname}`);
+    assert.ok(graph.every((item) => item["@type"] !== "Article") || isPost, `Article requires a blog post: ${pathname}`);
     const pageType = pathname === "/blog/" || pathname === "/docs/" ? "CollectionPage" : "WebPage";
     for (const type of ["Organization", "WebSite", pageType]) {
       only(graph.filter((item) => item["@type"] === type), `${pathname} ${type}`);
@@ -557,10 +566,15 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       const dates = tags(main, "time").map(({ datetime }) => datetime);
       if (isPost || isDoc) {
         const article = only(
-          graph.filter((item) => item["@type"] === (isPost ? "BlogPosting" : "TechArticle")),
+          graph.filter((item) => isPost ? ["BlogPosting", "Article"].includes(item["@type"]) : item["@type"] === "TechArticle"),
           `${pathname} article`,
         );
-        assert.equal(article.headline, title, pathname);
+        assert.equal(article.headline, article["@type"] === "Article" ? h1 : title, pathname);
+        if (article["@type"] === "Article") {
+          assert.equal(article.name, title, pathname);
+          assert.equal(article.url, canonicalUrl, pathname);
+          assert.deepEqual(article.isPartOf, { "@id": `${origin}/#website` }, pathname);
+        }
         assert.equal(article.description, description, pathname);
         assert.equal(article.inLanguage, "en", pathname);
         assert.equal(article.mainEntityOfPage, canonicalUrl, pathname);
@@ -696,7 +710,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
   assert.equal(items.length, publishedPosts.length, "RSS includes every post");
   for (const post of publishedPosts) {
     const item = only(items.filter((item) => item.link === post.url), `RSS post: ${post.url}`);
-    assert.equal(item.title, post.headline, post.url);
+    assert.equal(item.title, post.name ?? post.headline, post.url);
     assert.equal(item.description, post.description, post.url);
     assert.equal(item.guid["#text"], post.url, post.url);
     assert.equal(item.guid["@_isPermaLink"], "true", post.url);
