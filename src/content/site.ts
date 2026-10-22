@@ -65,7 +65,7 @@ export const faqContent: Record<SiteLanguage, Question[]> = {
 export const homeContent = {
   zh: {
     eyebrow: "免费开始 · 自己部署或用托管版",
-    title: ["美股选股器、每日信号和期权异动，", "代码全部开源"],
+    title: ["美股选股器、每日信号和期权异动，", "信号、回测、API 和前端代码开源"],
     description:
       "覆盖标普 500 和纳斯达克 100，基于日线数据。可以直接用托管版工作台，也可以按 Apache-2.0 协议自己部署。方法公开写明，每个信号都能对照这只股票过去的信号。",
     descriptionLink: "方法公开写明",

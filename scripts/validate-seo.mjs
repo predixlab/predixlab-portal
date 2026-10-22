@@ -317,6 +317,8 @@ export const validateSeoOutput = async (directory, expectedPages) => {
     assert.doesNotMatch(html, /<!--(?:seo-head|app-html)-->|fonts\.(?:googleapis|gstatic)\.com|[?&]lng=/, pathname);
     if (!isNewPage) assert.doesNotMatch(decodeHtml(html), /\u7814\u7a76/, `Outdated Chinese copy: ${pathname}`);
     assert.doesNotMatch(html, /\/(?:methodology|open-source)\//, `Unpublished draft reference: ${pathname}`);
+    assert.doesNotMatch(html, /https?:\/\/github\.com\/predixlab\/predixlab-(?:collector|options)(?:[/"#?.\s]|$)/i, `Unavailable repository reference: ${pathname}`);
+    assert.doesNotMatch(textContent(html), /fully open[ -]source|all code from data collection|the full code is open source|代码全部开源|全部开源/i, `Open-source overclaim: ${pathname}`);
     assert.match(html, /<div id="root">[\s\S]+<main\b/, `Empty application: ${pathname}`);
     const languageButton = only(
       tags(html, "button").filter((button) => button.class?.split(" ").includes("language-button")),
@@ -606,9 +608,16 @@ export const validateSeoOutput = async (directory, expectedPages) => {
       assert.equal(textContent(only(
         [...main.matchAll(/<h1\b[^>]*>[\s\S]*?<\/h1>\s*<p>([\s\S]*?)<\/p>/g)],
         `${pathname} intro`,
-      )[1]), "All code from data collection to daily signals is open source under Apache-2.0. Here's what you need to run it yourself.", pathname);
+      )[1]), "The signal, backtest, API and dashboard code is open source (Apache-2.0).", pathname);
+      assert.equal(description, "The signal, backtest, API and dashboard code is open source (Apache-2.0).", pathname);
+      assert.ok(textContent(main).includes("Data collection and options analysis run as part of the hosted service and aren't in the public repositories."), pathname);
+      assert.ok(textContent(main).includes("The license does not grant rights to any third-party market data; data providers keep their own terms."), pathname);
+      assert.doesNotMatch(textContent(html), /yahoo|cboe|bypass/i, pathname);
       const repositories = graph.filter((item) => item["@type"] === "SoftwareSourceCode");
-      assert.equal(repositories.length, 8, pathname);
+      assert.deepEqual(repositories.map(({ name }) => name).sort(), [
+        "predixlab-api", "predixlab-campaign", "predixlab-infra",
+        "predixlab-portal", "predixlab-signals", "predixlab-webapp",
+      ], pathname);
       for (const repository of repositories) {
         assert.equal(repository.license, "https://www.apache.org/licenses/LICENSE-2.0", pathname);
         assert.match(repository.codeRepository, /^https:\/\/github.com\/predixlab\/predixlab-[a-z]+$/, pathname);
