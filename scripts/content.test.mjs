@@ -590,28 +590,30 @@ test("default sharing artwork limits its open-source claim to signal code", asyn
   assert.doesNotMatch(svg, /Open-source US stock|Self-host|run the code yourself/i);
 });
 
-test("articles use article Open Graph dates, shared organization schemas and page-title alt text with the default image", async () => {
+test("articles use article Open Graph dates, shared organization schemas and configured or default sharing images", async () => {
   const png = await readFile(new URL("../public/social/predixlab-research.png", import.meta.url));
   assert.equal(png.readUInt32BE(16), 1200);
   assert.equal(png.readUInt32BE(20), 630);
   for (const document of [...docs, ...blogPosts]) {
     const seo = getPageSeo(document.path);
+    const imageUrl = document.image ? `https://predixlab.com${document.image}` : getPageSeo("/").imageUrl;
+    const imageAlt = document.imageAlt ?? document.title;
     const article = seo.structuredData["@graph"].find((item) => item["@type"] === (document.kind === "post" ? document.schemaType : "TechArticle"));
     assert.deepEqual(article.author, { "@id": "https://predixlab.com/#organization" });
     assert.deepEqual(article.publisher, article.author);
     assert.equal(article.datePublished, document.date);
     assert.equal(article.dateModified, document.updated);
     assert.deepEqual(article.image, { "@type": "ImageObject", url: seo.imageUrl, width: 1200, height: 630 });
-    assert.equal(seo.imageUrl, getPageSeo("/").imageUrl);
-    assert.equal(seo.imageAlt, document.title);
+    assert.equal(seo.imageUrl, imageUrl);
+    assert.equal(seo.imageAlt, imageAlt);
     assert.equal(seo.openGraphType, "article");
     const head = renderSeoHead(seo);
     for (const [name, value] of [
       ["og:type", "article"],
       ["article:published_time", document.date],
       ["article:modified_time", document.updated],
-      ["og:image:alt", document.title],
-      ["twitter:image:alt", document.title],
+      ["og:image:alt", imageAlt],
+      ["twitter:image:alt", imageAlt],
     ]) assert.ok(head.includes(`${name}" content="${renderToStaticMarkup(value)}"`));
     if (document.kind === "post") assert.equal(seo.rssUrl, "https://predixlab.com/blog/rss.xml");
   }
@@ -675,12 +677,13 @@ test("Docs index is Markdown-driven, lists every document in order and has Engli
   assert.equal([...page.appHtml.matchAll(/<h1\b/g)].length, 1);
   assert.deepEqual([...page.appHtml.matchAll(/<h2><a href="([^"]+)"/g)].map(([, path]) => path), docs.map(({ path }) => path));
   assert.equal(docsIndex.h1, "How PredixLab works, where it falls short, and how to run the signal code");
-  assert.equal(docsIndex.title, "PredixLab docs: how it works, limitations and signal code");
-  assert.equal(docsIndex.description, "Understand PredixLab's data, signals and backtests, review known limitations, and run the signal tests.");
+  assert.equal(docsIndex.title, "PredixLab docs: methods, limitations, signal code and MCP");
+  assert.equal(docsIndex.description, "Understand PredixLab's data, signals and backtests, review known limitations, run the signal tests, and connect an AI agent.");
   const expectedSummaries = [
     "Data sources, update schedule, the two models, walk-forward validation, and backtest assumptions.",
     "What the data, signals, and backtests can't tell you, and why historical results can look better than real trading.",
     "The signal, backtest, API and dashboard code is open source (Apache-2.0). Learn how it fits together and run the signal tests.",
+    "Connect an AI agent with a dedicated MCP key, explore the 18 read-only tools, and understand data dates and plan access.",
   ];
   assert.deepEqual(docs.map(({ summary }) => summary), expectedSummaries);
   for (const doc of docs) {

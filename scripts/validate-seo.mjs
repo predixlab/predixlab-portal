@@ -211,7 +211,7 @@ export const validateSeoOutput = async (directory, expectedPages) => {
   assert.ok(publicPaths.length > 0, "Public index-alias redirects are required");
   assert.ok(publicPaths.every((pathname) => !/^\/(?:en|zh)\//.test(pathname)), "Language-prefixed canonical route");
   const docsPaths = publicPaths.filter((pathname) => pathname.startsWith("/docs/"));
-  for (const pathname of ["/docs/", "/docs/how-it-works/", "/docs/limitations/", "/docs/self-hosting/"]) {
+  for (const pathname of ["/docs/", "/docs/how-it-works/", "/docs/limitations/", "/docs/self-hosting/", "/docs/mcp/"]) {
     assert.ok(docsPaths.includes(pathname), `Missing Docs route: ${pathname}`);
   }
   assert.ok(config.routes.every(({ route }) => !/^\/(?:methodology|open-source)(?:\/|$)/.test(route)), "Unpublished drafts must have no deployment rules");

@@ -202,11 +202,14 @@ test("blog FAQ and schema metadata reject malformed input without changing Markd
 
 test("blog discovery adds the Options basics category and updates post and index sitemap lastmods", () => {
   assert.equal(getPageForPath(path).key, "blogPost");
-  assert.equal(blogUpdated, "2026-10-22");
+  assert.equal(blogUpdated, "2026-10-24");
   const sitemap = new XMLParser().parse(renderSitemap()).urlset.url;
-  for (const url of [canonical, "https://predixlab.com/blog/"]) {
+  for (const [url, lastmod] of [
+    [canonical, "2026-10-22"],
+    ["https://predixlab.com/blog/", "2026-10-24"],
+  ]) {
     assert.equal(sitemap.filter((entry) => entry.loc === url).length, 1);
-    assert.equal(sitemap.find((entry) => entry.loc === url).lastmod, "2026-10-22");
+    assert.equal(sitemap.find((entry) => entry.loc === url).lastmod, lastmod);
   }
   const index = render("/blog/").appHtml;
   assert.match(index, /<h2 id="category-options-basics">Options basics<\/h2>/);
@@ -271,14 +274,15 @@ test("the four existing post bodies and SEO remain byte-identical to the pre-cha
   }
 });
 
-test("existing post pages retain their complete HTML in both navigation languages after adding a category", () => {
+test("posts predating the UOA explainer retain their complete HTML in both navigation languages after adding its category", () => {
   const originals = [...blogPosts];
-  const existingPosts = originals.filter((item) => item.path !== path);
+  const existingPosts = originals.filter((item) => item.date < post.date);
+  assert.equal(existingPosts.length, 4);
   const current = new Map(existingPosts.map((post) => [
     post.path, ["en", "zh"].map((language) => localizedHtml(post.path, language)),
   ]));
   try {
-    blogPosts.splice(0, blogPosts.length, ...existingPosts);
+    blogPosts.splice(0, blogPosts.length, ...originals.filter((item) => item.path !== path));
     for (const post of existingPosts) {
       assert.deepEqual(["en", "zh"].map((language) => localizedHtml(post.path, language)), current.get(post.path), post.path);
     }
@@ -287,7 +291,7 @@ test("existing post pages retain their complete HTML in both navigation language
   }
 });
 
-test("all existing Chinese product, company, legal and docs HTML remains byte-identical", () => {
+test("Chinese product, company and legal HTML stays unchanged, with updated docs index and MCP sidebar snapshots", () => {
   for (const [path, expected] of [
     ["/", "c216d9f598a9a149dac043a47349bad6e8051f0d1c9149a3c2221f6231153d94"],
     ["/us-stock-signals/", "e23e9e7d5750351e3c6efb942d944069bce359099c272233d435360c6b985269"],
@@ -297,10 +301,9 @@ test("all existing Chinese product, company, legal and docs HTML remains byte-id
     ["/about/", "7e27b3fe31bcb58b00d0cb8d8b8910123a84f1403c39250bda9ceb7ad4669d9a"],
     ["/terms/", "dbc194ecefbf829a4a968d04ce0929f53f5b90d024ab51767ada1ba43de25c47"],
     ["/privacy/", "019e29f372debcedcf2d98b02a98f39883cdb20941b5e4988fb218492cad3077"],
-    ["/docs/", "104289f5c4d33911bd56a9754fa09babf4e422a589986960dd9d3955416e6fbf"],
-    // The docs options-method section was intentionally updated.
-    ["/docs/how-it-works/", "683b7678cf6d8c65ba2d6407d9d56d9bd0fe1e91337b92d94c2ffcddf89e900b"],
-    ["/docs/limitations/", "729e86841830c1c7114de90b987872476613abbb065c0ed64b8dee92839d146a"],
-    ["/docs/self-hosting/", "9edc4c7f4fbe9f204061b823c35f8bf06a6fc97626b396920c1400a560068dfe"],
+    ["/docs/", "0d2875bc5a1b99e26478591f123344536931697218daf3d47360b9f43956231f"],
+    ["/docs/how-it-works/", "09b388257e9573c58d14c67521011aa3f19967724d1301d0164d2cb1941ce27a"],
+    ["/docs/limitations/", "f2fa9e9dc14bfb351b20ae8517c971d43cda9b34d3c9ce0c2a4d9cd59363fb87"],
+    ["/docs/self-hosting/", "6c6605666562c348da33fbc00ff45a8f3c556098f357d5f8908df48464c64b50"],
   ]) assert.equal(hash(localizedHtml(path, "zh")), expected, path);
 });

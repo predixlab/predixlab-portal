@@ -35,7 +35,7 @@ test("native directory indexes have no rewrite routes and index aliases permanen
 });
 
 test("Docs indexes permanently redirect without rewrites while unpublished drafts have no routes", () => {
-  const docsPaths = ["/docs/", "/docs/how-it-works/", "/docs/limitations/", "/docs/self-hosting/"];
+  const docsPaths = ["/docs/", "/docs/how-it-works/", "/docs/limitations/", "/docs/self-hosting/", "/docs/mcp/"];
   const config = createAzureConfig(baseConfig, [...publicPaths, ...docsPaths]);
   for (const path of docsPaths) {
     assert.equal(config.routes.find(({ route }) => azureRouteKey(route) === azureRouteKey(path)), undefined);
