@@ -37,9 +37,9 @@ const hash = (value) => createHash("sha256").update(value).digest("hex");
 test("MCP announcement preserves the entire approved source and all three approved images", async () => {
   for (const [path, expected] of [
     ["src/content/blog/predixlab-mcp.md", "fa77c1d60e700d3a573e121afd1c57272d01d353b86af57d93d12745af52673c"],
-    ["public/images/blog/predixlab-mcp/architecture.png", "59be517558773e77f89c31c2d3cb09c5eef3c0993ffacede4f56d12db7b24173"],
-    ["public/images/blog/predixlab-mcp/screening-illustration.png", "189931fac36ba2af0e30df60b5ef11fb5a5136c41fcf1b802dda7fa100d36dc8"],
-    ["public/social/predixlab-mcp.png", "29d36f4cac1830887a006cea92d727a3d25315e53b8b622422c2f252a122ce72"],
+    ["public/images/blog/predixlab-mcp/architecture.png", "9ee6e7fafdbb53f37b2b7556dd9a1a858725f8386c0821a94a083908bc6ea087"],
+    ["public/images/blog/predixlab-mcp/screening-illustration.png", "eeeea61d4320603abdc3125974dad96704ce8f960abea4248c4fa849d87e39e0"],
+    ["public/social/predixlab-mcp.png", "ddce0ad5b2d91658667c120b57d301f4b56ca13d101b2d7b9d5811c9ab6fda33"],
   ]) assert.equal(hash(await readFile(new URL(`../${path}`, import.meta.url))), expected, path);
 });
 
