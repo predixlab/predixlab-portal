@@ -45,11 +45,11 @@ The example above is an illustration, not real data. Results come from the rules
 
 ## Getting started
 
-Sign in to your [PredixLab dashboard](https://dashboard.predixlab.com/profile), open **Agent connections** on your Profile page and create a key. Then add PredixLab to your agent with that key and start a new conversation. If you'd like step-by-step setup details, they're in the [README](https://github.com/predixlab/predixlab-api#mcp-agent-access).
+Sign in to your [PredixLab dashboard](https://dashboard.predixlab.com/profile), open **Agent connections** on your Profile page and create a key. Then add PredixLab to your agent with that key and start a new conversation. If you'd like step-by-step setup details, they're in our [MCP setup guide](https://predixlab.com/docs/mcp/).
 
 ## Good to know
 
-- **Your plan applies.** On the Free plan, signals and options activity have a 10-day delay. Premium shows the latest published data.
+- **Your plan applies.** On the Free plan, signals and options data have a 10-day delay. Premium shows the latest published data.
 - **Daily data.** PredixLab publishes end-of-day data once per trading day, after the US close. These aren't live prices.
 - **Read-only.** Your agent can look up data. It can't place trades or change your account.
 - **Keep your key private.** Treat it like a password. Don't paste it into shared documents or public chats. If it leaks, revoke it in Agent connections.
@@ -64,7 +64,7 @@ A standard way for AI agents to use outside tools. PredixLab's MCP server lets y
 Grok Bot, and other agents that let you add a custom MCP server with an API key. PredixLab MCP uses an API key and doesn't offer OAuth yet; some clients, including ChatGPT custom connectors at the time of writing, may not support that.
 
 **Is it free?**
-Yes, you can create a key on the Free plan. Signals and options activity have a 10-day delay on Free. Premium shows the latest published data.
+Yes, you can create a key on the Free plan. Signals and options data have a 10-day delay on Free. Premium shows the latest published data.
 
 **Is this live market data?**
 No. It's daily end-of-day data. Always check the data date in the agent's answer.

@@ -36,7 +36,7 @@ const hash = (value) => createHash("sha256").update(value).digest("hex");
 
 test("MCP announcement preserves the entire approved source and all three approved images", async () => {
   for (const [path, expected] of [
-    ["src/content/blog/predixlab-mcp.md", "fa77c1d60e700d3a573e121afd1c57272d01d353b86af57d93d12745af52673c"],
+    ["src/content/blog/predixlab-mcp.md", "3883b0799ea124ff51c82d5647910c5f57bedba11467aa8a7bc124638daf130a"],
     ["public/images/blog/predixlab-mcp/architecture.png", "9ee6e7fafdbb53f37b2b7556dd9a1a858725f8386c0821a94a083908bc6ea087"],
     ["public/images/blog/predixlab-mcp/screening-illustration.png", "eeeea61d4320603abdc3125974dad96704ce8f960abea4248c4fa849d87e39e0"],
     ["public/social/predixlab-mcp.png", "ddce0ad5b2d91658667c120b57d301f4b56ca13d101b2d7b9d5811c9ab6fda33"],
@@ -70,10 +70,12 @@ test("MCP announcement renders its route, dates, canonical, custom sharing artwo
   for (const name of ["architecture", "screening-illustration"]) {
     assert.match(post.html, new RegExp(`<img src="/images/blog/predixlab-mcp/${name}\\.png" alt="Illustrative example, not real data:`));
   }
-  for (const href of [
-    "https://dashboard.predixlab.com/profile",
-    "https://github.com/predixlab/predixlab-api#mcp-agent-access",
-  ]) assert.ok(post.html.includes(`href="${href}" target="_blank" rel="noopener noreferrer"`));
+  for (const [href, attributes] of [
+    ["https://dashboard.predixlab.com/profile", ' target="_blank" rel="noopener noreferrer"'],
+    [`${origin}${docPath}`, ""],
+  ]) assert.ok(post.html.includes(`href="${href}"${attributes}>`));
+  assert.match(page.appHtml, /<a href="(?:https:\/\/predixlab\.com)?\/docs\/mcp\/">MCP setup guide<\/a>/);
+  validateInternalLinks(page.appHtml, page.seo.canonicalUrl, sitePages.map(({ path }) => path));
   const graph = page.seo.structuredData["@graph"];
   const article = graph.find((node) => node["@type"] === "BlogPosting");
   assert.equal(article.mainEntityOfPage, `${origin}${postPath}`);
@@ -181,8 +183,9 @@ test("MCP docs enumerate the exact 18 tools and give a valid placeholder-only HT
     "YYYY-MM-DD", "omitting one selects the latest session visible to your account",
     "S&P 500 and Nasdaq-100 constituents", "once per trading day after the US close",
     "daily observations", "not live prices", "include that date in every answer",
-    "Pivot picks, AlphaRank rankings and publication history, unusual options activity, gamma exposure, and options structure",
+    "Pivot signals, AlphaRank rankings and publication history, unusual options activity, gamma exposure, and options structure",
     "10 calendar days ago, not 10 trading sessions ago",
+    "The corresponding REST API endpoints use the same delay.",
     "market snapshots, overviews, movers, quotes, technical analysis and screening do not have this 10-day gate",
     "latest published data without the Free delay", "](/pricing/)",
     "client-managed secret storage", "Never put it in URLs, shared files, source-controlled files or public chats",

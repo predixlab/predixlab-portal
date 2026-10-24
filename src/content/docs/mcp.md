@@ -86,7 +86,7 @@ Market results are tied to a data date. Ask the agent to include that date in ev
 
 MCP uses the same account entitlements as the REST API. A key does not bypass your plan.
 
-- **Free:** the 10-day delay applies to signal sessions, Pivot picks, AlphaRank rankings and publication history, unusual options activity, gamma exposure, and options structure. Their date-discovery tools also respect this delay. Accessible sessions are dated on or before the date 10 calendar days ago, not 10 trading sessions ago. The ordinary REST picks and predictions endpoints use the same delay.
+- **Free:** the 10-day delay applies to signal sessions, Pivot signals, AlphaRank rankings and publication history, unusual options activity, gamma exposure, and options structure. Their date-discovery tools also respect this delay. Accessible sessions are dated on or before the date 10 calendar days ago, not 10 trading sessions ago. The corresponding REST API endpoints use the same delay.
 - **Other MCP market tools:** market snapshots, overviews, movers, quotes, technical analysis and screening do not have this 10-day gate. They still use daily published data.
 - **Premium:** access to the latest published data without the Free delay. This does not change model accuracy or remove data limitations.
 
